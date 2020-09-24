@@ -1,0 +1,42 @@
+# IDEA
+*.iml
+/.idea/
+/out/
+
+# Maven
+/target/
+*.mvn
+*.cmd
+
+# Compiled class files 
+*.class
+
+# Log Files
+*.log
+
+# Package Files
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Vue Editor
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+.DS_Store
+
+# Vue Project
+.DS_Store
+node_modules/
+/dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+/test/unit/coverage/
+/test/e2e/reports/
+selenium-debug.log
