@@ -8,7 +8,7 @@ module.exports = {
     'no-empty-source': null, // 允许空源
     'font-family-no-duplicate-names': null, // 允许使用重复的字体名称
     'value-list-comma-space-after': 'always', // 在值列表的逗号之后要求有一个空格
-    'selector-pseudo-element-colon-notation': 'double', // 指定伪元素使用双冒号
+    'selector-pseudo-element-colon-notation': 'single', // 指定伪元素使用双冒号
     'declaration-colon-space-before': 'never', // 在冒号之前禁止有空白
     'declaration-colon-space-after': 'always', // 在冒号之后要求有一个空格
     'color-hex-length': 'long', // 指定十六进制颜色不使用缩写

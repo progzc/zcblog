@@ -1,7 +1,7 @@
 //移动端设置border的1px像素
 border-1px($color)
   position: relative
-  &::after
+  &:after
     display: block
     position: absolute
     left: 0
@@ -11,7 +11,7 @@ border-1px($color)
     content: ''
 
 border-none()
-  &::after
+  &:after
     display: none
 
 //实现网页图标自适应dpr数值来识别2x图或者3x图
