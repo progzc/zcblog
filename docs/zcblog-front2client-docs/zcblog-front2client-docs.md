@@ -1,3 +1,9 @@
+# 0 技术方案
+
+主体技术方案：**VueCli4**（webpack）+ **Vue**  + **Vuex** + **Vue Router** + **ECMAScript**（JavaScript）+ **npm** (Node.js) + **CSS/Stylus**
+
+第三方插件：[mavon-editor](https://github.com/topics/mavon-editor)（实现文档的编辑）、[tocbot](https://github.com/tscanlin/tocbot)（制作博客文档目录）、[highlight.js](https://github.com/highlightjs/highlight.js)（实现代码高亮显示）、**Valine/Github**（评论系统）
+
 # 1 字体的设置
 
 ## 1.1 字体的引入语法
@@ -11,7 +17,7 @@
 }
 ```
 
-## 1.2 字体的设置
+## 1.2 引入字体和字体图标
 
 ```css
 //引入"Josefin Sans"字体
@@ -276,7 +282,7 @@ module.exports = {
   // 配置扩展名
   configureWebpack: {
     resolve: {
-      extensions: ['.js', '.vue', '.json']
+      extensions: ['.js', '.vue', '.json'] // 默认配置
     }
   }
 }
@@ -314,7 +320,7 @@ module.exports = {
 
 ## 3.5 配置stylus全局变量 
 
-> 安装style-resources-loader：`npm i -D style-resources-loader`
+> 安装style-resources-loader：`npm i -D style-resources-loader`（等价于`npm install --dev style-resources-loader`）
 >
 > 在`vue.config.js`中配置全局变量
 >
@@ -389,3 +395,175 @@ module.exports = {
 }
 ```
 
+## 3.7 开发环境配置
+
+​		开发环境配置一般有开发环境（development）、测试环境（test）、预发服务器环境（crm）、生产环境（production）；其中基于Vue的前端项目有部分公司有test环境，有大部分是没有test环境的；预发服务器环境和生产环境基本一致。
+
+​		还有项目的开发环境是这样配置的：.env（配置基本环境）、.env.development（配置开发环境）、.env.test（配置测试环境）、.env.production（配置生产环境）。
+
+### 3.7.1 本地开发环境配置
+
+本地开发环境在`.env`文件中配置：
+
+```json
+// serve 默认的本地开发环境配置
+NODE_ENV = "development"
+BASE_URL = "./"
+// VUE_APP_PUBLIC_PATH = "./"
+// VUE_APP_API = "https://test.zcblog.com/api"
+```
+
+### 3.7.2 预发环境配置
+
+预发环境在`.env.crm`中配置：
+
+```json
+// 自定义 build 环境配置（预发服务器）
+NODE_ENV = "production"
+// BASE_URL = "https://crm.zcblog.com/"
+// VUE_APP_PUBLIC_PATH = "https://crm.oss.com/zcblog"
+// VUE_APP_API = "https://crm.zcblog.com/api"
+
+// ACCESS_KEY_ID = "xxxxxxxxxxxxx"
+// ACCESS_KEY_SECRET = "xxxxxxxxxxxxx"
+// REGION = "oss-cn-hangzhou"
+// BUCKET = "zcblog-crm"
+// PREFIX = "zc-blog
+```
+
+### 3.7.3 生产环境配置
+
+生产环境在`.env.production`中配置：
+
+```json
+// build 默认的环境配置（正式服务器）
+NODE_ENV = "production"
+// BASE_URL = "https://prod.zcblog.com/"
+// VUE_APP_PUBLIC_PATH = "https://prod.oss.com/zcblog"
+// VUE_APP_API = "https://prod.zcblog.com/api"
+
+// ACCESS_KEY_ID = "xxxxxxxxxxxxx"
+// ACCESS_KEY_SECRET = "xxxxxxxxxxxxx"
+// REGION = "oss-cn-hangzhou"
+// BUCKET = "zcblog-prod"
+// PREFIX = "zc-blog"
+```
+
+# 4 基本开发思路构建
+
+## 4.1 系统基本结构
+
+下图为博客前台系统的开发思路，对应于`route/index.js`
+
+![image-20200929204030386](zcblog-front2client-docs.assets/image-20200929204030386.png)
+
+## 4.2 数据表的结构
+
+### 4.2.1 article/tag/article_tag
+
+​		文章表/标签表/文章表与标签表的中间表的构建：
+
+![image-20200929204644788](zcblog-front2client-docs.assets/image-20200929204644788.png)
+
+# 5 项目目录
+
+
+
+# 6 引入iview UI
+
+## 6.1 全局引入
+
+- 第1步：使用npm安装iview
+
+  ```json
+  npm install view-design --save
+  ```
+
+- 第2步：在`mian.js`中进行如下配置：
+
+  ```javascript
+  import Vue from 'vue';
+  import VueRouter from 'vue-router';
+  import App from 'components/app.vue';
+  import Routers from './router.js';
+  
+  import ViewUI from 'view-design';
+  import 'view-design/dist/styles/iview.css';
+  
+  Vue.use(VueRouter);
+  Vue.use(ViewUI);
+  
+  // The routing configuration
+  const RouterConfig = {
+      routes: Routers
+  };
+  const router = new VueRouter(RouterConfig);
+  
+  new Vue({
+      el: '#app',
+      router: router,
+      render: h => h(App)
+  });
+  ```
+
+## 6.2 按需引入（推荐）
+
+​		借助插件`babel-plugin-import`可以实现按需加载组件，**减少文件体积**。
+
+- 第1步：使用npm安装iview
+
+  ```json
+  npm install view-design --save
+  ```
+
+- 第2步：安装`babel-plugin-import`插件
+
+  ```json
+  npm install babel-plugin-import --save-dev
+  ```
+
+- 第3步：在`babel.config.js`文件中配置插件
+
+  ```javascript
+  plugins: [['import', {
+    libraryName: 'view-design',
+    libraryDirectory: 'src/components'
+  }]]
+  ```
+
+- 第4步：按需引入组件（注意：需要引入`iview.css`文件）
+
+  ```javascript
+  import Vue from 'vue';
+  import VueRouter from 'vue-router';
+  import App from 'components/app.vue';
+  import Routers from './router.js';
+  // 按需引入iview
+  import { Button, Table } from 'view-design';
+  import 'view-design/dist/styles/iview.css';
+  
+  Vue.use(VueRouter);
+  // 全局注册iview(例)
+  Vue.component('Button', Button);
+  Vue.component('Table', Table);
+  
+  // The routing configuration
+  const RouterConfig = {
+      routes: Routers
+  };
+  const router = new VueRouter(RouterConfig);
+  
+  new Vue({
+      el: '#app',
+      router: router,
+      render: h => h(App)
+  });
+  ```
+
+## 6.3 Vuex与Vue.prototype
+
+**Vuex与Vue.prototype的区别：**
+
+- Vuex和Vue.prototype.xxx都可以用来定义全局变量，注册完后，分别使用$store.xxx、$xxx来访问。
+- Vuex管理的变量是响应式，若被修改，会被重新渲染到页面。
+- Vue.prototype注册的全局变量只能手动修改，不是响应式的，不会被重新渲染。
