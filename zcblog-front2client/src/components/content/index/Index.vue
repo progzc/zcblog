@@ -11,7 +11,7 @@ export default {
 }
 </script>
 
-<style lang="stylus" type="text/stylus" rel="stylesheet/stylus" scoped>
+<style lang="stylus" type="text/stylus" rel="stylesheet/stylus">
   .main-wrapper
     background-color $color-page-background
     width 100%

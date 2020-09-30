@@ -55,6 +55,7 @@ module.exports = {
       .set('components', resolve('src/components'))
       .set('network', resolve('src/network'))
       .set('views', resolve('src/views'))
+      .set('i18n', resolve('src/i18n'))
     // 为 stylus 提供全局变量
     const types = ['vue-modules', 'vue', 'normal-modules', 'normal']
     types.forEach(type =>
