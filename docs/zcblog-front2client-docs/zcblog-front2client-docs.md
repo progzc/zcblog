@@ -1,8 +1,16 @@
+# 待解决问题
+
+怎么解决Web项目的XSS和CSRF攻击？
+
+前后端进行AES（**crypto-js**） + BASE64加密？
+
 # 0 技术方案
 
-主体技术方案：**VueCli4**（webpack）+ **Vue**  + **Vuex** + **Vue Router** + **ECMAScript**（JavaScript）+ **npm** (Node.js) + **CSS/Stylus**
+> 主体技术方案：**VueCli4**（webpack）+ **Vue**  + **Vuex** + **Vue Router** + **ECMAScript**（JavaScript）+ **npm**（Node.js）+ **CSS/Stylus** + **Vue I18n**（国际化）+ **iView UI**（UI组件，有栅格模式，类似于Bootstrap，利于实现响应式布局）+ **v-viewer**（实现图片预览和简单的编辑）
 
-第三方插件：[mavon-editor](https://github.com/topics/mavon-editor)（实现文档的编辑）、[tocbot](https://github.com/tscanlin/tocbot)（制作博客文档目录）、[highlight.js](https://github.com/highlightjs/highlight.js)（实现代码高亮显示）、**Valine/Github**（评论系统）
+> 第三方插件：[mavon-editor](https://github.com/topics/mavon-editor)（实现文档转html）、[tocbot](https://github.com/tscanlin/tocbot)（制作博客文档目录）、[highlight.js](https://github.com/highlightjs/highlight.js)（实现代码高亮显示）、**Valine/Github**（评论系统）
+
+快速删除node_modules文件夹：`rimraf node_module`
 
 # 1 字体的设置
 
@@ -471,7 +479,7 @@ NODE_ENV = "production"
 
 # 6 引入iview UI
 
-## 6.1 全局引入
+## 6.1 全量引入
 
 - 第1步：使用npm安装iview
 
@@ -567,3 +575,243 @@ NODE_ENV = "production"
 - Vuex和Vue.prototype.xxx都可以用来定义全局变量，注册完后，分别使用$store.xxx、$xxx来访问。
 - Vuex管理的变量是响应式，若被修改，会被重新渲染到页面。
 - Vue.prototype注册的全局变量只能手动修改，不是响应式的，不会被重新渲染。
+
+# 7 国际化（前端UI界面）
+
+## 7.1 iView和vue-i18n的国际化
+
+### 7.1.1 iView全量引入
+
+- 第1步：根据官网给出的iView全局引入的国际化方法，在`mian.js`中进行如下配置：
+
+  ```javascript
+  // 可以兼容 vue-i18n@6.x+
+  import Vue from 'vue'
+  import App from './App.vue' // Vue挂载到实例
+  import router from './router' // Vue路由
+  import store from './store' // Vue状态管理器
+  import VueI18n from 'vue-i18n' // 导入vue-i18n
+  import messages from './i18n' // 引入自定义国际化内容
+  import 'view-design/dist/styles/iview.css' // 按需引入iView UI的样式
+  import iViewUI from 'view-design' // 全局引入
+  
+  Vue.use(VueI18n)
+  Vue.use(iViewUI) // 全局注册iView组件
+  Vue.locale = () => {} // 旨在解决兼容性问题，但是测试后发现并不能解决问题
+  
+  Vue.prototype.$Modal = iViewUI.Modal // 使用Model来在组件中测试iView的国际化问题是否已经成功
+  
+  // Create VueI18n instance with options
+  const i18n = new VueI18n({
+      locale: 'en',  // set locale
+      messages  // set locale messages
+  })
+  new Vue({
+    router,
+    store,
+    i18n,
+    render: h => h(App)
+  }).$mount('#app')
+  ```
+
+- 第2步：在组件中测试iView的国际化问题是否已经成功：
+
+  ```javascript
+  export default {
+    name: 'HomeSideBar',
+    mounted () {
+      this.$Modal.info({ title: '测试', content: '测试iView UI的国际化是否已经成功' })
+    }
+  }
+  ```
+
+  发现曝出如下错误，说明官方的指导文件是错误的。
+
+![image-20200930171418314](zcblog-front2client-docs.assets/image-20200930171418314.png)
+
+- 第3步：进行如下改动
+
+  ```javascript
+  // 将下面这句注释
+  //Vue.locale = () => {};// 旨在解决兼容性问题，但是测试后发现并不能解决问题
+  // 替换成这句
+  Vue.use(iViewUI, {
+    i18n: (key, value) => i18n.t(key, value)
+  })
+  ```
+
+  同样进行测试，发现iView UI全量引入的国际化问题已经成功：
+
+  ![image-20200930172436408](zcblog-front2client-docs.assets/image-20200930172436408.png)
+
+### 7.1.2 iView按需引入的国际化
+
+- 官网只给出了单独实现iView组件按需引入的国际化问题，对于结合vue-i18n的按需引入iView实现国际化并未给出具体解决方案，试验了几种方法找到了最终解决办法方案。
+
+```javascript
+// 可以兼容 vue-i18n@6.x+
+import Vue from 'vue'
+import App from './App.vue' // Vue挂载到实例
+import router from './router' // Vue路由
+import store from './store' // Vue状态管理器
+import VueI18n from 'vue-i18n' // 导入vue-i18n
+import messages from './i18n' // 引入自定义国际化内容
+import 'view-design/dist/styles/iview.css' // 按需引入iView UI的样式
+// 引入iview.js文件，这样才能使用iview.js中的i18n方法实现按需导入的iView组件的国际化
+import iViewUI from 'view-design/dist/iview'
+
+Vue.use(VueI18n)
+// Vue.use(iViewUI) // 全局注册iView组件
+// Vue.locale = () => {} // 旨在解决兼容性问题，但是测试后发现并不能解决问题
+
+Vue.component('iv-row', iViewUI.Row) // 按需注册组件
+Vue.prototype.$Modal = iViewUI.Modal // 使用Model来在组件中测试iView的国际化问题是否已经成功
+iViewUI.i18n((key, value) => i18n.t(key, value)) // 解决按需注册iView组件与vue-i18n引起的兼容性问题
+
+// Create VueI18n instance with options
+const i18n = new VueI18n({
+  locale: 'en', // 设置国际化语言
+  messages // 设置国际化内容
+})
+new Vue({
+  router,
+  store,
+  i18n,
+  render: h => h(App)
+}).$mount('#app')
+```
+
+> **将上面的三个重点地方单独标注出来**：
+
+```js
+// 按这种方法可以引入iview.js文件
+import iViewUI from 'view-design/dist/iview'; // 千万不要使用import iViewUI from 'view-design'这种方式
+// 按需注册组件使用下面的方法
+Vue.component('iv-row', iViewUI.Row)
+// 解决兼容性问题
+iViewUI.i18n((key, value) => i18n.t(key, value))
+```
+
+### 7.1.3 注意事项
+
+#### 7.1.3.1 一点细节
+
+> 在iView从按需引入转换到全量引入时，不要忘记调整`babel.config.js`中的内容（否则按需引入的国际化也会出错）、重启项目生效：
+
+```js
+module.exports = {
+  presets: [
+    '@vue/cli-plugin-babel/preset'
+  ],
+  plugins: [['import', { // iView按需引入时的配置
+    libraryName: 'view-design',
+    libraryDirectory: 'src/components'
+  }]]
+  // plugins: [] // iView全量引入时的配置
+}
+```
+
+#### 7.1.3.2 关于箭头函数
+
+​		在使用this.$Modal.info时遇到了一些麻烦，注意应该在挂载的vue组件下使用，而在普通函数下使用会显示this.$Modal是undefined类型，这里的关键是this的含义。（具体普通函数和箭头函数下的this的指向推荐阅读文章：[普通函数和箭头函数](https://segmentfault.com/a/1190000015480642)）
+
+## 7.2 自定义国际化内容
+
+使用vue-i18n来完成自定义国际化的内容，具体做法如下：
+
+- 第1步：自定义项目的国际化内容。
+
+  `zh-CN.js`中定义中文的国际化内容：
+
+  ```js
+  module.exports = {
+    homeNav: {
+      home: '主页',
+      tags: '标签',
+      timeline: '时光轴',
+      pseudonym: '云 岫',
+      motto: '凡是过往, 皆为序章',
+      searchPlaceholder: '搜索关键词',
+      pageView: '浏览量',
+      uniqueVisitor: '访客数',
+      gallery: '相册'
+    }
+  }
+  ```
+
+  `en-US.js`中定义英文的国际化内容：
+
+  ```js
+  module.exports = {
+    homeNav: {
+      home: 'Home',
+      tags: 'Tags',
+      timeline: 'Timeline',
+      pseudonym: 'Clouds',
+      motto: 'Where of what\'s past is prologue',
+      searchPlaceholder: 'Search keywords...',
+      pageView: 'PV',
+      uniqueVisitor: 'UV',
+      gallery: 'Gallery'
+    }
+  }
+  ```
+
+- 第2步：与iView中的国际化内容进行合并。
+
+  在`i18n/index.js`中合并自定义的国际化内容与iView的国际化内容：
+
+  ```js
+  // 按需导入iView UI国际化语言
+  import en from 'view-design/dist/locale/en-US'
+  import zh from 'view-design/dist/locale/zh-CN'
+  
+  // 导入自定义国际化内容
+  import enUS from 'i18n/lang/en-US'
+  import zhCN from 'i18n/lang/zh-CN'
+  
+  const messages = {
+    en: Object.assign(enUS, en),
+    zh: Object.assign(zhCN, zh)
+  }
+  export default messages
+  ```
+
+- 第3步：在`main.js`中进行配置，参见7.1.1或7.1.2
+
+## 7.3 国际化的使用
+
+### 7.3.1 内容引用
+
+> 使用``{{$t('可国际化内容')}}``进行引用，具体例子：`{{$t('homeNav.motto')}}`。
+
+### 7.3.2 语言切换
+
+> 在挂载的vue组件中使用`this.$i18n.locale = 'zh'`可将语言切换成中文。（千万注意this的指向）
+
+# 8 网络请求封装
+
+## 8.1 注意事项
+
+### 8.1.1 字符串拼接
+
+> ES6中进行字符串拼接使用${变量}，注意拼接时要使用反单引号（即\`），示例如下：
+
+```javascript
+示例一：
+var a = 1;
+console.log(`a的值是：${a}`); // I love ${a}, because he is handsome.a的值是：1
+示例二：
+let a='Karry Wang';
+let str=`I love ${a}, because he is handsome.`;
+//注意：这行代码是用返单号引起来的
+alert(str); // I love Karry Wang, because he is handsome.
+```
+
+### 8.1.2 XSS和CSRF攻击
+
+### 8.1.3 前后端加密
+
+### 8.1.4 AES和BASE64加密
+
+### 8.1.5 crypto-js
