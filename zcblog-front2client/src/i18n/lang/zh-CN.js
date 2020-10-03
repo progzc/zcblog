@@ -9,5 +9,9 @@ module.exports = {
     pageView: '浏览量',
     uniqueVisitor: '访客数',
     gallery: '相册'
+  },
+  language: {
+    english: '英',
+    chinese: '中'
   }
 }

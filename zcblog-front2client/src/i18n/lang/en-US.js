@@ -9,5 +9,9 @@ module.exports = {
     pageView: 'PV',
     uniqueVisitor: 'UV',
     gallery: 'Gallery'
+  },
+  language: {
+    english: 'EN',
+    chinese: 'CN'
   }
 }

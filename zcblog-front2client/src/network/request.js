@@ -1,10 +1,10 @@
 import axios from 'axios'
 
-function request (config) {
+export function request (config) { // 封装网络请求
   // 1.创建axios的示例
-  const instance = axios.create({
-    baseURL: 'http://localhost:8080',
-    timeout: 1000 * 30, // 最大延时30s
+  const instance = axios.create({ // 创建网络请求实例（若有不同配置，可以封装多个网络请求实例）
+    baseURL: process.env.OPEN_PROXY ? process.env.VUE_APP_API : process.env.BASE_URL,
+    timeout: 1000 * 10, // 最大延时10s
     withCredentials: true, // 当前请求为跨域类型时,在请求中携带cookie
     headers: {
       'Content-Type': 'application/json;charset=utf-8'
