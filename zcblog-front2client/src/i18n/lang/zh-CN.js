@@ -13,5 +13,14 @@ module.exports = {
   language: {
     english: '英',
     chinese: '中'
+  },
+  copyright: {
+    desc: '版权所有'
+  },
+  warningMessage: {
+    nullForSearch: '搜索内容为空，请重新输入'
+  },
+  successMessage: {
+    successForSearch: '开始搜索'
   }
 }

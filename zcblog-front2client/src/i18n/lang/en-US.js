@@ -13,5 +13,14 @@ module.exports = {
   language: {
     english: 'EN',
     chinese: 'CN'
+  },
+  copyright: {
+    desc: 'All Rights Reserved'
+  },
+  warningMessage: {
+    nullForSearch: 'Invalid input, please try again.'
+  },
+  successMessage: {
+    successForSearch: 'Starting to search...'
   }
 }

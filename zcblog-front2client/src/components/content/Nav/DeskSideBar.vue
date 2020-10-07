@@ -10,7 +10,7 @@
         <div class="author-motto">{{$t('homeNav.motto')}}</div>
       </div>
       <div class="blog-search">
-        <iv-input search :placeholder="searchPlaceholder" v-model="keyWord" clearable></iv-input>
+        <iv-input search :placeholder="searchPlaceholder" v-model="keyWord" clearable @on-enter="search"></iv-input>
       </div>
       <div class="side-bar-nav-menu">
         <div class="menu-item-home">
@@ -29,13 +29,18 @@
     <!--侧边栏页脚-->
     <div class="side-bar-footer">
       <div class="links">
-        <span class="iconfont github">&#xe64a;</span>
-        <span class="iconfont gitee">&#xe6d0;</span>
-        <span class="iconfont admin">&#xe6ed;</span>
-        <span class="iconfont docs">&#xe6f7;</span>
+        <a href="https://github.com/progzc/zcblog" target="_blank"><span class="iconfont github">&#xe64a;</span></a>
+        <a href="https://gitee.com/progzc" target="_blank"><span class="iconfont gitee">&#xe6d0;</span></a>
+        <a href="#" target="_blank"><span class="iconfont admin">&#xe6ed;</span></a>
+        <a href="#" target="_blank"><span class="iconfont docs">&#xe6f7;</span></a>
+        <a href="http://qhnmn5y5g.hn-bkt.clouddn.com/personal-wx.jpg" target="_blank"><span class="iconfont wx">&#xe601;</span></a>
       </div>
       <div class="copyRight">
-
+        {{$t('copyright.desc')}}<span>&copy;</span>2020-2022 by {{$t('homeNav.pseudonym')}}
+      </div>
+      <div class="site-static-info">
+        <span class="pv">{{$t('homeNav.pageView')}}:{{pv}}</span>
+        <span class="uv">{{$t('homeNav.uniqueVisitor')}}:{{uv}}</span>
       </div>
     </div>
   </div>
@@ -48,7 +53,24 @@ export default {
   data () {
     return {
       searchPlaceholder: this.$t('homeNav.searchPlaceholder'),
-      keyWord: ''
+      keyWord: '',
+      uv: '2185',
+      pv: '759'
+    }
+  },
+  mounted () {
+  },
+  methods: {
+    search () {
+      if (this.keyWord === '' || this.keyWord.length < 1) {
+        this.$Message.warning({
+          content: this.$t('warningMessage.nullForSearch')
+        })
+      } else {
+        this.$Message.success({
+          content: this.$t('successMessage.successForSearch')
+        })
+      }
     }
   }
 }
@@ -96,7 +118,7 @@ export default {
           border-color  $color-on-hover
       .side-bar-nav-menu
         padding 0.5rem 0
-        margin 0.8rem
+        margin 3rem 0.8em 0.8rem 0.8rem
         font-weight normal
         .menu-item-choose
           display inline-block
@@ -124,25 +146,42 @@ export default {
     .side-bar-footer
       .links
         text-align center
-        span
-          font-size 1.8rem
-          margin 0 10px
-        .github
-          &:hover
-            color #098DE6
-            cursor pointer
-        .gitee
-          &:hover
-            color #C71D23
-            cursor pointer
-        .admin
-          margin-left 5px
-          margin-right 5px
-          &:hover
-            color #409EFF
-            cursor pointer
-        .docs
-          &:hover
-            color #41B883
-            cursor pointer
+        a
+          color inherit
+          span
+            font-size 1.6rem
+            margin 0 10px
+          .github
+            &:hover
+              color #098DE6
+              cursor pointer
+          .gitee
+            &:hover
+              color #C71D23
+              cursor pointer
+          .admin
+            margin-left 5px
+            margin-right 5px
+            &:hover
+              color #409EFF
+              cursor pointer
+          .docs
+            &:hover
+              color #41B883
+              cursor pointer
+          .wx
+            margin-left 5px
+            &:hover
+              color #1AAD19
+              cursor pointer
+      .copyRight
+        margin 5px 0
+        text-align center
+      .site-static-info
+        margin 5px 0
+        text-align center
+        .pv
+          margin-right 15px
+        .uv
+          margin-left 15px
 </style>
