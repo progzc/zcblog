@@ -1,9 +1,3 @@
-# 待解决问题
-
-怎么解决Web项目的XSS和CSRF攻击？
-
-前后端进行AES（**crypto-js**） + BASE64加密？
-
 # 0 技术方案
 
 > 主体技术方案：**VueCli4**（webpack）+ **Vue**  + **Vuex** + **Vue Router** + **ECMAScript**（JavaScript）+ **npm**（Node.js）+ **CSS/Stylus** + **Vue I18n**（国际化）+ **iView UI**（UI组件，有栅格模式，类似于Bootstrap，利于实现响应式布局）+ **v-viewer**（实现图片预览和简单的编辑）
@@ -785,9 +779,59 @@ module.exports = {
 
 > 使用``{{$t('可国际化内容')}}``进行引用，具体例子：`{{$t('homeNav.motto')}}`。
 
+> **input标签的placeholder属性的国际化：**:placeholder="$t('homeNav.searchPlaceholder')"。
+
 ### 7.3.2 语言切换
 
-> 在挂载的vue组件中使用`this.$i18n.locale = 'zh'`可将语言切换成中文。（千万注意this的指向）
+> 全局切换（不常用）：在挂载的vue组件中使用`this.$i18n.locale = 'zh'`可将语言切换成中文。（千万注意this的指向）
+
+> **针对不同用户切换，需要解决两个问题：**
+
+- 页面刷新后，通过按钮切换的语言还原成了最初的语言，无法保存。
+
+- 同一个浏览器中新增页面时必须"记住"选择的语言。
+
+  以上问题可以使用cookie的思想来解决：
+  `main.js`中如下配置：
+
+  ```javascript
+  const i18n = new VueI18n({
+    locale: localStorage.getItem('language') || 'en', // 设置国际化语言
+    messages // 设置国际化内容
+  })
+  ```
+
+  切换语言时进行如下配置：
+
+  ```vue
+  methods: {
+      changeLanguage (flag) {
+        if (flag === false) {
+          this.$i18n.locale = 'en'
+          localStorage.setItem('language', 'en')
+        } else {
+          this.$i18n.locale = 'zh'
+          localStorage.setItem('language', 'zh')
+        }
+      }
+    }
+  ```
+
+  相关博客文章参考：**[vue项目使用vue-i18n和iView切换多语言](https://www.cnblogs.com/zhengshize/p/10002870.html)**、[使用 vue-i18n 切换中英文](https://www.cnblogs.com/rogerwu/p/7744476.html)
+
+### 7.3.3 关于**localStorage**
+
+- localStorage主要用来作为本地存储，解决cookie存储空间不足的问题（cookie中每条cookie的存储空间为4k），而localStorage中一般浏览器支持的是5M大小；
+
+- 支持IE8以上；
+
+- 目前所有的浏览器中都会把localStorage的值类型限定为string类型；
+
+- 在浏览器的隐私模式下面是不可读取；不能被爬虫抓取到；
+
+- 本质上是对字符串的读取，如果存储内容多的话会消耗内存空间，会导致页面变卡。
+
+​        相关博客文章参考：[localStorage使用总结](https://www.cnblogs.com/st-leslie/p/5617130.html)
 
 # 8 网络请求封装
 
@@ -812,9 +856,39 @@ alert(str); // I love Karry Wang, because he is handsome.
 
 在IDEA的Terminal窗口使用git将本地文件推送到Github时，每次推送都要输入账号和密码，比较繁琐，解决方法为：
 
+在该项目的.git文件夹，修改config文件：
 
+```json
+[core]
+	repositoryformatversion = 0
+	filemode = false
+	bare = false
+	logallrefupdates = true
+	symlinks = false
+	ignorecase = true
+[remote "origin"]
+	url = https://name:password@github.com/progzc/zcblog.git //在name位置配置账户名，在password位置配置密码即可
+	fetch = +refs/heads/*:refs/remotes/origin/*
+[branch "master"]
+	remote = origin
+	merge = refs/heads/master
+```
 
 ### 8.1.3 XSS和CSRF攻击
+
+#### 8.1.3.1 XSS攻击
+
+**XSS（Cross Site Scripting）**：跨站脚本攻击，恶意攻击者往 Web 页面里插入恶意 Script 代码，当用户浏览该页之时，嵌入其中 Web 里面的 Script 代码会被执行，从而达到恶意攻击用户的目的。主要类型有**Reflected XSS**、**Stored XSS**、**DOM-based or local XSS**
+
+**XSS**防御的方法：输入过滤、输出转义、使用 HttpOnly Cookie。
+
+> 本项目解决XSS攻击的方法：后端采用**Jsoup**过滤恶意脚本。
+
+#### 8.1.3.2 CSRF攻击
+
+**CSRF（Cross-site request forgery）**：跨站请求伪造，伪造请求，冒充用户在站内的正常操作。
+
+**CSRF防御的方法**：验证 HTTP Referer 字段、在请求地址中添加 token 并验证、在 HTTP 头中自定义属性并验证。
 
 ### 8.1.4 前后端加密
 
@@ -826,6 +900,226 @@ alert(str); // I love Karry Wang, because he is handsome.
 
 **实际使用**：一般是通过RSA加密AES的密钥，传输到接收方，接收方解密得到AES密钥，然后发送方和接收方用AES密钥来通信。
 
-### 8.1.5 AES和BASE64加密
+#### 8.1.4.2 前后台交互加密方式
 
-### 8.1.6 crypto-js
+CSDN上有一篇文章写得很好，[前后台交互加密方式](https://blog.csdn.net/qq_42039281/article/details/89680210)；值得一看（包括登录机制、加密方法）。
+
+### 8.1.5 crypto-js
+
+`crypto-js`是前端项目中一般用来加密的库（可以对请求参数），本项目博客前台未采用加密，博客管理前台采用cookie来保证跨域安全性。
+
+## 8.2 封装axios
+
+为了降低代码的耦合度，可以根据axios封装自己的网络请求。
+
+在`network/request.js`下进行封装：
+
+```javascript
+import axios from 'axios'
+
+function request (config) { // 封装网络请求
+  // 1.创建axios的示例
+  const instance = axios.create({ // 创建网络请求示例
+    baseURL: process.env.OPEN_PROXY ? process.env.VUE_APP_API : process.env.BASE_URL,
+    timeout: 1000 * 10, // 最大延时10s
+    withCredentials: true, // 当前请求为跨域类型时,在请求中携带cookie
+    headers: {
+      'Content-Type': 'application/json;charset=utf-8'
+    }
+  })
+
+  // 2.1 请求拦截
+  instance.interceptors.request.use(config => {
+    return config
+  }, error => {
+    console.log(error)
+  })
+
+  // 2.2 响应拦截
+  instance.interceptors.response.use(res => {
+    return res.data
+  }, error => {
+    console.log(error)
+  })
+
+  // 3.发送真正的网络请求
+  return instance(config)
+}
+```
+
+# 9 vue相关技巧
+
+## 9.1 深入理解.sync修饰符
+
+> 传统的子组件像父组件通信的方法是在子组件中使用$emit向父组件发射事件传递信息。
+
+子组件`son.vue`：
+
+```vue
+<template>
+    <div>
+        <input @input="onInput" :value="value"/>
+    </div>
+</template>
+
+<script>
+export default {
+    props: {
+        value: {
+            type: String
+        }
+    },
+    methods: {
+        onInput(e) {
+            this.$emit("valueChanged", e.target.value)
+        }
+    }
+}
+</script>
+```
+
+父组件`father.vue`：
+
+```vue
+<template>
+    <son :value="myValue" @valueChanged="e => myValue = e"></son>
+</template>
+
+<script>
+    import son from './son.vue';
+    export default {
+        components: {
+            son,
+        },
+        data() {
+            return {
+                myValue: 1234,
+            }
+        },
+    }
+</script>
+```
+
+> 采用.sync修饰符可以简化这一过程，具体方法是：
+
+1. 组件内触发的事件名称以"update:myPropName"命名，相应的上述sun组件改为 update:value。
+2. 父组件v-bind:value加上.sync修饰符，即v-bind:value.sync，这样父组件就不用再手动绑定@update:value事件了。
+
+子组件`son.vue`：
+
+```vue
+methods: {
+    onInput(e) {
+        this.$emit("update:value", e.target.value)
+    }
+}
+```
+
+父组件`father.vue`：
+
+```vue
+<son :value.sync="myValue"></son>
+```
+
+## 9.2 穿透iView组件
+
+在使用iView组件时，如果想更改iView某一个组件的样式，可以在CSS/Stylus中采用穿透iView组件的方法来改变iView的自定义样式，方法如下：
+
+1. 通过浏览器查询到所要更改的样式的选择器（Chrome浏览器是按下F12）：
+
+   ![image-20201005092129871](zcblog-front2client-docs.assets/image-20201005092129871.png)
+
+2.  根据查询到的选择器自定义样式（必须要在选择器前增加>>>），通过样式的层叠性更改默认样式：
+
+   ```stylus
+   >>>.ive-page-item
+         background-color red
+   ```
+
+3. 若自定义样式未生效，应重点检查样式的权重（终极方法是在样式后面添加`!important`将权重提高到最优先级）
+
+   ```stylus
+   >>>.ive-page-item
+         background-color red !important
+   ```
+
+## 9.3 时间线的实现
+
+### 9.3.1 时间线的背景
+
+> 在使用时间线展示文章列表时，需要按照年份（从今往前排列）分类展示文章写作情况（包括文章创建时间、文章标题），并按照分页展示。
+
+![image-20201005172740546](zcblog-front2client-docs.assets/image-20201005172740546.png)
+
+### 9.3.2 时间线的实现思路
+
+> 思路：
+
+1. 先将页面需要的数据用ajax查询出的后台结果封装到一个对象articleListByDate中。
+   - articleListByDate对象包含创建日期（例`createTime："2020-10-01"`）、文章标题（例`articleTitle:"Java数字签名算法"`）、文章总数（例`total`）；
+   - 从数据库中查询到的数据要按照降序排列**（第一排序：日期；第二排序：文章标题按照字典顺序排列）**；
+   - 由于文章可能太多，要求进行分页展示，每页展示45条数据。
+
+2. 实现算法：
+
+   - 第1步：在工具类中，实现一个快速查询当前日期是否存在的方法；
+
+     - 创建一个js的dateMap集合（实现javad中类似HashMap的功能）
+     - 实现DateMap集合的快速查询功能
+
+   - 第2步：进行第一页的展示（**使用v-for循环**）；
+
+     - 从数据库中取出前45条数据，放到articleListByDate集合中；
+
+     - 创建一个dateMap集合，将articleListByDate集合中的第一条数据取出，将其createTime属性取出；
+
+     - 判断dateMap集合是否为空，若为空，则直接将create属性放置到dateMap集合中，若不为空，则将dateMap集合置为空后再将create属性放置到dateMap集合中；
+
+     - 创建第1个日期（年）标签，展示第1条数据（月-日 文章标题）标签；
+
+     - 判断第2条数据中的日期在dateMap集合中是否存在：
+
+       - 若存在，则直接将第2条数据（月-日 文章标题）标签（**使用v-if使（年）标签隐藏**，不要使用v-show标签）；
+
+       - 若不存在，则先将第2条数据的create属性放置到dateMap集合中，然后创建第2个日期（年）标签，展示第2条数据（月-日 文章标题）标签；
+
+     - ......循环判断，直到第一页的45条数据已经处理完。
+     - 最后，清空dateMap集合
+
+    - 第3步：更新当前页的页码，进行第2页的数据展示。
+   
+   - 第4步：相关样式的编辑。
+
+## 9.4 使用v-if/v-show控制分页
+
+> 背景：在页面设计中经常需要进行分页，为了提高用户体验，当页面显示项小于单页允许项的数量时，需要隐藏分页条，反之需要显示分页条。
+
+解决方法：若需要频繁切换显示与隐藏，使用v-show；反之使用v-if。
+
+```vue
+<template>
+    <div class="tag-timeline-page-container" v-if="checkPage()">
+      <iv-page
+        class-name="tag-timeline-pagination"
+        :total="pagination.total"
+        :current="pagination.currentPage"
+        :pageSize="pagination.pageSize"  >
+        @on-change="handleCurrentChange"
+      </iv-page>
+    </div>
+</template>
+<script type="text/ecmascript-6">
+import HashMap from 'common/js/HashMap'
+import TimeLine from 'components/content/TimeLine'
+
+export default {
+  methods: {
+    checkPage () {
+      return this.tagTimelineList.articleTimelineList.length > this.pagination.pageSize
+    }
+  }
+}
+</script>
+```
+
+> 注意事项：`v-if="checkPage()"`写成`v-if="checkPage"`不会生效。
