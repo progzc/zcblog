@@ -15,8 +15,8 @@ export default [
         path: '/',
         name: 'index',
         components: {
-          sideBar: HomeSideBar
-          // content: ArticleAbstractList
+          sideBar: HomeSideBar,
+          content: ArticleAbstractList
         },
         meta: {
           title: '首页'

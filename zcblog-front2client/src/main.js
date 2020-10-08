@@ -27,7 +27,7 @@ Vue.prototype.$Notice.config({
 
 Vue.use(VueI18n) // 全局注册vue-i18n
 const i18n = new VueI18n({
-  locale: 'en', // 设置国际化语言
+  locale: localStorage.getItem('language') || 'en', // 设置国际化语言
   messages // 设置国际化内容
 })
 iViewUI.i18n((key, value) => i18n.t(key, value))

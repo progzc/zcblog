@@ -22,12 +22,12 @@
             <span class="iconfont">&#xe891;</span>{{$t('homeNav.gallery')}}
           </li>
           <li class="menu-item-search">
-            <span class="iconfont">&#xe504;</span>
-            <input class="mobile-search" :placeholder="searchPlaceholder" v-model="keyWord" />
+            <span class="iconfont">&#xe505;</span>
+            <input class="mobile-search" :placeholder="$t('homeNav.searchPlaceholder')" v-model="keyWord" />
             <div class="site-language">
               <iv-switch class="mobile-switch" size="large" @on-change="changeLanguage" true-color="forestgreen">
-                <span slot="open">{{$t('language.english')}}</span>
-                <span slot="close">{{$t('language.chinese')}}</span>
+                <span slot="open">{{$t('language.chinese')}}</span>
+                <span slot="close">{{$t('language.english')}}</span>
               </iv-switch>
             </div>
           </li>
@@ -43,18 +43,17 @@ export default {
   data () {
     return {
       show: false,
-      searchPlaceholder: this.$t('homeNav.searchPlaceholder'),
       keyWord: ''
     }
   },
   methods: {
     changeLanguage (flag) {
-      if (flag === true) {
+      if (flag === false) {
         this.$i18n.locale = 'en'
-        this.searchPlaceholder = this.$t('homeNav.searchPlaceholder')
+        localStorage.setItem('language', 'en')
       } else {
         this.$i18n.locale = 'zh'
-        this.searchPlaceholder = this.$t('homeNav.searchPlaceholder')
+        localStorage.setItem('language', 'zh')
       }
     }
   }
@@ -71,17 +70,19 @@ export default {
       margin-bottom 10px
       padding 10px
       .site-brand-wrapper
-        font normal 700 18px $body-font
+        font normal 700 1.75rem $body-font
         text-align center
-        line-height 24px
-        height 24px
+        line-height 2.2rem
+        height 2.2rem
+        color black
         .site-nav-toggle
           float left
           padding 0 5px
           &:hover
             cursor pointer
         .site-title
-          color black
+          font-weight 400
+          border-bottom 1px solid $color-border
     .site-nav
       border-top 1px solid $color-border
       ul li
