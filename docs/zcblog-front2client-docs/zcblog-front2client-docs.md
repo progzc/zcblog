@@ -833,6 +833,86 @@ module.exports = {
 
 ​        相关博客文章参考：[localStorage使用总结](https://www.cnblogs.com/st-leslie/p/5617130.html)
 
+### 7.3.4 网页title的国际化
+
+> 解决办法：
+
+- 网页title随页面的变化可以在路由守卫中进行动态设置。
+
+- 网页title的国际化可以使用i18n的t()方法进行设置。
+
+> 具体步骤如下：
+
+- 第1步：在`main.js`中全局注册i18n
+
+  ```js
+  Vue.use(VueI18n) // 全局注册vue-i18n
+  const i18n = new VueI18n({
+    locale: localStorage.getItem('language') || 'en', // 设置国际化语言
+    messages // 设置国际化内容
+  })
+  Vue.prototype.i18n = i18n // 为将路由中的title国际化，配置全局i18n
+  iViewUI.i18n((key, value) => i18n.t(key, value))
+  ```
+
+- 第2步：在`en-US.js`、`zh-CN.js`中配置国际化项
+
+  ```javascript
+  // en-US.js
+  module.exports = {
+    metaTitle: {
+      index: 'Home | Clouds'
+    }
+  }
+  // zh-CN.js
+  module.exports = {
+    metaTitle: {
+      index: '首页 | 云岫'
+    }
+  }
+  ```
+
+- 第3步：在`routes.js`中配置页面title
+
+  ```javascript
+  export default [
+    {
+      path: '/',
+      component: Index,
+      children: [
+        {
+          path: '/',
+          name: 'index',
+          components: {
+            sideBar: HomeSideBar,
+            content: ArticleAbstractList
+          },
+          meta: {
+            title: 'metaTitle.index'
+          }
+        }
+      ]
+    }
+  ]
+  ```
+
+  
+
+- 第4步：在`router/index.js`中利用路由守卫动态更新title
+
+  ```java
+  router.beforeEach((to, from, next) => {
+    LoadingBar.start()
+    window.scrollTo(0, 0)
+    if (to.meta.title) {
+      document.title = Vue.prototype.i18n.t(to.meta.title) // 这里是配置的关键
+    }
+    next()
+  })
+  ```
+
+  
+
 # 8 网络请求封装
 
 ## 8.1 注意事项
@@ -1021,9 +1101,11 @@ methods: {
 <son :value.sync="myValue"></son>
 ```
 
-## 9.2 穿透iView组件
+## 9.2 穿透组件
 
-在使用iView组件时，如果想更改iView某一个组件的样式，可以在CSS/Stylus中采用穿透iView组件的方法来改变iView的自定义样式，方法如下：
+### 9.2.1 穿透iView组件
+
+> 在使用iView组件时，如果想更改iView某一个组件的样式，可以在CSS/Stylus中采用穿透iView组件的方法来改变iView的自定义样式，方法如下：
 
 1. 通过浏览器查询到所要更改的样式的选择器（Chrome浏览器是按下F12）：
 
@@ -1042,6 +1124,22 @@ methods: {
    >>>.ive-page-item
          background-color red !important
    ```
+
+### 9.2.2 穿透自定义组件
+
+> `>>>`除了可以穿透UI框架组件的样式，还可以穿透自定义组件的样式（即使在vue的样式中定义了scoped属性），利用这一特性，可以使自定义组件在不同组件间使用时的呈现出不一致的样式，这在某些情况下可能会很有用。
+
+例如：`ArticleAbstractList.vue`需要在屏幕尺寸小于576px时，其引入的`content-box.vue`组件的.content-container的宽度为100%，而在其他组件中需要在屏幕尺寸小于576px时，其引入的`content-box.vue`组件的.content-container的宽度为95%，可以在`ArticleAbstractList.vue`采用如下配置：
+
+```stylus
+@media screen and (max-width: $size-sm)
+  .article-abstract-page-container
+    margin-bottom 100px
+  .article-abstract-item:last-of-type
+    margin-bottom $footer-height-pageContent + 150px !important
+  >>>.content-container // 穿透自定义组件
+   width 100% !important
+```
 
 ## 9.3 时间线的实现
 
@@ -1123,3 +1221,4 @@ export default {
 ```
 
 > 注意事项：`v-if="checkPage()"`写成`v-if="checkPage"`不会生效。
+
