@@ -57,7 +57,7 @@ export default {
     .item
       .item-year
         margin 0.9rem 0 0.9rem 1rem
-        font-weight bold
+        font-weight 400
         font-size 1.2rem
         color $color-on-hover
         .iconfont
@@ -67,21 +67,23 @@ export default {
         margin 0 0 0 1.6rem
         height 1.8rem
         line-height 1.8rem
+        font-weight 400
         border-left 1px solid $color-border
         &:before
           content '\e605'
           position absolute
           z-index 10
-          left -10px
+          left -9.5px
           top -1px
           font-size 18px
           font-family 'iconfont' !important
-          opacity 0.7
+          opacity 0.65
         &:hover
           color $color-timeline-checked
           cursor pointer
           opacity 1
-          font-weight bold
+          font-weight 500
+          font-size 15px
           transition-duration 0.2s
           transition-timing-function ease-in-out
           transition-delay 0s
@@ -91,7 +93,6 @@ export default {
         .item-title
           position absolute
           left 5rem
-
   @media screen and (max-width: $size-sm)
     .item-title
       overflow hidden

@@ -1,29 +1,33 @@
 <template>
-  <div class="article-timeline">
-    <header class="article-timeline-header"></header>
-    <div class="article-timeline-container">
-      <time-line :itemList="articleTimelineList" :temp="temp" @linkToArticle="handleToArticle"></time-line>
+  <content-box>
+    <div class="article-timeline-container" slot="container">
+      <!--文章时间线内容-->
+      <div class="article-timeline-item">
+        <time-line :itemList="articleTimelineList" :temp="temp" @linkToArticle="handleToArticle"></time-line>
+      </div>
+      <!--页码-->
+      <div class="article-timeline-page-container" v-if="checkPage()">
+        <iv-page
+          class-name="article-timeline-pagination"
+          :total="pagination.total"
+          :current="pagination.currentPage"
+          :pageSize="pagination.pageSize"  >
+          @on-change="handleCurrentChange"
+        </iv-page>
+      </div>
     </div>
-    <div class="article-timeline-page-container" v-if="checkPage()">
-      <iv-page
-        class-name="article-timeline-pagination"
-        :total="pagination.total"
-        :current="pagination.currentPage"
-        :pageSize="pagination.pageSize"  >
-        @on-change="handleCurrentChange"
-      </iv-page>
-    </div>
-    <footer class="article-timeline-footer"></footer>
-  </div>
+  </content-box>
 </template>
 
 <script type="text/ecmascript-6">
+import ContentBox from 'components/content/ContentBox'
 import HashMap from 'common/js/HashMap'
 import TimeLine from 'components/content/TimeLine'
 
 export default {
   name: 'ArticleTimeLine',
   components: {
+    'content-box': ContentBox,
     'time-line': TimeLine
   },
   data () {
@@ -118,19 +122,16 @@ export default {
 
 <style lang="stylus" type="text/stylus" rel="stylesheet/stylus" scoped>
   @import '~common/stylus/index.styl'
-  .article-timeline
-    .article-timeline-header
-      display block
-      height $header-height-pageContent
-    .article-timeline-container
+  .article-timeline-container
+    .article-timeline-item
       overflow hidden
       padding 1rem 1rem 1rem 1rem
       margin 0 auto
-      width 75%
+      margin-bottom $footer-height-pageContent
       border-radius 6px
       background-color $color-content-background
     .article-timeline-page-container
-      padding 50px 0 50px 0
+      padding 20px 0 80px 0
       height 1.5rem
       line-height 1.5rem
       text-align center
@@ -156,7 +157,7 @@ export default {
           border none !important
           border-radius 0 !important
           background none !important
-    .article-timeline-footer
-      display block
-      height $footer-height-pageContent
+  @media screen and (max-width: $size-sm)
+    .article-timeline-page-container
+      margin-bottom 100px
 </style>

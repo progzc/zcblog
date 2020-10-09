@@ -10,6 +10,11 @@ module.exports = {
     uniqueVisitor: '访客数',
     gallery: '相册'
   },
+  metaTitle: {
+    index: '首页 | 云岫',
+    timeline: '时光轴 | 云岫',
+    tags: '标签 | 云岫'
+  },
   language: {
     english: '英',
     chinese: '中'

@@ -1,19 +1,22 @@
 <template>
-  <div class="tag-list">
-    <header class="tag-header"></header>
-    <div class="tag-container">
-        <div class="tag-item" v-for="tag in tagList" :key="tag.id">
-          <div class="tag-group">
-            <span class="iconfont">&#xe655;</span>{{tag.name}}
-          </div>
+  <content-box>
+    <div class="tag-container" slot="container">
+      <div class="tag-item" v-for="tag in tagList" :key="tag.id">
+        <div class="tag-group">
+          <span class="iconfont">&#xe655;</span>{{tag.name}}
         </div>
+      </div>
     </div>
-  </div>
+  </content-box>
 </template>
 
 <script type="text/ecmascript-6">
+import ContentBox from 'components/content/ContentBox'
 export default {
   name: 'TagList',
+  components: {
+    'content-box': ContentBox
+  },
   data () {
     return {
       tagList: [
@@ -44,40 +47,37 @@ export default {
 </script>
 
 <style lang="stylus" type="text/stylus" rel="stylesheet/stylus" scoped>
-  .tag-list
-    .tag-header
-      display block
-      height $header-height-pageContent
-    .tag-container
-      overflow hidden
-      margin 0 auto
-      padding 1.5rem 0 1.5rem 3rem
-      width 75%
-      border-radius 6px
-      background-color $color-content-background
-      .tag-item
+  .tag-container
+    padding 1.5rem 0 1.5rem 3rem
+    border-radius 6px
+    background-color $color-content-background
+    .tag-item
+      display inline-block
+      margin 8px 0 8px 0
+      width 20%
+      .tag-group
         display inline-block
-        margin 8px 0 8px 0
-        width 20%
-        .tag-group
-          display inline-block
-          opacity 0.8
-          font-weight 400
-          &:hover
-            color $color-on-hover
-            cursor pointer
-          span
-            margin-right 5px
-  @media screen and (min-width: 1600px)
+        opacity 0.75
+        font-weight 400
+        &:hover
+          color $color-on-hover
+          cursor pointer
+        span
+          margin-right 5px
+          color $color-on-hover
+  @media screen and (min-width: $size-xxl)
     .tag-item
       width 10% !important
-  @media screen and (max-width: 1200px)
+  @media screen and (max-width: $size-xl)
     .tag-item
       width 25% !important
-  @media screen and (max-width: 992px)
+  @media screen and (max-width: $size-lg)
     .tag-item
       width 33% !important
-  @media screen and (max-width: 768px)
+  @media screen and (max-width: $size-md)
     .tag-item
       width 50% !important
+  @media screen and (max-width: $size-sm)
+    .tag-container
+      margin-bottom 200px
 </style>

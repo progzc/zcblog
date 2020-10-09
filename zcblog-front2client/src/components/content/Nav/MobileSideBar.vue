@@ -10,16 +10,16 @@
       <div class="site-nav" v-show="show">
         <ul class="menu">
           <li class="menu-item-home">
-            <span class="iconfont">&#xe501;</span>{{$t('homeNav.home')}}
+            <a href="/"><span class="iconfont">&#xe501;</span>{{$t('homeNav.home')}}</a>
           </li>
           <li class="menu-item-tags">
-            <span class="iconfont">&#xe613;</span>{{$t('homeNav.tags')}}
+            <a href="/tags"><span class="iconfont">&#xe613;</span>{{$t('homeNav.tags')}}</a>
           </li>
           <li class="menu-item-timeline">
-            <span class="iconfont">&#xe7e3;</span>{{$t('homeNav.timeline')}}
+            <a href="/timeline"><span class="iconfont">&#xe7e3;</span>{{$t('homeNav.timeline')}}</a>
           </li>
           <li class="menu-item-gallery">
-            <span class="iconfont">&#xe891;</span>{{$t('homeNav.gallery')}}
+            <a href="#"><span class="iconfont">&#xe891;</span>{{$t('homeNav.gallery')}}</a>
           </li>
           <li class="menu-item-search">
             <span class="iconfont">&#xe505;</span>
@@ -70,7 +70,7 @@ export default {
       margin-bottom 10px
       padding 10px
       .site-brand-wrapper
-        font normal 700 1.75rem $body-font
+        font normal 700 1.4rem $body-font
         text-align center
         line-height 2.2rem
         height 2.2rem
@@ -91,6 +91,9 @@ export default {
         list-style none
         line-height 24
         font normal 400 16px $body-font
+        &>a
+          text-decoration none
+          color black
         &:hover
           color $color-on-hover
           cursor pointer

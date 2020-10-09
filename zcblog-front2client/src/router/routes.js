@@ -5,6 +5,8 @@ const HomeSideBar = () => import('views/HomeSideBar')
 
 // 首页（懒加载）
 const ArticleAbstractList = () => import('views/ArticleAbstractList')
+const ArticleTimeLine = () => import('views/ArticleTimeLine')
+const TagList = () => import('views/TagList')
 
 export default [
   {
@@ -19,7 +21,29 @@ export default [
           content: ArticleAbstractList
         },
         meta: {
-          title: '首页'
+          title: 'metaTitle.index'
+        }
+      },
+      {
+        path: '/timeline',
+        name: 'timeline',
+        components: {
+          sideBar: HomeSideBar,
+          content: ArticleTimeLine
+        },
+        meta: {
+          title: 'metaTitle.timeline'
+        }
+      },
+      {
+        path: '/tags',
+        name: 'tags',
+        components: {
+          sideBar: HomeSideBar,
+          content: TagList
+        },
+        meta: {
+          title: 'metaTitle.tags'
         }
       }
     ]

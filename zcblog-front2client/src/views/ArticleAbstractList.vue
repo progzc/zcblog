@@ -1,8 +1,8 @@
 <template>
-  <div class="article-abstract-list">
-    <header class="article-abstract-header"></header>
-    <div class="article-abstract-container">
-      <div class="article-abstract-item" v-for="article in articleList" :key="article.id">
+  <content-box>
+    <div class="article-abstract-container" slot="container">
+      <!--文章摘要内容-->
+      <div class="article-abstract-item" v-for="article in articleAbstractList" :key="article.id">
         <h1><a href="javascript:void(0);" @click="handleToArticle(article.id)">{{article.title}}</a></h1>
         <div class="article-abstract-info">
           <div class="edit-time-group"><span class="iconfont">&#xe503;</span>{{article.createTime}}</div>
@@ -14,28 +14,27 @@
         </div>
         <p>{{article.description}}</p>
       </div>
+      <!--页码-->
+      <div class="article-abstract-page-container" v-if="checkPage()">
+        <iv-page
+          class-name="article-abstract-pagination"
+          :total="pagination.total"
+          :current="pagination.currentPage"
+          :pageSize="pagination.pageSize"  >
+          @on-change="handleCurrentChange"
+        </iv-page>
+      </div>
     </div>
-    <div class="article-page-container">
-      <iv-page
-        class-name="article-pagination"
-        :total="pagination.total"
-        :current="pagination.currentPage"
-        :pageSize="pagination.pageSize"  >
-        @on-change="handleCurrentChange"
-      </iv-page>
-    </div>
-    <div class="article-site-footer">
-      <site-footer></site-footer>
-    </div>
-  </div>
+  </content-box>
 </template>
 
 <script type="text/ecmascript-6">
-import SiteFooter from 'components/content/SiteFooter'
+import ContentBox from 'components/content/ContentBox'
+
 export default {
   name: 'ArticleAbstractList',
   components: {
-    'site-footer': SiteFooter
+    'content-box': ContentBox
   },
   data () {
     return {
@@ -44,7 +43,7 @@ export default {
         currentPage: 1,
         pageSize: 10
       },
-      articleList: [
+      articleAbstractList: [
         {
           id: 0,
           title: 'Spring Batch异常处理',
@@ -148,6 +147,9 @@ export default {
     this.findPage()
   },
   methods: {
+    checkPage () {
+      return this.articleAbstractList.length < this.pagination.pageSize
+    },
     handleCurrentChange (currentPage) {
       this.pagination.currentPage = currentPage
       this.findPage()
@@ -169,72 +171,70 @@ export default {
 
 <style lang="stylus" type="text/stylus" rel="stylesheet/stylus" scoped>
   @import '~common/stylus/index.styl'
-  .article-abstract-list
-    position relative
-    left 20%
-    background $color-page-background
-    width 80%
-    .article-abstract-header
+  .article-abstract-container
+    .article-abstract-item
       display block
-      height $header-height-pageContent
-    .article-abstract-container
-      overflow hidden
-      margin 0 auto
-      width 75%
-      .article-abstract-item
-        display block
-        padding 1.5rem 2rem 1.5rem 2rem
-        margin-top 40px
-        border-radius 6px
-        background-color $color-content-background
-        &:first-of-type
-          margin-top 0
-        h1>a
-          height 1.6rem
-          line-height 1.6rem
-          text-align left
-          font-size 1rem
-          font-weight normal
+      padding 1rem 1rem 1rem 1rem
+      /*margin-top 40px*/
+      margin 40px 10px 0 10px
+      border-radius 6px
+      background-color $color-content-background
+      &:hover
+        -webkit-box-shadow 0 0 10px rgba(0,0,0,.3)
+        -moz-box-shadow 0 0 10px rgba(0,0,0,.3)
+        box-shadow 0 0 10px rgba(0,0,0,.3)
+      &:first-of-type
+        margin-top 10px
+      &:last-of-type
+        margin-bottom $footer-height-pageContent + 10px
+      h1>a
+        height 1.6rem
+        line-height 1.6rem
+        text-align left
+        font-size 18px
+        font-weight 400
+        &:hover
+          color $color-on-hover
+          cursor pointer
+      .article-abstract-info
+        overflow hidden
+        font-weight 400
+        opacity 0.6
+        &>div
           &:hover
             color $color-on-hover
             cursor pointer
-        .article-abstract-info
-          overflow hidden
-          font-weight 400
-          opacity 0.6
-          &>div
-            &:hover
-              color $color-on-hover
-              cursor pointer
-            .iconfont
-              margin-right 5px
-          .edit-time-group
-            float left
-            margin 5px 10px 5px 0
-          .left-separator
-            float left
-            margin 5px 0
-          .update-time-group
-            float left
-            margin 5px 0 5px 10px
-          .like-num-group
-            float right
-            margin 5px 10px 5px 0
-          .right-separator
-            float right
-            margin 5px 0
-          .read-num-group
-            float right
-            margin 5px 10px 5px 10px
-        p
-          text-indent 2em
-          line-height 1.8em
-    .article-page-container
+          .iconfont
+            margin-right 5px
+        .edit-time-group
+          float left
+          margin 5px 10px 5px 0
+        .left-separator
+          float left
+          margin 5px 0
+        .update-time-group
+          float left
+          margin 5px 0 5px 10px
+        .like-num-group
+          float right
+          margin 5px 10px 5px 0
+        .right-separator
+          float right
+          margin 5px 0
+        .read-num-group
+          float right
+          margin 5px 10px 5px 10px
+      p
+        font-weight 400
+        font-size 14px
+        text-indent 1.8em
+        line-height 1.8em
+    .article-abstract-page-container
       padding 50px 0 80px 0
       height 1.5rem
       line-height 1.5rem
       text-align center
-      .article-pagination
+      .article-abstract-pagination
         >>>.ivu-page-item
           width 20px !important
           min-width 20px !important
@@ -256,24 +256,14 @@ export default {
           border none !important
           border-radius 0 !important
           background none !important
-    .article-site-footer
-      display none
   @media screen and (max-width: $size-md)
     .read-num-group, .right-separator, .like-num-group
       display none !important
   @media screen and (max-width: $size-sm)
-    .article-abstract-list
-      position relative
-      left 0
-      width 100%
-      background $color-page-background
-      .article-abstract-header
-        display block
-        height 0
-      .article-abstract-container
-        overflow hidden
-        margin 0 auto
-        width 95%
-      .article-site-footer
-        display block
+    .article-abstract-page-container
+      margin-bottom 100px
+    .article-abstract-item:last-of-type
+      margin-bottom $footer-height-pageContent + 150px !important
+    >>>.content-container
+      width 100% !important
 </style>

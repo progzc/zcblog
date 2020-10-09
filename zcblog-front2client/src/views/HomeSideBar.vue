@@ -40,6 +40,18 @@ export default {
       background $color-page-background
       width 20%
       border-right 1px solid $color-border
+      #site-footer
+        position absolute
+        left 50%
+        width 100%
+        margin-left -50%
+        bottom 10px
+  @media screen and (max-width: $size-xl )
+    #side-bar-footer
+      width 25% !important
+  @media screen and (max-width: $size-lg )
+    #side-bar-footer
+      width 30% !important
   @media screen and (max-width: $size-sm)
     #side-bar-footer
       display none !important

@@ -14,15 +14,15 @@
       </div>
       <div class="side-bar-nav-menu">
         <div class="menu-item-home">
-          <div class="menu-item-choose"><span class="iconfont">&#xe501;</span>{{$t('homeNav.home')}}</div>
+          <a class="menu-item-choose" href="/"><span class="iconfont">&#xe501;</span>{{$t('homeNav.home')}}</a>
         </div>
         <div class="menu-item-gallery">
-          <div class="menu-item-choose"><span class="iconfont">&#xe891;</span>{{$t('homeNav.gallery')}}</div>
+          <a class="menu-item-choose" href="#"><span class="iconfont">&#xe891;</span>{{$t('homeNav.gallery')}}</a>
         </div>
         <div class="menu-item-mix">
-          <div class="menu-item-timeline"><span class="iconfont">&#xe7e3;</span>{{$t('homeNav.timeline')}}</div>
+          <a class="menu-item-timeline" href="/timeline"><span class="iconfont">&#xe7e3;</span>{{$t('homeNav.timeline')}}</a>
           <span class="separator"></span>
-          <div class="menu-item-tags"><span class="iconfont">&#xe613;</span>{{$t('homeNav.tags')}}</div>
+          <a class="menu-item-tags" href="/tags"><span class="iconfont">&#xe613;</span>{{$t('homeNav.tags')}}</a>
         </div>
       </div>
     </div>
@@ -101,6 +101,8 @@ export default {
         font-weight normal
         .menu-item-choose
           display inline-block
+          color $color-font-content
+          text-decoration none
           &:hover
             color $color-on-hover
             cursor pointer
@@ -111,6 +113,8 @@ export default {
           margin 4rem 0 1rem 0
           .menu-item-timeline
             display inline-block
+            color $color-font-content
+            text-decoration none
             &:hover
               color $color-on-hover
               cursor pointer
@@ -119,6 +123,8 @@ export default {
             border-right 1px solid $color-gradually-gray-71
           .menu-item-tags
             display inline-block
+            color $color-font-content
+            text-decoration none
             &:hover
               color $color-on-hover
               cursor pointer

@@ -10,6 +10,11 @@ module.exports = {
     uniqueVisitor: 'UV',
     gallery: 'Gallery'
   },
+  metaTitle: {
+    index: 'Home | Clouds',
+    timeline: 'Timeline | Clouds',
+    tags: 'Tags | Clouds'
+  },
   language: {
     english: 'EN',
     chinese: 'CN'
