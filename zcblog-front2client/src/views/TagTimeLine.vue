@@ -1,31 +1,35 @@
 <template>
-  <div class="tag-timeline">
-    <header class="tag-timeline-header"></header>
-    <div class="tag-timeline-container">
-      <time-line :itemList="tagTimelineList.articleTimelineList" :temp="temp" @linkToArticle="handleToArticle">
-        <div class="tag-name" slot="title">{{tagTimelineList.name}}</div>
-      </time-line>
+  <content-box>
+    <div class="tag-timeline-container" slot="container">
+      <!--指定标题类文章时间线内容-->
+      <div class="tag-timeline-item">
+        <time-line :itemList="tagTimelineList.articleTimelineList" :temp="temp" @linkToArticle="handleToArticle">
+          <div class="tag-name" slot="title">{{tagTimelineList.name}}</div>
+        </time-line>
+      </div>
+      <!--页码-->
+      <div class="tag-timeline-page-container" v-if="checkPage()">
+        <iv-page
+          class-name="tag-timeline-pagination"
+          :total="pagination.total"
+          :current="pagination.currentPage"
+          :pageSize="pagination.pageSize"  >
+          @on-change="handleCurrentChange"
+        </iv-page>
+      </div>
     </div>
-    <div class="tag-timeline-page-container" v-if="checkPage()">
-      <iv-page
-        class-name="tag-timeline-pagination"
-        :total="pagination.total"
-        :current="pagination.currentPage"
-        :pageSize="pagination.pageSize"  >
-        @on-change="handleCurrentChange"
-      </iv-page>
-    </div>
-    <footer class="tag-timeline-footer"></footer>
-  </div>
+  </content-box>
 </template>
 
 <script type="text/ecmascript-6">
+import ContentBox from 'components/content/ContentBox'
 import HashMap from 'common/js/HashMap'
 import TimeLine from 'components/content/TimeLine'
 
 export default {
   name: 'TagTimeLine',
   components: {
+    'content-box': ContentBox,
     'time-line': TimeLine
   },
   data () {
@@ -123,15 +127,12 @@ export default {
 
 <style lang="stylus" type="text/stylus" rel="stylesheet/stylus" scoped>
   @import '~common/stylus/index.styl'
-  .tag-timeline
-    .tag-timeline-header
-      display block
-      height $header-height-pageContent
-    .tag-timeline-container
+  .tag-timeline-container
+    .tag-timeline-item
       overflow hidden
       padding 1rem 1rem 1rem 1rem
       margin 0 auto
-      width 75%
+      margin-bottom $footer-height-pageContent
       border-radius 6px
       background-color $color-content-background
       .tag-name
@@ -141,7 +142,7 @@ export default {
         font-weight bold
         text-align center
     .tag-timeline-page-container
-      padding 50px 0 50px 0
+      padding 20px 0 80px 0
       height 1.5rem
       line-height 1.5rem
       text-align center
@@ -167,7 +168,4 @@ export default {
           border none !important
           border-radius 0 !important
           background none !important
-    .tag-timeline-footer
-      display block
-      height $footer-height-pageContent
 </style>

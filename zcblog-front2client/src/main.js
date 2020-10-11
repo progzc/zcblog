@@ -16,6 +16,7 @@ Vue.component('iv-icon', iViewUI.Icon)
 Vue.component('iv-affix', iViewUI.Affix)
 Vue.component('iv-input', iViewUI.Input)
 Vue.component('iv-switch', iViewUI.Switch)
+Vue.component('iv-tag', iViewUI.Tag)
 // 注册全局变量（非响应式）
 Vue.prototype.$Message = iViewUI.Message // 信息提示
 Vue.prototype.$Notice = iViewUI.Notice // 通知提醒

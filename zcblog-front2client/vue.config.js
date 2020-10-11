@@ -11,7 +11,7 @@ const addStylusResource = rule => {
 }
 
 module.exports = {
-  publicPath: IS_PROD ? process.env.VUE_APP_PUBLIC_PATH : './', // 默认'/'，部署应用包时的基本 URL
+  publicPath: IS_PROD ? process.env.VUE_APP_PUBLIC_PATH : '/', // 默认'/'，部署应用包时的基本 URL
   outputDir: 'dist', // 默认值,生产环境构建文件的目录
   assetsDir: '', // 默认值,放置生成的静态资源(js、css、img、fonts)的(相对于outputDir的)目录
   lintOnSave: false, // 不会将lint错误输出为编译警告,即有不符合lint语法时，也会编译成功

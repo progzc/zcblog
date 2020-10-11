@@ -8,12 +8,18 @@ module.exports = {
     searchPlaceholder: 'Search keywords...',
     pageView: 'PV',
     uniqueVisitor: 'UV',
-    gallery: 'Gallery'
+    gallery: 'Gallery',
+    content: 'Contents',
+    sitePreview: 'Site Preview',
+    toTop: 'Top',
+    seeMore: 'See More'
   },
   metaTitle: {
     index: 'Home | Clouds',
     timeline: 'Timeline | Clouds',
-    tags: 'Tags | Clouds'
+    tags: 'Tags | Clouds',
+    tag: 'Tag | Clouds',
+    article: 'Article | Clouds'
   },
   language: {
     english: 'EN',

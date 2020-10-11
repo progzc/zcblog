@@ -8,12 +8,18 @@ module.exports = {
     searchPlaceholder: '搜索关键词',
     pageView: '浏览量',
     uniqueVisitor: '访客数',
-    gallery: '相册'
+    gallery: '相册',
+    content: '目录',
+    sitePreview: '站点导航',
+    toTop: '置顶',
+    seeMore: '查看原文'
   },
   metaTitle: {
     index: '首页 | 云岫',
     timeline: '时光轴 | 云岫',
-    tags: '标签 | 云岫'
+    tags: '标签云 | 云岫',
+    tag: '标签 | 云岫',
+    article: '文章 | 云岫'
   },
   language: {
     english: '英',

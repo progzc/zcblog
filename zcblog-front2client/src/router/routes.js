@@ -7,6 +7,9 @@ const HomeSideBar = () => import('views/HomeSideBar')
 const ArticleAbstractList = () => import('views/ArticleAbstractList')
 const ArticleTimeLine = () => import('views/ArticleTimeLine')
 const TagList = () => import('views/TagList')
+const TagTimeLine = () => import('views/TagTimeLine')
+const ArticleSideBar = () => import('views/ArticleSideBar')
+const ArticleContent = () => import('views/ArticleContent')
 
 export default [
   {
@@ -44,6 +47,28 @@ export default [
         },
         meta: {
           title: 'metaTitle.tags'
+        }
+      },
+      {
+        path: '/tag/java',
+        name: 'tag',
+        components: {
+          sideBar: HomeSideBar,
+          content: TagTimeLine
+        },
+        meta: {
+          title: 'metaTitle.tag'
+        }
+      },
+      {
+        path: '/article/java',
+        name: 'article',
+        components: {
+          sideBar: ArticleSideBar,
+          content: ArticleContent
+        },
+        meta: {
+          title: 'metaTitle.article'
         }
       }
     ]

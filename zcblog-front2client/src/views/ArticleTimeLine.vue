@@ -157,7 +157,4 @@ export default {
           border none !important
           border-radius 0 !important
           background none !important
-  @media screen and (max-width: $size-sm)
-    .article-timeline-page-container
-      margin-bottom 100px
 </style>

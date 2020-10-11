@@ -62,19 +62,19 @@ export default {
 
 <style lang="stylus" type="text/stylus" rel="stylesheet/stylus" scoped>
   .mobile-side-bar
-    background-color $color-page-background
+    background-color $color-header-mobile
     .header-inner
       overflow hidden
       width auto
-      margin 0 auto
-      margin-bottom 10px
-      padding 10px
+      margin 0 auto 20px auto
+      padding-top 10px
       .site-brand-wrapper
+        padding 0 10px
         font normal 700 1.4rem $body-font
         text-align center
         line-height 2.2rem
         height 2.2rem
-        color black
+        color white
         .site-nav-toggle
           float left
           padding 0 5px
@@ -82,24 +82,34 @@ export default {
             cursor pointer
         .site-title
           font-weight 400
-          border-bottom 1px solid $color-border
     .site-nav
       border-top 1px solid $color-border
+      color white
       ul li
-        margin 5px 0
-        padding 5px 0
+        margin 5px 0 5px 0
+        padding 5px 15px
         list-style none
         line-height 24
         font normal 400 16px $body-font
+        &:first-of-type
+          margin-top 0
+          padding-top 8px
         &>a
           text-decoration none
-          color black
+          color white
+          span
+            margin-right 10px
         &:hover
           color $color-on-hover
           cursor pointer
-          background-color $color-gradually-gray-91
+          background-color $color-gradually-gray-11
+      .menu-item-search
+        margin-bottom 0
+        padding-bottom 7px
         span
-          margin 0 5px
+          position relative
+          top 2px
+          margin-right 10px
           font-size 18px
         .mobile-search
           margin 0
@@ -114,7 +124,7 @@ export default {
         .site-language
           position relative
           float right
-          margin 2px 0
+          margin 1px 0
           .mobile-switch span
             position absolute
             top 2px

@@ -2,7 +2,7 @@
   <content-box>
     <div class="tag-container" slot="container">
       <div class="tag-item" v-for="tag in tagList" :key="tag.id">
-        <div class="tag-group">
+        <div class="tag-group" @click="timelineByTag(tag.id)">
           <span class="iconfont">&#xe655;</span>{{tag.name}}
         </div>
       </div>
@@ -42,6 +42,14 @@ export default {
         { id: 57, name: 'EasyUI' }, { id: 58, name: 'Ehcache' }, { id: 59, name: 'Eureka' }
       ]
     }
+  },
+  methods: {
+    timelineByTag (id) {
+      console.log(id)
+      this.$router.push({
+        path: '/tag/java'
+      })
+    }
   }
 }
 </script>
@@ -67,7 +75,7 @@ export default {
           color $color-on-hover
   @media screen and (min-width: $size-xxl)
     .tag-item
-      width 10% !important
+      width 20% !important
   @media screen and (max-width: $size-xl)
     .tag-item
       width 25% !important
@@ -79,5 +87,5 @@ export default {
       width 50% !important
   @media screen and (max-width: $size-sm)
     .tag-container
-      margin-bottom 200px
+      margin-bottom 50px
 </style>
