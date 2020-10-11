@@ -1222,3 +1222,200 @@ export default {
 
 > 注意事项：`v-if="checkPage()"`写成`v-if="checkPage"`不会生效。
 
+## 9.5 监听滚动位置
+
+> 为了提高用户体验，需要监听`content.vue`中内容的滚动条位置，实时向用户输出滚动条位置，需要注意以下细节：
+
+- 滚动进度条提供置顶功能，且要平滑过渡；
+- 当滚动条位于顶端时，隐藏滚动进度条；
+- 没有滚动条未出现时，隐藏滚动进度条；
+- 小屏幕需要隐藏滚动进度条。
+- 考虑浏览器的兼容性问题
+
+> 具体实现（参见`content.vue`中的代码），关键内容如下：
+
+```vue
+<template>
+  <div class="content-box">
+    <transition name="slide-fade"> // 添加隐藏动画效果
+      <div class="scroll-progress-bar" @click="scroll2Top" v-show="show">
+        {{scrollPercent}}
+      </div>
+    </transition>
+  </div>
+</template>
+
+<script type="text/ecmascript-6">
+export default {
+  name: 'ContentBox',
+  data () {
+    return {
+      show: false, // 没有滚动条未出现时，隐藏滚动进度条
+      scrollPercent: 0 // 没有滚动条未出现时，隐藏滚动进度条
+    }
+  },
+  mounted () {
+    window.addEventListener('scroll', this.windowScroll) // 监听浏览器滚动事件
+  },
+  methods: {
+    windowScroll () { // 浏览器滚动事件反馈
+      // 滚动条距离顶部距离（考虑浏览器兼容性问题）
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop
+      // 窗口高度（考虑浏览器兼容性问题）
+      const windowHeight = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight
+      // 滚动条内容总高度（考虑浏览器兼容性问题）
+      const scrollHeight = document.documentElement.scrollHeight || document.body.scrollHeight
+      this.scrollPercent = Math.round(scrollTop / (scrollHeight - windowHeight) * 100)
+      if (this.scrollPercent === 0) { // 当滚动条位于顶端时，隐藏滚动进度条
+        this.show = false
+      } else {
+        this.show = true
+      }
+    },
+    scroll2Top () { // 滚动进度条提供置顶功能，且要平滑过渡
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      })
+    }
+  }
+}
+</script>
+
+<style lang="stylus" type="text/stylus" rel="stylesheet/stylus" scoped>
+  @import '~common/stylus/index.styl'
+  .content-box
+    position relative
+    left 20%
+    background $color-page-background
+    width 80%
+    min-height 100vh
+    .scroll-progress-bar
+      display inline-block
+      position fixed
+      padding-top 1.5px
+      bottom 30px
+      right 30px
+      text-align center
+      color white
+      font-weight normal
+      width 1.7rem
+      height 1.7rem
+      line-height 1.7rem
+      border-radius 50%
+      background $color-gradually-gray-31
+      &:hover
+        cursor pointer
+        background $color-on-hover
+  .slide-fade-enter-active ,.slide-fade-leave-active // 显示效果动画
+    transition all .2s ease
+  .slide-fade-leave-to ,.slide-fade-enter // 隐藏效果动画
+    transform translateY(70px)
+  @media screen and (max-width: $size-xl)
+    .content-box
+      left 25%
+      width 75%
+      .content-container
+        width 90%
+      .scroll-progress-bar // 小屏幕不显示滚动进度条
+        display none 
+</style>
+```
+
+## 9.6 Vue-Cli4中路由刷新报错
+
+> 问题：vue-cli3中路由刷新报错：`Uncaught SyntaxError: Unexpected token <`
+>
+> 解决办法：publicPath 不要写成相对路径'./' 要写成绝对路径 '/'
+
+## 9.7 vue项目在IE11中报错(暂未解决)
+
+> 问题：vue项目在IE11中报错`SCRIPT1002: 语法错误`、`chunk-vendors.js (1391,3)`
+>
+> 解决办法：babel-loder不能把高版本webpack-dev-server的ES6转换成ES5，需要将webpack-dev-server版本降低到2.6.1。
+>
+> 操作步骤（**本机上未试验成功？**）：
+>
+> - npm uninstall webpack-dev-server
+> - npm install webpack-dev-server@2.6.1 --save-dev
+
+## 9.8 混入mixins
+
+`mixins` 选项接收一个混入对象的数组。这些混入对象可以像正常的实例对象一样包含实例选项，这些选项将会被合并到最终的选项中。本项目通过在混入中定义过滤器，可以对数据做一些过滤操作（使用函数可以实现同样的功能，但搭配管道符的过滤操作语义化更佳）。下面举个例子：
+
+- 在`utils.js`中定义混入的对象：
+
+```javascript
+/**
+ * 映射tag颜色
+ */
+export function mapTagColor (id) {
+  switch (id % 4) {
+    case 0:
+      return '#FF5722'
+    case 1:
+      return '#4CAF50'
+    case 2:
+      return '#2196F3'
+    case 3:
+      return '#9C27B0'
+    case 4:
+      return '#00BCD4'
+    case 5:
+      return '#FFC107'
+    case 6:
+      return '#795548'
+  }
+}
+// 在混入对象中定义过滤器
+export const mixin = {
+  filters: {
+    // 用于映射标签颜色
+    mapTagColor: function (id) {
+      return mapTagColor(id)
+    }
+  }
+}
+```
+
+- 在`ArticleAbstractList.vue`中引入混入对象，对数据进行过滤操作
+
+```vue
+<template>
+  <content-box>
+	<div class="article-abstract-tag" v-if="article.tagList">
+      <span class="iconfont">&#xe611;</span> // 使用过滤器对数据进行操作
+      <iv-tag class="article-abstract-tag-item" :color="tag.id | mapTagColor" v-for="tag in article.tagList" :key="tag.id">
+        <span class="article-abstract-tag-click" @click="handleToTag(tag.id)">{{tag.name}}</span>
+      </iv-tag>
+    </div>
+  </content-box>
+</template>
+
+<script type="text/ecmascript-6">
+import ContentBox from 'components/content/ContentBox'
+import { mixin } from 'common/js/utils'
+
+export default {
+  name: 'ArticleAbstractList',
+  components: {
+    'content-box': ContentBox
+  },
+  data () {
+    return {
+      pagination: {
+        total: 100,
+        currentPage: 1,
+        pageSize: 10
+      },
+      articleAbstractList:[]
+    }
+  },
+  mixins: [mixin] // 引入混入对象
+}
+</script>
+
+<style lang="stylus" type="text/stylus" rel="stylesheet/stylus" scoped>
+</style>
+```
+
