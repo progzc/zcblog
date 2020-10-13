@@ -16,9 +16,7 @@
       </div>
       <div class="side-bar-toc-nav" v-show="show">
         <!--在这里自动生成目录-->
-        <div class="content-toc" id="content-toc" ref="content-toc">
-          这里是自动生成的目录abc
-        </div>
+        <article-page-toc id="dest-toc" ref="dest-toc"></article-page-toc>
       </div>
     </div>
   </div>
@@ -28,18 +26,22 @@
 import MobileSideBar from 'components/content/Nav/MobileSideBar'
 import DeskSideBar from 'components/content/Nav/DeskSideBar'
 import SiteFooter from 'components/content/SiteFooter'
+import ArticlePageToc from 'components/content/article/ArticlePageToc'
 
 export default {
-  name: 'HomeSideBar',
+  name: 'ArticleSideBar',
   components: {
     'mobile-side-bar': MobileSideBar,
     'desk-side-bar': DeskSideBar,
-    'site-footer': SiteFooter
+    'site-footer': SiteFooter,
+    'article-page-toc': ArticlePageToc
   },
   data () {
     return {
       show: true
     }
+  },
+  mounted () {
   },
   methods: {
     tocNavClick () {
@@ -95,21 +97,22 @@ export default {
           left 50%
           width 100%
           margin-left -50%
-          bottom 10px
+          bottom 0
       .side-bar-toc-nav
-        padding 10px 10px
-        .content-toc
-          padding 0.6rem
-          margin 0.4rem
-          border-radius 6px
-          background-color $color-content-background
-          font-weight 400
+        padding 10px
+  @media screen and (max-width: $size-xxl )
+    #side-bar-footer
+      width 20% !important
+    >>>.side-bar-nav-menu
+      margin-top 0 !important
   @media screen and (max-width: $size-xl )
     #side-bar-footer
       width 25% !important
   @media screen and (max-width: $size-lg )
     #side-bar-footer
       width 30% !important
+    >>>.menu-item-mix
+      margin-top 1rem !important
   @media screen and (max-width: $size-sm)
     #side-bar-footer
       display none !important

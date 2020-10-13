@@ -1,8 +1,13 @@
 <template>
   <div class="content-box">
     <header class="content-header"></header>
+    <!--文章内容-->
     <div class="content-container">
-      <slot name="container"></slot>
+      <slot name="content"></slot>
+    </div>
+    <!--评论内容-->
+    <div class="common-container">
+      <slot name="common"></slot>
     </div>
     <div class="content-site-footer">
       <site-footer></site-footer>
@@ -67,13 +72,12 @@ export default {
     .content-header
       display block
       height $header-height-pageContent
-    .content-container
+    .content-container,.common-container
       overflow hidden
       margin 0 auto
       width 75%
     .content-site-footer
       display none
-      padding-bottom 10px
     .scroll-progress-bar
       display inline-block
       position fixed
@@ -95,11 +99,15 @@ export default {
     transition all .2s ease
   .slide-fade-leave-to ,.slide-fade-enter
     transform translateY(70px)
+  @media screen and (max-width: $size-xxl)
+    .content-box
+      left 20%
+      width 80%
   @media screen and (max-width: $size-xl)
     .content-box
       left 25%
       width 75%
-      .content-container
+      .content-container,.common-container
         width 90%
       .scroll-progress-bar
         display none
@@ -107,7 +115,7 @@ export default {
     .content-box
       left 30%
       width 70%
-      .content-container
+      .content-container,.common-container
         width 95%
   @media screen and (max-width: $size-sm)
     .content-box
@@ -118,7 +126,7 @@ export default {
       .content-header
         display block
         height 0
-      .content-container
+      .content-container,.common-container
         overflow hidden
         margin 0 auto
         width 95%

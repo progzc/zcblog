@@ -43,7 +43,7 @@ export default {
         a
           color inherit
           span
-            font-size 1.3rem
+            font-size 1.2rem
             margin 0 10px
           .github
             &:hover

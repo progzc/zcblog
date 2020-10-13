@@ -1,6 +1,6 @@
 <template>
   <content-box>
-    <div class="article-timeline-container" slot="container">
+    <div class="article-timeline-container" slot="content">
       <!--文章时间线内容-->
       <div class="article-timeline-item">
         <time-line :itemList="articleTimelineList" :temp="temp" @linkToArticle="handleToArticle"></time-line>

@@ -110,7 +110,7 @@ export default {
           font-size 1.05rem
           margin 0 5px
         .menu-item-mix
-          margin 4rem 0 1rem 0
+          margin 3rem 0 1rem 0
           .menu-item-timeline
             display inline-block
             color $color-font-content

@@ -1,6 +1,6 @@
 <template>
   <content-box>
-    <div class="tag-container" slot="container">
+    <div class="tag-container" slot="content">
       <div class="tag-item" v-for="tag in tagList" :key="tag.id">
         <div class="tag-group" @click="timelineByTag(tag.id)">
           <span class="iconfont">&#xe655;</span>{{tag.name}}

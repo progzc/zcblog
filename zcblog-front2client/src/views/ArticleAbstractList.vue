@@ -1,30 +1,18 @@
 <template>
   <content-box>
-    <div class="article-abstract-container" slot="container">
+    <div class="article-abstract-container" slot="content">
       <!--文章摘要内容-->
       <div class="article-abstract-item" v-for="article in articleAbstractList" :key="article.id">
         <h1><a href="javascript:void(0);" @click="handleToArticle(article.id)">
           {{article.title}}</a><span class="toTop iconfont" v-if="article.top===1">[{{$t('homeNav.toTop')}}]</span>
         </h1>
-        <div class="article-abstract-info">
-          <div class="edit-time-group"><span class="iconfont">&#xe503;</span>{{article.createTime}}</div>
-          <span class="left-separator">|</span>
-          <div class="update-time-group"><span class="iconfont">&#xe50a;</span>{{article.createTime}}</div>
-          <div class="read-num-group"><span class="iconfont">&#xe63f;</span>{{article.readNum}}</div>
-          <span class="right-separator">|</span>
-          <div class="like-num-group"><span class="iconfont">&#xe504;</span>{{article.likeNum}}</div>
-        </div>
+        <article-info :article="article"></article-info>
         <p>{{article.description}}
           <span class="article-link" @click="handleToArticle(article.id)">
             {{$t('homeNav.seeMore')}}<span class="triangle"></span>
           </span>
         </p>
-        <div class="article-abstract-tag" v-if="article.tagList">
-          <span class="iconfont">&#xe611;</span>
-          <iv-tag class="article-abstract-tag-item" :color="tag.id | mapTagColor" v-for="tag in article.tagList" :key="tag.id">
-            <span class="article-abstract-tag-click" @click="handleToTag(tag.id)">{{tag.name}}</span>
-          </iv-tag>
-        </div>
+        <tag-wall :tagList="article.tagList"></tag-wall>
       </div>
       <!--页码-->
       <div class="article-abstract-page-container" v-if="checkPage()">
@@ -32,7 +20,7 @@
           class-name="article-abstract-pagination"
           :total="pagination.total"
           :current="pagination.currentPage"
-          :pageSize="pagination.pageSize"  >
+          :pageSize="pagination.pageSize" >
           @on-change="handleCurrentChange"
         </iv-page>
       </div>
@@ -42,12 +30,15 @@
 
 <script type="text/ecmascript-6">
 import ContentBox from 'components/content/ContentBox'
-import { mixin } from 'common/js/utils'
+import TagWall from 'components/content/TagWall'
+import ArticleInfo from 'components/content/ArticleInfo'
 
 export default {
   name: 'ArticleAbstractList',
   components: {
-    'content-box': ContentBox
+    'content-box': ContentBox,
+    'tag-wall': TagWall,
+    'article-info': ArticleInfo
   },
   data () {
     return {
@@ -76,6 +67,11 @@ export default {
         },
         {
           id: 1,
+          top: 1,
+          tagList: [{ id: 0, name: 'Linux' },
+            { id: 1, name: 'SpringBoot' },
+            { id: 2, name: 'SpringCloud' },
+            { id: 3, name: 'Nuxt.js' }],
           title: 'Spring Batch异常处理',
           description: `Spring Batch处理任务过程中如果发生了异常，默认机制是马上停止任务执行，抛出相应异常，
           如果任务还包含未执行的步骤也不会被执行。要改变这个默认规则，我们可以配置异常重试和异常跳过机制。
@@ -164,7 +160,6 @@ export default {
   created () {
     this.findPage()
   },
-  mixins: [mixin],
   methods: {
     checkPage () {
       return this.articleAbstractList.length > this.pagination.pageSize
@@ -183,9 +178,6 @@ export default {
     },
     handleToArticle (id) {
       console.log('跳转到文章' + id)
-    },
-    handleToTag (id) {
-      console.log('跳转到标签时间轴' + id)
     }
   }
 }
@@ -225,36 +217,6 @@ export default {
         height 1.8rem
         font-size 1.2rem
         font-weight 500
-      .article-abstract-info
-        overflow hidden
-        font-weight 400
-        opacity 0.6
-        &>div
-          &:hover
-            color $color-on-hover
-            cursor pointer
-          .iconfont
-            margin-right 5px
-        .edit-time-group
-          float left
-          margin 5px 10px 5px 0
-        .left-separator
-          float left
-          margin 5px 0
-        .update-time-group
-          float left
-          margin 5px 0 5px 10px
-        .like-num-group
-          float right
-          margin 5px 10px 5px 0
-          &:hover
-            color red
-        .right-separator
-          float right
-          margin 5px 0
-        .read-num-group
-          float right
-          margin 5px 10px 5px 10px
       p
         font-weight 400
         font-size 14px
@@ -277,22 +239,6 @@ export default {
             font-size 0
             border 6.5px solid transparent
             border-left-color $color-on-hover
-      .article-abstract-tag
-        position relative
-        margin 5px 0
-        .iconfont
-          position absolute
-          top -1px
-          margin-left 5px
-          font-size 1.2rem
-        .article-abstract-tag-item
-          margin 0 5px
-          color white
-          font-weight 400
-          &:hover
-            cursor pointer
-        .article-abstract-tag-item:first-of-type
-          margin-left 32px
     .article-abstract-page-container
       padding 50px 0 80px 0
       height 1.5rem
@@ -322,9 +268,6 @@ export default {
           background none !important
   >>>.content-header //解决添加阴影导致的盒子下沉的效果(若不下沉,盒子上边阴影又无法显现)
     height $header-height-pageContent - 10px !important
-  @media screen and (max-width: $size-md)
-    .read-num-group, .right-separator, .like-num-group
-      display none !important
   @media screen and (max-width: $size-sm)
     >>>.content-container
       width 100% !important

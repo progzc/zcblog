@@ -12,6 +12,7 @@
   "dependencies": {
     "axios": "^0.20.0",
     "core-js": "^3.6.5",
+    "tocbot": "^4.11.2",
     "view-design": "^4.3.2",
     "vue": "^2.6.11",
     "vue-i18n": "^8.21.1",

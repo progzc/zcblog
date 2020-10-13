@@ -45,7 +45,10 @@ export default {
         left 50%
         width 100%
         margin-left -50%
-        bottom 10px
+        bottom 0
+  @media screen and (max-width: $size-xxl )
+    #side-bar-footer
+      width 20% !important
   @media screen and (max-width: $size-xl )
     #side-bar-footer
       width 25% !important
