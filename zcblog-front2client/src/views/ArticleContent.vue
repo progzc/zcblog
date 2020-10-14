@@ -10,13 +10,26 @@
       <!--文章内容-->
       <article-page-content :article="article" id="src-toc" ref="src-toc"></article-page-content>
       <!--打赏功能-->
+      <article-reward></article-reward>
       <!--文章版权声明-->
+      <article-copyright></article-copyright>
       <!--文章标签-->
-      <tag-wall :tagList="article.tagList"></tag-wall>
+      <tag-wall class="article-tag-wall" :tagList="article.tagList"></tag-wall>
       <!--上一页/下一页-->
+      <div class="article-context">
+        <div class="article-previous" @click="handleToArticle()">
+          <span class="iconfont">&#xe581;</span>
+          <span class="title-ellipsis">JAVA非对称加密算法RSA</span>
+        </div>
+        <div class="article-next" @click="handleToArticle()">
+          <span class="title-ellipsis">Spring Cloud微服务权限系统搭建教程</span>
+          <span class="iconfont">&#xe580;</span>
+        </div>
+      </div>
     </div>
-    <div class="common-container" slot="common">
-        1111
+    <!--添加评论系统-->
+    <div class="article-common" slot="common">
+      <valine-common></valine-common>
     </div>
   </content-box>
 </template>
@@ -25,7 +38,10 @@
 import ContentBox from 'components/content/ContentBox'
 import ArticleInfo from 'components/content/ArticleInfo'
 import ArticlePageContent from 'components/content/article/ArticlePageContent'
+import ArticleReward from 'components/content/article/ArticleReward'
+import ArticleCopyright from 'components/content/article/ArticleCopyright'
 import TagWall from 'components/content/TagWall'
+import ValineCommon from 'components/common/ValineCommon'
 
 import tocbot from 'tocbot'
 import { makeIds } from 'common/js/utils'
@@ -36,7 +52,10 @@ export default {
     'content-box': ContentBox,
     'article-info': ArticleInfo,
     'article-page-content': ArticlePageContent,
-    'tag-wall': TagWall
+    'article-reward': ArticleReward,
+    'article-copyright': ArticleCopyright,
+    'tag-wall': TagWall,
+    'valine-common': ValineCommon
   },
   data () {
     return {
@@ -210,16 +229,77 @@ export default {
       onClick: false
     })
     tocbot.refresh()
+  },
+  methods: {
+    handleToArticle () {
+      console.log('跳转到相应文章')
+    }
   }
 }
 </script>
 
 <style lang="stylus" type="text/stylus" rel="stylesheet/stylus" scoped>
   @import '~common/stylus/index.styl'
-  .article-container, .common-container
+  .article-container, .article-common
     display block
-    padding 1rem 1rem 1rem 1rem
+    padding 1rem 2rem 1rem 2rem
     margin 0 10px 10px 10px
     border-radius 6px
     background-color $color-content-background
+    .article-tag-wall
+      margin 1.5rem 0
+    .article-context
+      position relative
+      margin 1.5rem 0 2rem 0
+      border-top 1px solid #f5f5f5
+      font-weight 400
+      .article-previous,
+        display block
+        position absolute
+        left 0
+        padding-top 0.6rem
+        &:hover
+          cursor pointer
+          color $color-on-hover
+        .iconfont
+          margin-right 5px
+          font-size 0.75rem
+        .title-ellipsis
+          /*display inline-block*/
+          width 10rem // 长度超过20rem显示...
+          overflow hidden
+          text-overflow ellipsis
+          white-space nowrap
+      .article-next
+        display block
+        position absolute
+        right 0
+        padding-top 0.6rem
+        &:hover
+          cursor pointer
+          color $color-on-hover
+        .iconfont
+
+          margin-left 5px
+          font-size 0.75rem
+        .title-ellipsis
+          display inline-block
+          width 10rem // 长度超过20rem显示...
+          overflow hidden
+          text-overflow ellipsis
+          white-space nowrap
+          text-align right
+  .article-common
+    margin-bottom $footer-height-pageContent
+  @media screen and (max-width: $size-sm)
+    .article-container
+      padding 1rem 1rem 1rem 1rem !important
+      .article-context
+        .article-previous,.article-next
+          width 8rem !important
+    .article-common
+      margin 0 0 $footer-height-pageContent 0 !important
+      padding 1rem 1rem 1rem 1rem !important
+    >>>.content-container,.common-container
+      width 100% !important
 </style>

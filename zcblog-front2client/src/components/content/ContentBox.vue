@@ -136,5 +136,4 @@ export default {
       background-color $color-footer-mobile
       padding 15px 0 10px 0
       color white
-
 </style>
