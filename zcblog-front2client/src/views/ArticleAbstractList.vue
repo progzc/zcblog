@@ -9,7 +9,7 @@
         <article-info :article="article"></article-info>
         <p>{{article.description}}
           <span class="article-link" @click="handleToArticle(article.id)">
-            {{$t('homeNav.seeMore')}}<span class="triangle"></span>
+            {{$t('homeNav.seeMore')}}
           </span>
         </p>
         <tag-wall :tagList="article.tagList"></tag-wall>
@@ -178,6 +178,7 @@ export default {
     },
     handleToArticle (id) {
       console.log('跳转到文章' + id)
+      this.$router.push({ path: '/article/java' })
     }
   }
 }
@@ -188,7 +189,7 @@ export default {
   .article-abstract-container
     .article-abstract-item
       display block
-      padding 1rem 1rem 1rem 1rem
+      padding 1rem 1.2rem 1rem 1.2rem
       margin 40px 10px 0 10px
       border-radius 6px
       background-color $color-content-background
@@ -220,25 +221,18 @@ export default {
       p
         font-weight 400
         font-size 14px
-        text-indent 1.8em
-        line-height 1.8em
+        text-indent 1.6rem
+        line-height 1.6rem
+        text-align justify
         .article-link
-          position relative
           color $color-on-hover
-          padding-right 12px
           &:hover
             border-bottom  1px solid $color-on-hover
             cursor pointer
-          .triangle
-            position absolute
-            top -1px
-            margin-left 5px
-            width 0
-            height 0
-            line-height 0
-            font-size 0
-            border 6.5px solid transparent
-            border-left-color $color-on-hover
+          &:after
+            content '\e517'
+            margin-left 0
+            font-family: "iconfont" !important;
     .article-abstract-page-container
       padding 50px 0 80px 0
       height 1.5rem

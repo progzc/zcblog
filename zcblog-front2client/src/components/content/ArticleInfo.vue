@@ -51,7 +51,7 @@ export default {
       margin 5px 0
     .read-num-group
       float right
-      margin 5px 10px 5px 10px
+      margin 5px 0 5px 10px
   @media screen and (max-width: $size-md)
     .read-num-group, .right-separator, .like-num-group
       display none !important

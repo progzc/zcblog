@@ -34,8 +34,11 @@ export default {
       height auto
       line-height 1.4rem
       font-weight 600
+      color #6DB33F
       a
         color #515A6E
       span
         font-weight 400
+        color #515A6E
+        overflow-wrap break-word
 </style>

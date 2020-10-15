@@ -16,7 +16,7 @@ module.exports = {
     valineLang: 'zh-CN', // 切换Valine的语言为中文
     reward: '请作者喝杯茶',
     articleAuthor: '本文作者',
-    articleLink: '本文连接',
+    articleLink: '本文链接',
     artileCopyright: '版权声明',
     copyrightDeclaration: '本站所有文章除特别声明外，均采用CC BY-NC-SA 4.0版权协议。'
   },

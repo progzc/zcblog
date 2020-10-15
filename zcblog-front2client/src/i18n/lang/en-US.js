@@ -18,7 +18,7 @@ module.exports = {
     articleAuthor: 'Article Author',
     articleLink: 'Article Link',
     artileCopyright: 'Article CopyRight',
-    copyrightDeclaration: 'Besides specially states, Copyright license is CC BY-NC-SA 4.0.'
+    copyrightDeclaration: 'Besides specially states, copyright license is CC BY-NC-SA 4.0.'
   },
   metaTitle: {
     index: 'Home | Clouds',
