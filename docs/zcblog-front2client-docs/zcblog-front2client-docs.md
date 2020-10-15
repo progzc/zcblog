@@ -911,7 +911,6 @@ module.exports = {
   })
   ```
 
-  
 
 # 8 网络请求封装
 
@@ -1350,7 +1349,7 @@ export default {
  * 映射tag颜色
  */
 export function mapTagColor (id) {
-  switch (id % 4) {
+  switch (id % 7) {
     case 0:
       return '#FF5722'
     case 1:
@@ -1419,3 +1418,176 @@ export default {
 </style>
 ```
 
+# 10 代码语法高亮
+
+## 10.1 安装highlight.js
+
+> 主要有三种安装方式：直接引入、CDN、npm安装。
+
+- 第一种：直接引入本地文件，需要先下载[highlight](https://highlightjs.org/download/)到本地。
+
+  ```html
+  // 在public/index.html文件中引入
+  <link rel="stylesheet" href="/path/to/styles/default.css">
+  <script src="/path/to/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+  ```
+
+- 第二种：采用CDN引入本地文件。具体又分为两种方式：cdnjs和jsdelivr。
+
+  - cdnjs方式（以go语言高亮为例）：
+
+    ```html
+    <link rel="stylesheet"
+          href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/styles/default.min.css">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/highlight.min.js"></script>
+    <!-- and it's easy to individually load additional languages -->
+    <script charset="UTF-8"
+     src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/languages/go.min.js"></script>
+    ```
+
+  - jsdelivr方式：
+
+    ```html
+    <link rel="stylesheet"
+          href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.1.2/build/styles/default.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@10.1.2/build/highlight.min.js"></script>
+    ```
+
+- 第三种：采用npm进行安装（本项目采用这种方式）
+
+  安装方法：`npm install highlight.js`
+
+## 10.2 highlight.js简介
+
+> 使用highlight.js对代码块进行语法高亮时，需要将代码块包裹在`<pre><code>`中，highlight.js会对`<pre><code>`中的代码进行语法高亮。
+
+- 对html进行语法高亮（方法一）：
+
+  ```html
+  <pre><code class="html">...</code></pre>
+  ```
+
+- 对html进行语法高亮（方法二）
+
+  ```html
+  <pre><code class="language-html">...</code></pre>
+  ```
+
+- 将代码当作纯文本，不进行语法高亮
+
+  ```html
+  <pre><code class="plaintext">...</code></pre>
+  ```
+
+- 移除语法高亮效果
+
+  ```html
+  <pre><code class="nohighlight">...</code></pre>
+  ```
+
+## 10.3 引入highlight.js
+
+> 使用npm安装的`highlight.js`有两种引入方式：全量引入和按需引入。全量引入支持对所有编程语法进行语法高亮，按需引入只支持对指定的编程语言进行语法高亮。按需引入的性能更好。
+
+### 10.3.1 全量引入
+
+在`main.js`中进行全量引入：
+
+```javascript
+import hljs from 'highlight.js' // 全量引入highlight.js,会包含所有支持的编程语言
+import 'highlight.js/styles/monokai-sublime.css' // 引入样式文件
+
+// 可以在Vue组件中通过<highlightjs language='javascript' code="var x = 5;" />对代码进行语法高亮
+Vue.use(hljs.vuePlugin) // 非必须，也可以使用Vue.directive自定义配置highlightjs指令
+Vue.prototype.$hljs = hljs // 注册全局变量
+```
+
+### 10.3.2 按需引入
+
+在`main.js`中进行按需引入（本项目采用）：
+
+```javascript
+import hljs from 'highlight.js/lib/core' // 引入highlight.js核心包
+import javascript from 'highlight.js/lib/languages/javascript' // 支持javascript语法高亮
+import java from 'highlight.js/lib/languages/java' // 支持java语法高亮
+import css from 'highlight.js/lib/languages/css' // 支持css语法高亮
+import xml from 'highlight.js/lib/languages/xml' // 支持xml语法高亮
+import 'highlight.js/styles/monokai-sublime.css' // 引入样式文件
+
+hljs.registerLanguage('javascript', javascript) // 注册java语言
+hljs.registerLanguage('java', java) // 注册javascript语言
+hljs.registerLanguage('css', css) // 注册css语言
+hljs.registerLanguage('xml', xml) // 注册xml语言
+
+// 可以在Vue组件中通过<highlightjs language='javascript' code="var x = 5;" />对代码进行语法高亮
+Vue.use(hljs.vuePlugin) // 非必须，也可以使用Vue.directive自定义配置highlightjs指令
+Vue.prototype.$hljs = hljs // 注册全局变量
+```
+
+## 10.4 生成html代码
+
+> 本项目采用`mavon-editor`编辑器生成mark-down文件，相关操作在博客后台界面系统（zcblog-front2manage）中进行操作。highlight.js不能识别原生mark-down文件，需要对原生mark-down文件转换成highlight.js可以识别的html文件（**使用marked.js进行转换**）。
+
+关键代码如下：
+
+```javascript
+// article-add-or-update.vue中
+mavonChangeHandle (context, render) {
+   this.article.contentFormat = marked(context, {breaks: true}) // 该方法会自动为h1~h6生成id属性
+}
+
+// marked.js中的关键部分
+function marked(src, opt, callback){
+    // 该方法是marked插件(marked.js)中的方法
+    // 安装marked插件：npm install marked
+}
+```
+
+## 10.5 高亮显示代码/行号
+
+在`ArticleContent.vue`中高亮显示代码：
+
+```javascript
+methods: {
+  highlightCode () {
+    const srcToc = document.querySelector('#src-toc')
+    const blocks = srcToc.querySelectorAll('pre code')
+    blocks.forEach((block) => {
+      this.$hljs.highlightBlock(block)
+      // 去前后空格并添加行号
+      block.innerHTML = '<ul><li>' + block.innerHTML.replace(/(^\s*)|(\s*$)/g, '').replace(/\n/g, '\n</li><li>') + '\n</li></ul>'
+    })
+  }
+}
+```
+
+在`article.styl`中编辑样式（给代码添加行号）：
+
+```stylus
+  // 给代码框添加间隙
+  >>>code
+    margin 0 10px
+  // 给代码框添加样式
+  >>>.hljs ul
+    list-style decimal
+    margin 0 0 0 40px!important
+    padding 0
+  >>>.hljs li
+    list-style decimal-leading-zero
+    border-left 1px solid $color-border !important
+    padding 2px 5px !important
+    margin 0 !important
+    line-height 14px
+    width 100%
+    box-sizing border-box
+  >>>.hljs li:nth-of-type(even)
+    background-color rgba(255,255,255,.015)
+    color inherit
+```
+
+**展示效果（具体内容请无视，只注意显示效果即可）：**
+
+![image-20201016005453280](zcblog-front2client-docs.assets/image-20201016005453280.png)
+
+# 11 目录锚点制作
