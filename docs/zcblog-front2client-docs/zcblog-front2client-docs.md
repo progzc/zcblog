@@ -1591,3 +1591,235 @@ methods: {
 ![image-20201016005453280](zcblog-front2client-docs.assets/image-20201016005453280.png)
 
 # 11 目录锚点制作
+
+> 为了给博客文章自动生成目录，本项目使用tocbot来制作博客文档目录。
+
+## 11.1 安装tocbot.js
+
+安装tocbot.js有两种方式：CDN安装和npm安装。
+
+- 使用npm安装（本项目采用这种方式）：
+
+  使用npm安装tocbot.js：`npm install --save tocbot`
+
+- 使用CDN安装：
+
+  ```html
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.11.1/tocbot.min.js"></script>
+  ```
+
+引入CSS样式（本项目采用自定义样式，不引入默认的样式）：
+
+```html
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.11.1/tocbot.css">
+```
+
+## 11.2 生成目录
+
+### 11.2.1 h1~h6自动生成id
+
+> tocbot.js会自动捕获具有id属性的h1~h6标题作为锚点生成目录，首先应确保h1~h6生成id属性。
+
+在`ArticleContent.vue`中为h1~h6标题自动生成id属性：
+
+```javascript
+makeIds(document.querySelector('#src-toc')) // #src-toc为id选择器，负责选择DOM中的文章内容节点
+
+// makeIds为common/js/utils.js中定义的方法
+/**
+ * 为DOM文档的h1~h6标题生成id属性
+ * @param srcToc: 需要动态生成id属性的DOM文档
+ */
+export function makeIds (srcToc) {
+  var headings = srcToc.querySelectorAll('h1, h2, h3, h4, h5, h6')
+  var headingMap = {}
+  Array.prototype.forEach.call(headings, function (heading) {
+    var id = heading.id ? heading.id : heading.textContent.trim().toLowerCase()
+      .split(' ').join('-').replace(/[!@#$%^&*():]/ig, '').replace(/\//ig, '-')
+    headingMap[id] = !isNaN(headingMap[id]) ? ++headingMap[id] : 0
+    if (headingMap[id]) {
+      heading.id = id + '-' + headingMap[id]
+    } else {
+      heading.id = id
+    }
+  })
+}
+```
+
+> **注意事项**：正如*10.4 生成html代码*一节所诉，在博客后台界面系统（zcblog-front2manage）中使用marked.js将markdown文档转换生成html时，会自动为h1~h6生成id属性，所以本节这一步骤在项目中可以忽略。
+
+### 11.2.2 配置生成目录
+
+在`ArticleContent.vue`中对所需生成目录的内容进行配置：
+
+```javascript
+<!--文章内容-->
+<article-page-content :article="article" id="src-toc" ref="src-toc"></article-page-content>
+
+mounted () {
+  // 博客前台管理使用marked.js将mark-down文件转换成html文件后，h1~h6会自动添加id属性
+  makeIds(document.querySelector('#src-toc'))
+  this.highlightCode() // 代码高亮
+  this.tocbotControl = tocbot.init({
+    tocSelector: '#dest-toc', // ArticlePageToc的id,在ArticleSideBar.vue中设置
+    contentSelector: '#src-toc', // ArticlePageContent的id,在ArticleContent.vue中设置
+    headingSelector: 'h1, h2, h3', // 配置使用哪些标题生成目录节点
+    hasInnerContainers: true,
+    linkClass: 'toc-link',
+    activeLinkClass: 'is-active-link',
+    listClass: 'toc-list',
+    isCollapsedClass: 'is-collapsed',
+    collapsibleClass: 'is-collapsible',
+    listItemClass: 'toc-list-item',
+    collapseDepth: 0, // 配置展开几级目录，这里不展开目录
+    scrollSmooth: true,
+    scrollSmoothDuration: 420,
+    headingsOffset: 1,
+    throttleTimeout: 50,
+    positionFixedClass: 'is-position-fixed',
+    fixedSidebarOffset: 'auto',
+    includeHtml: true,
+    onClick: false
+  })
+  tocbot.refresh()
+},
+beforeDestroy () { // 在离开时销毁目录
+  if (this.tocbotControl !== undefined) {
+    this.tocbotControl.destroy()
+  }
+}
+```
+
+> 这里比较关键的是`tocSelector: '#dest-toc'`、`contentSelector: '#src-toc'`，分别为文章内容目录和文章内容指定选择器。`#dest-toc`和`#src-toc`不必在同一个vue组件文件中存在，只需在整个SPA页面中唯一即可。
+
+## 11.3 添加样式和动画效果
+
+在`ArticleContent.vue`中为文档目录添加样式和动画效果：
+
+```css
+<style lang="stylus" type="text/stylus" rel="stylesheet/stylus">
+  .article-page-toc
+    overflow-y auto
+    max-height 90vh
+    padding 0.6rem
+    margin 0.4rem
+    border-radius 6px
+    background-color $color-content-background
+    font-weight 400
+    .toc-list
+      position relative
+      margin 0
+      padding-left 10px
+      list-style none
+      .toc-list-item
+        &>a.toc-link
+          display inline-block
+          overflow hidden
+          white-space nowrap
+          text-overflow ellipsis
+          width 100%
+          height 18px
+          line-height 18px
+    .toc-link
+      color black
+      height 100%
+    .is-active-link
+      font-weight 400
+      color $color-nav
+    .is-collapsible
+      overflow hidden
+      padding-left 10px
+      max-height 1000px
+      transition all 300ms ease-in-out
+    .is-collapsed
+      max-height 0
+    .is-position-fixed
+      position fixed !important
+      top 0
+</style>
+```
+
+> 在为目录添加样式时，可以参考tocbot自带的默认样式进行编辑：
+
+![image-20201016105616904](zcblog-front2client-docs.assets/image-20201016105616904.png)
+
+# 12 增加评论系统
+
+## 12.1 安装Valine
+
+> 常见的第三方评论系统有Github、畅言、Valine，本项目采用Valine作为评论系统。
+
+安装Valine有两种方式：CND和npm：
+
+- CDN方式：`<script src='//unpkg.com/valine/dist/Valine.min.js'></script>`
+- npm方式：`npm install valine --save`
+
+## 12.2 使用Valine
+
+在`ValineCommon.vue`中引入valine：
+
+```javascript
+<script type="text/ecmascript-6">
+import Valine from 'valine'
+export default {
+  name: 'ValineCommon',
+  mounted () {
+    this.createValine()
+  },
+  methods: {
+    createValine () {
+      Valine({
+        el: '#vcomment',
+        appId: process.env.VUE_APP_Valine_APPID, // 将LeanCloud配置信息抽离到.env中
+        appKey: process.env.VUE_APP_Valine_APPKEY, // 将LeanCloud配置信息抽离到.env中
+        avatar: 'retro',
+        visitor: false,
+        // 当前文章页路径，用于区分不同的文章页，以保证正确读取该文章页下的评论列表
+        path: window.location.pathname,
+        recordIP: true,
+        lang: this.$i18n.t('homeNav.valineLang') // 配置国际化
+      })
+    }
+  },
+  watch: {
+    '$route' (to, from) {
+      if (to.path !== from.path) {
+        setTimeout(() => {
+          // 重新刷新valine
+          this.createValine()
+        }, 300)
+      }
+    }
+  }
+}
+</script>
+```
+
+## 12.3 注意事项
+
+### 12.3.1 抽离配置信息
+
+为了便于管理，统一将配置信息抽离到.env中：
+
+```javascript
+appId: process.env.VUE_APP_Valine_APPID, // 将LeanCloud配置信息抽离到.env中
+appKey: process.env.VUE_APP_Valine_APPKEY, // 将LeanCloud配置信息抽离到.env中
+```
+
+### 12.3.2 避免评论重复加载
+
+需要配置path变量，以避免评论重复加载。
+
+```javascript
+// 当前文章页路径，用于区分不同的文章页，以保证正确读取该文章页下的评论列表
+path: window.location.pathname,
+```
+
+### 12.3.3 动态配置国际化
+
+Valine提供了几种语言的国际化，这里注意的是本项目的国际化是动态切换的，所以这里不能写死了。
+
+```javascript
+lang: this.$i18n.t('homeNav.valineLang') // 配置国际化
+```
+
