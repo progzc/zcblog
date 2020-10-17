@@ -12,6 +12,7 @@
   "dependencies": {
     "axios": "^0.20.0",
     "core-js": "^3.6.5",
+    "highlight.js": "^10.2.1",
     "tocbot": "^4.11.2",
     "valine": "^1.4.14",
     "view-design": "^4.3.2",

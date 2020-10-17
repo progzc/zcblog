@@ -45,6 +45,7 @@ import ValineCommon from 'components/common/ValineCommon'
 
 import tocbot from 'tocbot'
 import { makeIds } from 'common/js/utils'
+import Vue from 'vue'
 
 export default {
   name: 'ArticleContent',
@@ -116,6 +117,23 @@ export default {
                     为了解决简单工厂模式的缺点，诞生了工厂方法模式（Factory method pattern）。
                     为了解决简单工厂模式的缺点，诞生了工厂方法模式（Factory method pattern）。</p>
                     <p>定义：定义创建对象的接口，让实现这个接口的类来决定实例化哪个类，工厂方法让类的实例化推迟到了子类进行。</p>
+                    <pre><code class="language-java">@Override
+protected boolean onLoginFailure(AuthenticationToken token, AuthenticationException e, ServletRequest request, ServletResponse response) {
+    HttpServletResponse httpResponse = (HttpServletResponse) response;
+    httpResponse.setContentType(&quot;application/json;charset=utf-8&quot;);
+    httpResponse.setHeader(&quot;Access-Control-Allow-Credentials&quot;, &quot;true&quot;);
+    httpResponse.setHeader(&quot;Access-Control-Allow-Origin&quot;, HttpContextUtils.getOrigin());
+    try {
+        //处理登录失败的异常
+        Throwable throwable = e.getCause() == null ? e : e.getCause();
+        Result r = Result.error(ErrorEnum.NO_AUTH.getCode(),throwable.getMessage());
+        String json = JsonUtils.toJson(r);
+        httpResponse.getWriter().print(json);
+    } catch (Exception e1) {
+
+    }
+    return false;
+}</code></pre>
                     <h2>1.3 抽象工厂模式</h2>
                     <p>抽象工厂模式（Abstract factory pattern）提供了一系列相关或者相互依赖的对象的接口，关键字是“一系列”。
                     具体产品从客户端代码中抽离出来，解耦。
@@ -239,7 +257,9 @@ export default {
     }
   },
   mounted () {
+  // 博客前台管理使用marked.js将mark-down文件转换成html文件后，h1~h6会自动添加id属性
     makeIds(document.querySelector('#src-toc'))
+    this.highlightCode()
     this.tocbotControl = tocbot.init({
       tocSelector: '#dest-toc', // ArticlePageToc的id,在ArticleSideBar.vue中设置
       contentSelector: '#src-toc', // ArticlePageContent的id,在ArticleContent.vue中设置
@@ -271,6 +291,15 @@ export default {
   methods: {
     handleToArticle () {
       console.log('跳转到相应文章')
+    },
+    highlightCode () {
+      const srcToc = document.querySelector('#src-toc')
+      const blocks = srcToc.querySelectorAll('pre code')
+      blocks.forEach((block) => {
+        this.$hljs.highlightBlock(block)
+        // 去前后空格并添加行号
+        block.innerHTML = '<ul><li>' + block.innerHTML.replace(/(^\s*)|(\s*$)/g, '').replace(/\n/g, '\n</li><li>') + '\n</li></ul>'
+      })
     }
   }
 }

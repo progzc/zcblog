@@ -36,4 +36,22 @@
     text-align justify
     line-height 28px
     font-size 14px
-
+  // 给代码框添加间隙
+  >>>code
+    margin 0 10px
+  // 给代码框添加样式
+  >>>.hljs ul
+    list-style decimal
+    margin 0 0 0 40px!important
+    padding 0
+  >>>.hljs li
+    list-style decimal-leading-zero
+    border-left 1px solid $color-border !important
+    padding 2px 5px !important
+    margin 0 !important
+    line-height 14px
+    width 100%
+    box-sizing border-box
+  >>>.hljs li:nth-of-type(even)
+    background-color rgba(255,255,255,.015)
+    color inherit

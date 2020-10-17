@@ -7,6 +7,21 @@ import messages from './i18n' // 引入自定义国际化内容
 import 'view-design/dist/styles/iview.css' // 按需引入iView UI的样式
 import iViewUI from 'view-design/dist/iview' // 引入iview.js文件，这样才能使用iview.js中的i18n方法实现按需导入的iView组件的国际化
 
+// 若使用 import hljs from 'highlight.js'会引入所有的语言，导致性能降低
+import hljs from 'highlight.js/lib/core' // 引入highlight.js核心包
+import javascript from 'highlight.js/lib/languages/javascript' // 支持javascript语法高亮
+import java from 'highlight.js/lib/languages/java' // 支持java语法高亮
+import css from 'highlight.js/lib/languages/css' // 支持css语法高亮x
+import xml from 'highlight.js/lib/languages/xml' // 支持xml语法高亮
+import 'highlight.js/styles/monokai-sublime.css' // 引入样式文件
+hljs.registerLanguage('javascript', javascript)
+hljs.registerLanguage('java', java)
+hljs.registerLanguage('css', css)
+hljs.registerLanguage('xml', xml)
+// 可以在Vue组件中通过<highlightjs language='javascript' code="var x = 5;" />对代码进行语法高亮
+Vue.use(hljs.vuePlugin) // 非必须，也可以使用Vue.directive自定义配置highlightjs指令
+Vue.prototype.$hljs = hljs
+
 // 按需注册组件
 Vue.component('iv-row', iViewUI.Row)
 Vue.component('iv-col', iViewUI.Col)
