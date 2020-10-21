@@ -1,6 +1,6 @@
 # 0 技术方案
 
-> 主体技术方案：**VueCli4**（webpack）+ **Vue**  + **Vuex** + **Vue Router** + **ECMAScript**（JavaScript）+ **npm**（Node.js）+ **CSS/Stylus** + **Vue I18n**（国际化）+ **iView UI**（UI组件，有栅格模式，类似于Bootstrap，利于实现响应式布局）+ **v-viewer**（实现图片预览和简单的编辑）
+> 主体技术方案：**VueCli4**（webpack）+ **Vue**  + **Vuex** + **Vue Router** + **ECMAScript**（JavaScript）+ **npm**（Node.js）+ **CSS/Stylus** + **Vue I18n**（国际化）+ **iView UI**（UI组件，有栅格模式，类似于Bootstrap，利于实现响应式布局）+ **photoswipe**（实现图片预览和简单的编辑）
 
 > 第三方插件：[mavon-editor](https://github.com/topics/mavon-editor)（实现文档转html）、[tocbot](https://github.com/tscanlin/tocbot)（制作博客文档目录）、[highlight.js](https://github.com/highlightjs/highlight.js)（实现代码高亮显示）、**Valine/Github**（评论系统）
 
@@ -81,6 +81,10 @@
   font-weight: normal
   font-style: normal
 ```
+
+> **注意事项**：为了方便后续项目新增或者更新字体图标，建议将使用的字体图标添加到一个项目中保存。
+>
+> ![image-20201018160948674](zcblog-front2client-docs.assets/image-20201018160948674.png)
 
 ## 1.3 字体的设置
 
@@ -1418,6 +1422,44 @@ export default {
 </style>
 ```
 
+## 9.9 vuex中的辅助函数
+
+> 在前端项目中，我们一般会使用vuex来管理状态变量，引用vuex（state、mutations、actions）里的内容时采用传统的方法未免显得比较繁琐，这列可以使用vuex中的辅助函数来简化这一过程。辅助函数的本质其实就是语法糖！
+
+使用步骤：
+
+- 第1步：在组件中导入vuex中的辅助函数
+
+  ```javascript
+  import { mapState, mapMutations, mapActions } from 'vuex'
+  ```
+
+- 第2步：在组件中导入mutation里的方法名
+
+  ```javascript
+  computed: {
+    ...mapState({
+      article: state => state.article.article, // 第一个article指的是模块名，需要在设置namespaced: true
+      languages: state => state.article.languages, // 第一个article指的是模块名，需要在设置namespaced: true
+      needAuth: state => state.article.needAuth, // 第一个article指的是模块名，需要在设置namespaced: true
+      ExpandLeftColumn: state => state.base.ExpandLeftColumn
+  }),
+  methods: {
+    ...mapMutations({
+      updateArticleAuth: 'article/UPDATE_ARTICLE_AUTH',
+      clearArticleInfo: 'article/CLAER_ARTICLE_DETAIL_INFO',
+      resetExpandColumn: 'base/RESET_EXPAND_COLUMN'
+    }),
+    ...mapActions({
+      getArticleDetailInfo: 'article/GET_ARTICLE_DETAIL_INFO'
+    })
+   }
+  ```
+
+- 第2步：使用辅助函数
+
+  使用辅助函数非常简单，将...mapState里的变量当作data()里定义的变量一样使用；将...mapMutations和..mapActions里的变量当作methods里的其他方法一样使用即可。
+
 # 10 代码语法高亮
 
 ## 10.1 安装highlight.js
@@ -1749,7 +1791,7 @@ beforeDestroy () { // 在离开时销毁目录
 
 > 常见的第三方评论系统有Github、畅言、Valine，本项目采用Valine作为评论系统。
 
-安装Valine有两种方式：CND和npm：
+安装Valine有两种方式：CND和npm（本项目采用npm安装方式）：
 
 - CDN方式：`<script src='//unpkg.com/valine/dist/Valine.min.js'></script>`
 - npm方式：`npm install valine --save`
@@ -1822,4 +1864,32 @@ Valine提供了几种语言的国际化，这里注意的是本项目的国际�
 ```javascript
 lang: this.$i18n.t('homeNav.valineLang') // 配置国际化
 ```
+
+# 13 文章加密(MD5+盐+Cookie)
+
+需构思数据库的设计。
+
+引入cookie？
+
+后台管理系统前台采用token实现跨域？
+
+# 14 相册模块的实现
+
+使用photoswipe实现Gallery模块。
+
+## 14.1 如何使用photoswipe
+
+## 14.2 动态生成data-size
+
+## 14.3 缩略图的实现
+
+后端实现：采用Thumbnailator库实现生成一个缩略图文件保存到云存储器上（云存储器一般会采用CDN加速）。
+
+前端实现：？（理想情况下是采用前端根据原图动态生成缩略图放到前台展示，这样可以降低服务器压力，但是目前试了几种方法并不理想）
+
+## 14.4 缓存提速
+
+目前的思路是采用预加载提速（与之对应的是懒加载，为了降低服务器的访问压力）。
+
+预加载完成即可完成data-size的生成，这样说来14.2和14.4其实是关联到一起的。
 
