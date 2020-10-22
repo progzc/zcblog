@@ -467,7 +467,7 @@ NODE_ENV = "production"
 
 ### 4.2.1 article/tag/article_tag
 
-​		文章表/标签表/文章表与标签表的中间表的构建：
+​		文章表/标签表/文章表与标签表的中间表的构建（这里只是一个思路，具体在构建后台系统时会完善）：
 
 ![image-20200929204644788](zcblog-front2client-docs.assets/image-20200929204644788.png)
 

@@ -185,7 +185,7 @@ CREATE TABLE `log_like` (
   `params` varchar(5000) COLLATE utf8_unicode_ci DEFAULT NULL COMMENT '请求参数',
   `time` bigint(20) NOT NULL COMMENT '执行时长(毫秒)',
   `ip` varchar(64) COLLATE utf8_unicode_ci DEFAULT NULL COMMENT 'IP地址',
-  `create_date` datetime DEFAULT NULL COMMENT '自动填充：创建时间',
+  `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '自动填充：创建时间',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='点赞日志'
 ```
@@ -202,7 +202,7 @@ CREATE TABLE `log_view` (
   `params` varchar(5000) COLLATE utf8_unicode_ci DEFAULT NULL COMMENT '请求参数',
   `time` bigint(20) NOT NULL COMMENT '执行时长(毫秒)',
   `ip` varchar(64) COLLATE utf8_unicode_ci DEFAULT NULL COMMENT 'IP地址',
-  `create_date` datetime DEFAULT NULL COMMENT '自动填充：创建时间',
+  `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '自动填充：创建时间',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='阅读日志'
 ```
@@ -254,7 +254,7 @@ CREATE TABLE `sys_role` (
   `role_name` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL COMMENT '角色名称',
   `remark` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL COMMENT '备注',
   `create_user_id` bigint(20) DEFAULT NULL COMMENT '创建者ID',
-  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '用户创建时间',
   PRIMARY KEY (`role_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='角色'
 ```
@@ -325,6 +325,18 @@ CREATE TABLE `sys_role_menu` (
 本项目中采用了5张表来完成权限的管理：`sys_user`、`sys_role`、`sys_user_role`、`sys_menu`、`sys_role_menu`。其中`sys_menu`表中包含了权限相关的内容。
 
 主流的权限管理表应该至少需要10张表，包括`权限表`、`角色表`、`组表`、`用户表`4张主表；`用户权限表`、`用户角色表`、`用户组表`、`角色权限表`、`组角色表`、`组权限表`6张中间表。本项目相当于做了一定的简化。关于"用户·角色·权限·表"的设计可以参见相关博客文章：**[用户·角色·权限·表的设计](https://blog.csdn.net/weixin_42476601/article/details/82346740)**
+
+# 2 项目搭建
+
+使用mavon搭建工程：
+
+## 2.1 使用mavon构建时出错
+
+
+
+
+
+
 
 
 
