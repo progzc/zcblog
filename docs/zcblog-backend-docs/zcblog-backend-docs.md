@@ -12,7 +12,7 @@
 
 `quartz`：定时器，定时发送文章（**此功能不一定实现**），定时清除OSS上的无效图片，将云存储上逻辑删除的资源间隔指定时间彻底清除，相当于完成回收站的类似功能（**此功能不一定实现**）；
 
-`MySql`：数据库；
+`MySql` + `Druid`：数据库 + 连接池；
 
 `Swagger`：Restful风格的web服务框架（方便与前端人员即时沟通；也可进行测试发送请求，实现postman类似的功能）；
 
@@ -576,6 +576,279 @@ zcblog-backend  # 父模块
 </project>
 ```
 
+## 2.3 项目配置
+
+在`zcblog-core`模块中使用yml进行项目配置，根据开发环境的不同，分为开发环境配置文件（`application-dev.yml`）、测试环境配置文件（`application-test.yml`）和生产环境配置文件（`application-prod.yml`）。将`application-dev.yml`、`application-test.yml`和`application-prod.yml`中的相同部分抽离到`application.yml`中。
+
+### 2.3.1 application.yml
+
+在`application.yml`配置文件中主要进行web应用服务器（本项目使用`Tomcat`）的配置、Spring web的配置、MyBatis + MyBatisPlus的配置。
+
+```yaml
+# 配置web应用服务器
+server:
+  tomcat:
+    uri-encoding: utf-8 # 网络请求字符集为utf-8
+    max-threads: 1000 # 最多支持1000个线程
+    min-spare-threads: 30 # 至少有30个空闲线程
+  # 端口分配：博客前台端口8080；博客管理前台端口8081；博客后台端口8082
+  port: 8082
+  connection-timeout: 5000ms # 请求超时时间5s
+  servlet:
+    #项目映射路径，相当于网络请求为 http://localhost:8082/blog
+    context-path: /blog
+
+# Spring配置
+spring:
+  profiles:
+    # 配置环境：开发dev,测试test,生产prod
+    active: dev
+  jackson:
+    serialization:
+      # 从数据库返回的时间戳是long型的毫秒值
+      write-dates-as-timestamps: true
+  servlet:
+    multipart:
+      max-file-size: 100MB # 单个文件上传最大100MB
+      max-request-size: 100MB # 总上传文件最大100MB
+  mvc:
+    # restFul风格：当找不到页面时，正常抛出错误，不跳转页面
+    throw-exception-if-no-handler-found: true
+    # 映射static资源文件(如js/css/img...)
+    static-path-pattern: /static/**
+  resources:
+    # 为资源文件建立默认映射：若设置为false，会导致不能访问Swagger
+    add-mappings: true
+  rabbitmq:
+    listener:
+      direct:
+        acknowledge-mode: manual # 表示该监听器手动应答消息
+
+# MyBatisPlus配置
+mybatis-plus:
+  mapper-locations: classpath:mapper/**/*.xml # 指定mapper文件位置
+  type-aliases-package: com.progzc.blog.entity.* # 配置别名，多个package使用逗号分隔
+  global-config:
+    # 配置数据库
+    db-config:
+      id-type: auto # 主键策略：数据库自增
+      field-strategy: not_empty # 字段策略：非空判断
+      logic-delete-value: 0 # 0表示逻辑删除（默认值是0）
+      logic-not-delete-value: 1 # 1表示未删除（默认值是1）
+  # MyBatis原生配置
+  configuration:
+    map-underscore-to-camel-case: true # 驼峰下划线自动转换
+    cache-enabled: false # 不开启二级缓存
+```
+
+下面对几个重要的配置做解释：
+
+- **id-type**：配置主键生成策略，取值如下。
+  - `auto`：数据库主键自增（**本项目这种策略**）。
+  - `none`：根据雪花算法生成主键。
+  - `input`：insert前自行set主键值（可以通过自己注册填充插件进行填充）。
+  - `assign_id`：分配id；使用接口IdentifierGenerator的方法nextId（默认实现类为DefaultIdentifierGenerator雪花算法）。
+  - `assign_uuid`：分配UUID；使用接口IdentifierGenerator的方法nextUUID（默认default方法）。
+
+- **field-strategy**：配置字段策略，取值如下。
+
+  - ignored：查询时会将未设置字段以null自动填充。
+
+    ```java
+    // 若设置ignored，会忽略掉null值得判断。可以为更新对象设空值！
+    public void updateUserTest(){
+        User user = new User();
+        user.setId(1);
+        user.setState((byte) 1);
+        user.setAddress(null);
+        userService.updateById(user);
+    }
+    // 输出结果
+    ==> Preparing: UPDATE user SET address=?, state=? WHERE id=? 
+    ==> Parameters: null, 1(Byte), 1(Integer)
+    ```
+
+  - not_null：会进行null检查；通过接口更新数据时字段为null值时将不更新进数据库。
+
+  - not_empty：会对字段值进行null和''比较检查；通过接口更新数据时字段为null值和''值时将不更新进数据库（**本项目采用这种策略**）。
+
+### 2.3.2 application-dev.yml
+
+`application-dev.yml`中主要进行**开发阶段**的数据库和Druid连接池、Redis、Elasticsearch、RabbitMQ、MyBatisPlus（特定配置）、七牛云、jasypt。
+
+```yaml
+spring:
+  # 配置数据库
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource  # 使用Druid连接池
+    driver-class-name: com.mysql.cj.jdbc.Driver  # 使用MySQL数据库
+    druid:
+      # 配置数据库连接地址并进行相关设置（允许进行批处理、使用utf-8字符集、不进行SSL连接、使用格林威治时间）
+      url: jdbc:mysql://localhost:3306/zcblog?allowMultiQueries=true&useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=GMT
+      username: root  # 数据库用户名
+      password: root  # 数据库密码
+      initial-size: 10  # 初始连接数10个
+      max-active: 100  # 最大连接数100个
+      min-idle: 10  # 最小空闲数是10个
+      max-wait: 60000  # 最长等待时间为60s
+      # 开启缓存preparedStatement(PSCache)，PSCache对支持游标的数据库性能提升巨大，比如说oracle;在MySQL下建议关闭。
+      pool-prepared-statements: true
+      # 要启用PSCache，必须配置大于0，当大于0时，poolPreparedStatements自动触发修改为true。
+      # 在Druid中，不会存在Oracle下PSCache占用内存过多的问题，可以把这个数值配置大一些，比如说100
+      max-pool-prepared-statement-per-connection-size: 20
+      time-between-eviction-runs-millis: 60000  # Destroy线程检测连接的间隔时间为60s
+      min-evictable-idle-time-millis: 300000  # 一个连接在池中最小生存的时间为300s
+      test-while-idle: true  # 若空闲时间大于timeBetweenEvictionRunsMillis,则执行validationQuery检测连接是否有效;不影响性能,但可保证安全性.
+      test-on-borrow: false  # 申请连接时不执行validationQuery检测连接是否有效,会提升性能
+      test-on-return: false  # 归还连接时不执行validationQuery检测连接是否有效,会提升性能
+      stat-view-servlet:
+        enabled: true  #  启用监控页面的配置
+        url-pattern: /druid/*  # 设置监控页面的url
+        login-username: admin  # 设置监控页面的登录名
+        login-password: admin  # 设置监控页面的登录密码
+      filter:
+        # 监控统计
+        stat:
+          db-type: mysql  # 数据库为MySQL
+          log-slow-sql: true  # 记录慢SQL
+          slow-sql-millis: 1000  # 定义执行时间1s以上的为慢SQL
+          merge-sql: false  # 禁止合并SQL
+        wall:
+          db-type: mysql  # 数据库为MySQL
+          enabled: true  # 防止SQL注入
+          config:
+            multi-statement-allow: true  # 允许进行批处理(spring.datasource.druid.url也要进行配置)
+  # 配置redis
+  redis:
+    host: localhost  # 配置主机为本机
+    port: 6379  # 配置端口号
+    timeout: 6s  # 配置连接池超时时长为6s
+    lettuce:
+      pool:
+        max-active: 1000  # 连接池最大连接数
+        max-wait: -1ms  # 连接池最大阻塞等待时间（使用负值表示没有限制）
+        max-idle: 10  # 连接池中的最大空闲连接数
+        min-idle: 5  # 连接池中的最小空闲连接数
+  # 配置Elasticsearch
+  data:
+    elasticsearch:
+      cluster-name: zcblog-cluster  # 配置集群名称
+      cluster-nodes: 127.0.0.1:9301  # 配置集群中某一节点的地址
+  # 配置RabbitMQ
+  rabbitmq:
+    host: 192.168.175.135  # 配置主机（本项目RabbitMQ运行在虚拟机上）
+    port: 5672  # 配置端口号
+    username: guest  # 配置用户名
+    password: guest  # 配置密码
+
+# 配置MyBatisPlus
+mybatis-plus:
+  global-config:
+    refresh: true  # 刷新Mapper,只在开发环境打开
+
+# 配置七牛云（变量）
+oss:
+  qiniu:
+    domain: http://qhnmn5y5g.hn-bkt.clouddn.com  # 七牛云外链域名
+    prefix: blog # 前缀,相当于项目路径
+    accessKey: ENC(加密数据源)  # 配置AccessKey（非明文）
+    secretKey: ENC(加密数据源)  # 配置SecretKey（非明文）
+    bucketName: progzc-blog # 配置空间名
+
+# 配置加密和解密
+jasypt:
+  encryptor:
+    password: 密码盐  # 配置密码盐
+```
+
+### 2.3.3 application-test.yml
+
+`application-test.yml`配置文件中的内容与`application-dev.yml`基本一致，只需要根据实际需要稍加修改即可。
+
+```yaml
+mybatis-plus.global-config.refresh: false  # 刷新Mapper,只在开发环境打开
+```
+
+### 2.3.4 application-prod.yml
+
+`application-prod.yml`配置文件中的内容与`application-dev.yml`基本一致，只需要根据实际需要稍加修改即可。
+
+```yaml
+mybatis-plus.global-config.refresh: false  # 刷新Mapper,只在开发环境打开
+```
+
+### 2.3.5 jasypt明文加密
+
+为了安全，项目配置文件里的密码（以及有些重要的用户名、密钥）一般不能采用明文显示，需要进行加密处理。这里采用`jasypt`进行加密。
+
+使用步骤：
+
+1. 引入工具依赖包（在`zcblog-core`模块中引入）：
+
+   ```xml
+   <!--jasypt加密解密-->
+   <dependency>
+   	<groupId>com.github.ulisesbocchio</groupId>
+   	<artifactId>jasypt-spring-boot-starter</artifactId>
+   </dependency>
+   ```
+
+2. 在控制台下，直接使用jasypt工具包对数据源进行加密。采用如下命令：
+
+   ```java
+   java -cp jasypt-1.9.2.jar org.jasypt.intf.cli.JasyptPBEStringEncryptionCLI input=数据源 password=密码盐 algorithm=加密方式
+   ```
+数据源为yml配置文件中中需要加密的密码（或用户名、密钥等），默认的加密方式为：PBEWithMD5AndDES，密码盐为yml配置文件中`jasypt.encryptor.password`的值。
+
+3. 将第2步生成输出的`加密数据源`填充到yml配置文件中的原明文位置，形式如下：
+
+   ```java
+   ENC(加密数据源)
+   // 举例
+   oss.qiniu.accessKey: ENC(hF4gC+N5O30Z5WEtKxOD1mSZsRox0MBg3YAjBtfIMvetCLWQfBKSTz3HpdMqiaTpHVxriYk0aEo=)
+   ```
+
+4. 数据源的使用：
+
+   ```java
+   // 4.1 在yml文件中配置密码盐
+   jasypt.encryptor.password: 密码盐
+   
+   // 4.2 在yml文件中将明文用加密数据源替换
+   oss.qiniu.accessKey: ENC(加密数据源)
+   
+   // 4.3 在Springboot中自动使用jasypt解密获取明文
+   public class JasyptTest {
+       @Autowired
+       StringEncryptor stringEncryptor; // 密码解码器自动注入
+       
+       @Value("${oss.qiniu.accessKey}")
+       private String accessKey; // jasypt会自动对accessKey进行解密
+    
+       @Test
+       public void test() {
+           System.out.println("密码:" + accessKey);
+       }
+   }
+   ```
+
+> **注意事项：**由于**加密方式**默认为`PBEWithMD5AndDES`，yml配置文件中又会暴露**密码盐**，非法分子很容易就可以拿到**加密方式**和**密码盐**对**加密数据源**进行解密得到**数据源**，这是很不安全的一种操作。
+>
+> **实际工作中：**会自定义一个**加密解密类**（实现`StringEncryptor`接口），然后将其注入到使用的项目中（@Autowired），在该类中可以对**加密数据源**进行解密操作得到**数据源**；**加密解密类**会存放在服务器上特定的位置，这样就保证了密码的安全性。
+
+> 参考博客文章：**[SpringBoot配置文件属性内容加解密](https://blog.csdn.net/cts529269539/article/details/79024436)**
+
+### 2.2.6 log日志配置
+
+
+
+## 2.4 关于Restful API
+
+
+
+> 参考博客文章：**[阮一峰-Restful API最佳实践](http://www.ruanyifeng.com/blog/2018/10/restful-api-best-practices.html)**、
+
+## 2.5 代码生成器
 
 
 
@@ -595,6 +868,33 @@ zcblog-backend  # 父模块
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# # 个人建站流程
+
+## ## 购买域名
+
+在阿里云购买域名：`progzc.com`，购买期限为1年。
+
+## ## 购买云服务器
+
+在阿里云官网购买云服务器：CPU1核、内存2GiB、操作系统CentOS 8.0 64位、带宽3Mbps。
+
+## ## 进行ICP备案
+
+在阿里云ICP备案系统平台按照步骤备案：基础信息校验-->主办者信息填写-->网站信息填写-->上传资料（**本省注册不需要提交暂住证**）。
 
 
 
