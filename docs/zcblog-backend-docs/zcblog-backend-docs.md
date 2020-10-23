@@ -328,15 +328,253 @@ CREATE TABLE `sys_role_menu` (
 
 # 2 项目搭建
 
-使用mavon搭建工程：
+## 2.1 项目模块结构
 
-## 2.1 使用mavon构建时出错
+使用mavon搭建工程，项目目录如下：
 
+```html
+zcblog-backend  # 父模块
+|————zcblog-core  # 核心基础类：yml配置、Entity、工具类、xss过滤等
+|		|————pom.xml  # 引入依赖
+|		|————src
+|————zcblog-authorize  # 登录与鉴权：Shiro
+|		|————pom.xml  # 依赖zcblog-core
+|		|————src
+|————zcblog-manage  # 博客后台管理系统的服务请求
+|		|————pom.xml  # 依赖zcblog-authorize
+|		|————src
+|————zcblog-client  # 博客前台系统的服务请求
+|		|————pom.xml  # 依赖zcblog-manage
+|		|————src
+|————zcblog-search  # 搜索模块 + 消息中间件：Elasticsearch、RabbitMq
+|		|————pom.xml  # 依赖zcblog-client
+|		|————src  # 项目启动入口：com.progzc.blog.BlogRunApplication
+|————pom.xml  # 引入SpringBoot启动依赖；管理jar包，统一使所有子模块依赖项的版本。
+```
 
+几点说明：
 
+- 整个项目使用Mavon进行构建，利用Git进行版本管理。
 
+- zcblog-backend为父模块，父模块有两个作用：引入SpringBoot启动依赖；管理jar包，统一使所有子模块依赖项的版本。
 
+- 父模块下按照项目的功能划分有5个子模块，子模块之间的依赖关系为：
 
+  > `zcblog-core`-->`zcblog-authorize`-->`zcblog-manage`-->`zcblog-client`-->`zcblog-search`
+
+- 启动类放置在`zcblog-search`模块中，入口文件为`com.progzc.blog.BlogRunApplication`。
+
+## 2.2 项目Jar包管理
+
+在父模块`zcblog-backend`的`pom.xml`进行jar包管理：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!--项目相关信息-->
+    <groupId>com.progzc</groupId>
+    <artifactId>blog</artifactId>
+    <packaging>pom</packaging>
+    <version>1.0-SNAPSHOT</version>
+    <name>zcblog-backend</name>
+    <description>Clouds' Blog</description>
+
+    <!--项目子模块-->
+    <modules>
+        <module>zcblog-core</module>
+        <module>zcblog-authorize</module>
+        <module>zcblog-manage</module>
+        <module>zcblog-client</module>
+        <module>zcblog-search</module>
+    </modules>
+
+    <!--引入SpringBoot启动依赖-->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.1.6.RELEASE</version>
+        <relativePath/><!-- lookup parent from repository -->
+    </parent>
+
+    <!--定义所需各种框架的版本-->
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding><!--项目采用utf-8字符集编码-->
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <maven.compiler.encoding>UTF-8</maven.compiler.encoding><!--编译时的编码-->
+        <java.version>1.8</java.version><!--使用java1.8版本-->
+        <mybaits.version>1.3.2</mybaits.version><!--DO层使用MyBatis操作数据库-->
+        <mybatisplus.version>3.0.1</mybatisplus.version><!--使用MyBatisPlus增强MyBatis的功能-->
+        <druid.version>1.1.10</druid.version><!--数据库连接池使用Druid-->
+        <shiro.version>1.4.0</shiro.version><!--使用Shiro进行登录与鉴权-->
+        <swagger.version>2.9.2</swagger.version><!--使用Swagger UI生成接口文档-->
+        <kaptcha.version>0.0.9</kaptcha.version><!--来自谷歌的验证码工具kaptcha-->
+        <redis.pool.version>2.6.0</redis.pool.version><!--使用redis实现缓存-->
+        <commons.lang.version>2.6</commons.lang.version><!--常用的工具包-->
+        <commons.fileupload.version>[1.3.3,)</commons.fileupload.version><!--实现文件上传-->
+        <commons.io.version>2.5</commons.io.version><!--IO工具包-->
+        <jasypt.version>2.1.0</jasypt.version><!--加密与解密-->
+        <qiniu.version>[7.2.0, 7.2.99]</qiniu.version><!--使用七牛云的OSS作为云储存-->
+        <springboot.version>2.1.2.RELEASE</springboot.version><!--Spring的版本-->
+        <lombok.version>1.18.4</lombok.version><!--简化代码-->
+        <mysql.version>8.0.11</mysql.version><!--数据库使用MySQL-->
+    </properties>
+
+    <!--管理jar包，统一使所有子模块依赖项的版本-->
+    <dependencyManagement>
+        <dependencies>
+            <!--lombok-->
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <optional>true</optional>
+                <version>${lombok.version}</version>
+            </dependency>
+            <!--Swagger-->
+            <dependency>
+                <groupId>io.springfox</groupId>
+                <artifactId>springfox-swagger2</artifactId>
+                <version>${swagger.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.springfox</groupId>
+                <artifactId>springfox-swagger-ui</artifactId>
+                <version>${swagger.version}</version>
+            </dependency>
+            <!--常用工具包-->
+            <dependency>
+                <groupId>commons-lang</groupId>
+                <artifactId>commons-lang</artifactId>
+                <version>${commons.lang.version}</version>
+            </dependency>
+            <!--文件上传-->
+            <dependency>
+                <groupId>commons-fileupload</groupId>
+                <artifactId>commons-fileupload</artifactId>
+                <version>${commons.fileupload.version}</version>
+            </dependency>
+            <!--IO工具包-->
+            <dependency>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>${commons.io.version}</version>
+            </dependency>
+            <!--jasypt-->
+            <dependency>
+                <groupId>com.github.ulisesbocchio</groupId>
+                <artifactId>jasypt-spring-boot-starter</artifactId>
+                <version>${jasypt.version}</version>
+            </dependency>
+            <!--Spring aop-->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-aop</artifactId>
+                <version>${springboot.version}</version>
+            </dependency>
+            <!--Spring Web-->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-web</artifactId>
+                <version>${springboot.version}</version>
+            </dependency>
+            <!--Shiro-->
+            <dependency>
+                <groupId>org.apache.shiro</groupId>
+                <artifactId>shiro-spring</artifactId>
+                <version>${shiro.version}</version>
+            </dependency>
+            <!--Kaptcha-->
+            <dependency>
+                <groupId>com.github.axet</groupId>
+                <artifactId>kaptcha</artifactId>
+                <version>${kaptcha.version}</version>
+            </dependency>
+            <!--七牛云-->
+            <dependency>
+                <groupId>com.qiniu</groupId>
+                <artifactId>qiniu-java-sdk</artifactId>
+                <version>${qiniu.version}</version>
+            </dependency>
+            <!--单元测试-->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-test</artifactId>
+                <version>${springboot.version}</version>
+            </dependency>
+            <!--MyBatis-->
+            <dependency>
+                <groupId>org.mybatis.spring.boot</groupId>
+                <artifactId>mybatis-spring-boot-starter</artifactId>
+                <version>${mybaits.version}</version>
+            </dependency>
+            <!--MySQL-->
+            <dependency>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
+                <version>${mysql.version}</version>
+            </dependency>
+            <!--MyBatisPlus-->
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-boot-starter</artifactId>
+                <version>${mybatisplus.version}</version>
+            </dependency>
+            <!--Druid-->
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>druid-spring-boot-starter</artifactId>
+                <version>${druid.version}</version>
+            </dependency>
+            <!--Spring缓存-->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-cache</artifactId>
+                <version>${springboot.version}</version>
+            </dependency>
+            <!--redis-->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-data-redis</artifactId>
+                <version>${springboot.version}</version>
+            </dependency>
+            <!--连接池-->
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-pool2</artifactId>
+                <version>${redis.pool.version}</version>
+            </dependency>
+            <!--Elasticsearch-->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-data-elasticsearch</artifactId>
+                <version>${springboot.version}</version>
+            </dependency>
+            <!--Rabbitmq-->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-amqp</artifactId>
+                <version>${springboot.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <!--添加mavon插件-->
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+</project>
+```
 
 
 
