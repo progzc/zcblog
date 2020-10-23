@@ -1,0 +1,54 @@
+# 配置web应用服务器
+server:
+  tomcat:
+    uri-encoding: utf-8 # 网络请求字符集为utf-8
+    max-threads: 1000 # 最多支持1000个线程
+    min-spare-threads: 30 # 至少有30个空闲线程
+  # 端口分配：博客前台端口8080；博客管理前台端口8081；博客后台端口8082
+  port: 8082
+  connection-timeout: 5000ms # 请求超时时间5s
+  servlet:
+    #项目映射路径，相当于网络请求为 http://localhost:8082/blog
+    context-path: /blog
+
+# Spring配置
+spring:
+  profiles:
+    # 配置环境：开发dev,测试test,生产prod
+    active: dev  # 将application-dev.yml中的内容合并到本配置文件中
+  jackson:
+    serialization:
+      # 从数据库返回的时间戳是long型的毫秒值
+      write-dates-as-timestamps: true
+  servlet:
+    multipart:
+      max-file-size: 100MB # 单个文件上传最大100MB
+      max-request-size: 100MB # 总上传文件最大100MB
+  mvc:
+    # restFul风格：当找不到页面时，正常抛出错误，不跳转页面
+    throw-exception-if-no-handler-found: true
+    # 映射static资源文件(如js/css/img...)
+    static-path-pattern: /static/**
+  resources:
+    # 为资源文件建立默认映射：若设置为false，会导致不能访问Swagger
+    add-mappings: true
+  rabbitmq:
+    listener:
+      direct:
+        acknowledge-mode: manual # 表示该监听器手动应答消息
+
+# MyBatisPlus配置
+mybatis-plus:
+  mapper-locations: classpath:mapper/**/*.xml # 指定mapper文件位置
+  type-aliases-package: com.progzc.blog.entity.* # 配置别名，多个package使用逗号分隔
+  global-config:
+    # 配置数据库
+    db-config:
+      id-type: auto # 主键策略：数据库自增
+      field-strategy: not_empty # 字段策略：非空判断
+      logic-delete-value: 0 # 0表示逻辑删除（默认值是0）
+      logic-not-delete-value: 1 # 1表示未删除（默认值是1）
+  # MyBatis原生配置
+  configuration:
+    map-underscore-to-camel-case: true # 驼峰下划线自动转换
+    cache-enabled: false # 不开启二级缓存
