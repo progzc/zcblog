@@ -80,3 +80,10 @@ oss:
 jasypt:
   encryptor:
     password: zcblog-jasypt  # 配置加密盐
+
+# 配置日志
+logging:
+  level:
+    root: info # 开发测试环境根级别配置info级别日志
+    com.progzc.blog: debug  # 开发测试环境项目配置debug级别日志
+    com.prog.blog.mapper: trace  # 开发测试环境dao层配置trace级别日志

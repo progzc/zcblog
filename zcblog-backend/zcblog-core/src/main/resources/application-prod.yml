@@ -80,3 +80,11 @@ oss:
 jasypt:
   encryptor:
     password: zcblog-jasypt  # 配置加密盐
+
+# 配置日志
+logging:
+  level:
+    root: error  # 生产环境根级别配置error级别日志
+    com.progzc.blog: error  # 生产环境项目配置error级别日志
+    com.progzc.blog.mapper: error  # 生产环境dao层配置error级别日志
+  file: error.log  # 生产环境将错误日志输出到当前项目根路径下的error.log文件
