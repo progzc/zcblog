@@ -46,8 +46,8 @@ mybatis-plus:
     db-config:
       id-type: auto # 主键策略：数据库自增
       field-strategy: not_empty # 字段策略：非空判断
-      logic-delete-value: 0 # 0表示逻辑删除（默认值是0）
-      logic-not-delete-value: 1 # 1表示未删除（默认值是1）
+      logic-delete-value: 1 # 1表示逻辑删除（默认值是1）
+      logic-not-delete-value: 0 # 0表示未删除（默认值是0）
   # MyBatis原生配置
   configuration:
     map-underscore-to-camel-case: true # 驼峰下划线自动转换

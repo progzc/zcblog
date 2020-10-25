@@ -29,7 +29,7 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <!--指定全局入口文件-->
                 <configuration>
-                    <mainClass></mainClass>
+                    <mainClass>com.progzc.blog.BlogRunApplication</mainClass>
                     <layout>ZIP</layout>
                 </configuration>
             </plugin>

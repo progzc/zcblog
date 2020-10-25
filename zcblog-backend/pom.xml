@@ -21,7 +21,7 @@
         <module>zcblog-search</module>
     </modules>
 
-    <!--项目父模块，这里表示以SpringBoot构建项目-->
+    <!--引入SpringBoot启动依赖-->
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
@@ -47,7 +47,7 @@
         <commons.io.version>2.5</commons.io.version><!--IO工具包-->
         <jasypt.version>2.1.0</jasypt.version><!--加密与解密-->
         <qiniu.version>[7.2.0, 7.2.99]</qiniu.version><!--使用七牛云的OSS作为云储存-->
-        <springboot.version>2.1.2.RELEASE</springboot.version><!--SpringBoot的版本-->
+        <springboot.version>2.1.2.RELEASE</springboot.version><!--Spring的版本-->
         <lombok.version>1.18.4</lombok.version><!--简化代码-->
         <mysql.version>8.0.11</mysql.version><!--数据库使用MySQL-->
     </properties>
@@ -175,7 +175,7 @@
                 <artifactId>commons-pool2</artifactId>
                 <version>${redis.pool.version}</version>
             </dependency>
-            <!-- Elasticsearch-->
+            <!--Elasticsearch-->
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-data-elasticsearch</artifactId>

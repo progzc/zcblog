@@ -1,0 +1,19 @@
+package ${package.Service};
+
+import ${package.Entity}.${entity};
+import ${superServiceClassPackage};
+
+/**
+ * @Description $!{table.comment}
+ * @Author zhaochao
+ * @Date ${date}
+ * @Email zcprog@foxmail.com
+ * @Version V1.0
+ */
+#if(${kotlin})
+interface ${table.serviceName} : ${superServiceClass}<${entity}>
+#else
+public interface ${table.serviceName} extends ${superServiceClass}<${entity}> {
+
+}
+#end
