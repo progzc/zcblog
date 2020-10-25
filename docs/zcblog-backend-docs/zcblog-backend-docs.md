@@ -328,35 +328,35 @@ CREATE TABLE `sys_role_menu` (
 
 # 2 项目搭建
 
-## 2.1 项目模块结构
+## 2.1 项目模块结构(基于功能)
 
 使用mavon搭建工程，项目目录如下：
 
-```html
-zcblog-backend  # 父模块
-|————zcblog-core  # 核心基础类：yml配置、Entity、工具类、xss过滤等
-|		|————pom.xml  # 引入依赖
+```yaml
+zcblog-backend         # 父模块
+|————zcblog-core       # 核心基础类：yml配置、Entity、工具类、xss过滤等
+|		|————pom.xml   # 引入依赖
 |		|————src
 |————zcblog-authorize  # 登录与鉴权：Shiro
-|		|————pom.xml  # 依赖zcblog-core
+|		|————pom.xml   # 依赖zcblog-core
 |		|————src
-|————zcblog-manage  # 博客后台管理系统的服务请求
-|		|————pom.xml  # 依赖zcblog-authorize
+|————zcblog-manage     # 博客后台管理系统的服务请求
+|		|————pom.xml   # 依赖zcblog-authorize
 |		|————src
-|————zcblog-client  # 博客前台系统的服务请求
-|		|————pom.xml  # 依赖zcblog-manage
+|————zcblog-client     # 博客前台系统的服务请求
+|		|————pom.xml   # 依赖zcblog-manage
 |		|————src
-|————zcblog-search  # 搜索模块 + 消息中间件：Elasticsearch、RabbitMq
-|		|————pom.xml  # 依赖zcblog-client
-|		|————src  # 项目启动入口：com.progzc.blog.BlogRunApplication
-|————pom.xml  # 引入SpringBoot启动依赖；管理jar包，统一使所有子模块依赖项的版本。
+|————zcblog-search     # 搜索模块 + 消息中间件：Elasticsearch、RabbitMq
+|		|————pom.xml   # 依赖zcblog-client
+|		|————src       # 项目启动入口：com.progzc.blog.BlogRunApplication
+|————pom.xml           # 引入SpringBoot启动依赖；管理jar包，统一使所有子模块依赖项的版本。
 ```
 
 几点说明：
 
 - 整个项目使用Mavon进行构建，利用Git进行版本管理。
 
-- zcblog-backend为父模块，父模块有两个作用：引入SpringBoot启动依赖；管理jar包，统一使所有子模块依赖项的版本。
+- zcblog-backend为父模块，父模块有两个作用：引入SpringBoot启动依赖；管理jar包，统一所有子模块依赖项的版本。
 
 - 父模块下按照项目的功能划分有5个子模块，子模块之间的依赖关系为：
 
@@ -364,7 +364,36 @@ zcblog-backend  # 父模块
 
 - 启动类放置在`zcblog-search`模块中，入口文件为`com.progzc.blog.BlogRunApplication`。
 
-## 2.2 项目Jar包管理
+## 2.2 项目模块结构新构思(基于服务)
+
+在设计之初，考虑到后续进行水平扩展的另一种模块结构的设计（**即时将灵感记录下来，预计本项目完成之后，再对项目进行改进**）。如下所示：
+
+```yaml
+zcblog-backend         # 父模块
+|————zcblog-core       # 核心基础类：Entity、工具类、xss过滤等
+|		|————pom.xml   # 引入依赖
+|		|————src
+|————zcblog-interface  # 存放服务接口
+|		|————pom.xml   # 依赖zcblog-core
+|		|————src
+|————zcblog-authorize  # 登录与鉴权：Shiro
+|		|————pom.xml   # 依赖zcblog-interface
+|		|————src
+|————zcblog-consumer   # 服务消费者：controller
+|		|————pom.xml   # 依赖zcblog-authorize，单独部署应用
+|		|————src       # 应用启动入口：com.progzc.blog.ConsumerRunApplication
+|————zcblog-provider   # 服务消费者：serviceImpl、do层、*Mapper.xml
+|		|————pom.xml   # 依赖zcblog-interface，单独部署应用
+|		|————src       # 应用启动入口：com.progzc.blog.ProviderRunApplication
+|————zcblog-timer      # 定时器，进行任务调度
+|		|————pom.xml   # 依赖zcblog-interface，单独部署应用
+|		|————src	   # 应用启动入口：com.progzc.blog.TimerRunApplication
+|————pom.xml           # 管理jar包，统一使所有子模块依赖项的版本。
+```
+
+> **特别说明**：这种模块结构的好处是可以进行水平扩展，实现分布式部署。但是考虑到本博客项目最终实际是运行到自己购买的云服务器上，而本人所购买的服务器配置较低，若在单机上模拟分布式应用，内存比较紧张。这里先将这种模块结构构思出来，待本项目完成之后，重新新建一个项目对本项目进行改进，完成项目的分布式部署。
+
+## 2.3 项目Jar包管理
 
 在父模块`zcblog-backend`的`pom.xml`进行jar包管理：
 
@@ -576,11 +605,11 @@ zcblog-backend  # 父模块
 </project>
 ```
 
-## 2.3 项目配置
+## 2.4 项目配置
 
 在`zcblog-core`模块中使用yml进行项目配置，根据开发环境的不同，分为开发环境配置文件（`application-dev.yml`）、测试环境配置文件（`application-test.yml`）和生产环境配置文件（`application-prod.yml`）。将`application-dev.yml`、`application-test.yml`和`application-prod.yml`中的相同部分抽离到`application.yml`中。
 
-### 2.3.1 application.yml
+### 2.4.1 application.yml
 
 在`application.yml`配置文件中主要进行web应用服务器（本项目使用`Tomcat`）的配置、Spring web的配置、MyBatis + MyBatisPlus的配置。
 
@@ -633,8 +662,8 @@ mybatis-plus:
     db-config:
       id-type: auto # 主键策略：数据库自增
       field-strategy: not_empty # 字段策略：非空判断
-      logic-delete-value: 0 # 0表示逻辑删除（默认值是0）
-      logic-not-delete-value: 1 # 1表示未删除（默认值是1）
+      logic-delete-value: 1 # 1表示逻辑删除（默认值是1）
+      logic-not-delete-value: 0 # 0表示未删除（默认值是0）
   # MyBatis原生配置
   configuration:
     map-underscore-to-camel-case: true # 驼峰下划线自动转换
@@ -672,7 +701,7 @@ mybatis-plus:
 
   - not_empty：会对字段值进行null和''比较检查；通过接口更新数据时字段为null值和''值时将不更新进数据库（**本项目采用这种策略**）。
 
-### 2.3.2 application-dev.yml
+### 2.4.2 application-dev.yml
 
 `application-dev.yml`中主要进行**开发阶段**的数据库和Druid连接池、Redis、Elasticsearch、RabbitMQ、MyBatisPlus（特定配置）、七牛云、jasypt。
 
@@ -761,7 +790,7 @@ jasypt:
     password: 密码盐  # 配置密码盐
 ```
 
-### 2.3.3 application-test.yml
+### 2.4.3 application-test.yml
 
 `application-test.yml`配置文件中的内容与`application-dev.yml`基本一致，只需要根据实际需要稍加修改即可。
 
@@ -769,7 +798,7 @@ jasypt:
 mybatis-plus.global-config.refresh: false  # 刷新Mapper,只在开发环境打开
 ```
 
-### 2.3.4 application-prod.yml
+### 2.4.4 application-prod.yml
 
 `application-prod.yml`配置文件中的内容与`application-dev.yml`基本一致，只需要根据实际需要稍加修改即可。
 
@@ -777,7 +806,7 @@ mybatis-plus.global-config.refresh: false  # 刷新Mapper,只在开发环境打�
 mybatis-plus.global-config.refresh: false  # 刷新Mapper,只在开发环境打开
 ```
 
-### 2.3.5 jasypt明文加密
+### 2.4.5 jasypt明文加密
 
 为了安全，项目配置文件里的密码（以及有些重要的用户名、密钥）一般不能采用明文显示，需要进行加密处理。这里采用`jasypt`进行加密。
 
@@ -838,9 +867,9 @@ mybatis-plus.global-config.refresh: false  # 刷新Mapper,只在开发环境打�
 
 > 参考博客文章：**[SpringBoot配置文件属性内容加解密](https://blog.csdn.net/cts529269539/article/details/79024436)**
 
-### 2.2.6 log日志配置
+### 2.4.6 log日志配置
 
-#### 2.2.6.1 日志系统的介绍
+#### 2.4.6.1 日志系统的介绍
 
 常用的日志系统抽象层有`Slf4j`，实现层有`Log4j`、`Logback`...，SpringBoot默认的日志系统是`Slf4j(抽象层) + LogBack(实现层)`，默认的日志级别是`info`。
 
@@ -856,7 +885,7 @@ mybatis-plus.global-config.refresh: false  # 刷新Mapper,只在开发环境打�
 #  3.1 程序代码块中可以使用{}占位符来拼接字符串，如：log.info("name:{} , age:{}", name, age);
 ```
 
-#### 2.2.6.2 常用的日志配置项
+#### 2.4.6.2 常用的日志配置项
 
 常用的日志配置如下：
 
@@ -891,7 +920,7 @@ logging.config: 日志配置文件  # 可以导入.xml日志配置文件
 logging.path: 日志目录  # 配置日志文件的目录
 logging.file.name: ${logging.path}/${spring.application.name}.log  # 动态生成日志文件
 ```
-#### 2.2.6.3 本项目的日志配置
+#### 2.4.6.3 本项目的日志配置
 
 本项目的日志配置在yml中进行配置。`开发及测试环境下`的日志配置如下：
 
@@ -918,17 +947,17 @@ logging:
 
 > 参考博客文章：**[SpringBoot日志配置](https://blog.csdn.net/qq_44316726/article/details/108979727)**、[日志格式化符号解释](https://www.cnblogs.com/dong-dong-dong/p/9547136.html)、**[日志配置进阶与lombok简化主动生成日志](https://blog.csdn.net/Inke88/article/details/75007649)**、
 
-## 2.4 关于RESTful API
+## 2.5 关于RESTful API
 
-### 2.4.1 RESTful API简介
+### 2.5.1 RESTful API简介
 
 **REST（Representational State Transfer）**：即表现层状态转化。它是一种互联网应用程序的**API设计理念**：可以用URL定位资源，用HTTP动词（GET、POST、DELETE、PUT）描述操作来解释什么是REST。GET用来获取资源，POST用来新建资源（也可以用于更新资源），PUT用来更新资源，DELETE用来删除资源。
 
 **RESTful API**：基于REST构建的API就是Restful风格。优点是**可以通过一套统一的API接口为 Web，iOS和Android提供服务**，特别适合于前后端分离的系统。
 
-### 2.4.2 RESTful API的设计细节
+### 2.5.2 RESTful API的设计细节
 
-#### 2.4.2.1 URL设计
+#### 2.5.2.1 URL设计
 
 1. 客户端发出的数据操作指令都是**"动词 + 宾语"**的结构，如`GET /articles`。动词通常就是5种HTTP方法，对应CRUD操作。
 
@@ -971,7 +1000,7 @@ GET /articles/published  # 查询已发布的文章；URL采用多级URL，不�
 GET /articles?published=true  # 查询已发布的文章；URL采用一级URL+查询字符串表达，正确
 ```
 
-#### 2.4.2.2 状态码
+#### 2.5.2.2 状态码
 
 **状态码必须精确**。针对客户端的每一次请求，服务器都必须给出响应。**响应包括 HTTP 状态码和数据两部分**。
 
@@ -1002,7 +1031,7 @@ GET /articles?published=true  # 查询已发布的文章；URL采用一级URL+�
   # 503 Service Unavailable: 服务器无法处理请求，一般用于网站维护状态
 ```
 
-#### 2.4.2.3 服务器响应
+#### 2.5.2.3 服务器响应
 
 1. **不要返回纯文本**。API返回的数据格式，不能是纯文本，而应该是一个JSON对象。
    - 服务器响应的HTTP 头设置为`Content-Type: application/json`。
@@ -1016,7 +1045,7 @@ GET /articles?published=true  # 查询已发布的文章；URL采用一级URL+�
    # 例：GitHub的API都在https://api.github.com/这个域名。访问它，就可以得到其他URL。
    ```
 
-### 2.4.3 本项目的API设计
+### 2.5.3 本项目的API设计
 
 本项目的API设计会尽可能遵循RESTful原则。**具体体现形式**：
 
@@ -1029,9 +1058,227 @@ GET /articles?published=true  # 查询已发布的文章；URL采用一级URL+�
 
 > 参考博客文章：**[阮一峰-Restful API最佳实践](http://www.ruanyifeng.com/blog/2018/10/restful-api-best-practices.html)**、[Rest服务和Restful API](https://blog.csdn.net/shangrila_kun/article/details/89026968)、[Restful风格的API接口开发教程](https://www.imooc.com/article/28250)
 
-## 2.5 代码生成器
+# 3 代码生成器
 
+## 3.1 自定义代码生成工具类
 
+借助于MybatisPlus，可以根据数据库中的表快速帮我们生成entity、controller、service、serviceImpl、mapper、xml。这样带来了两个好处：一是节省了大量的时间；二是保证了准确性（不会出现成员变量与表中字段名对应不上的情况）。
+
+在`CodeGeneratorUtils.java`中编写自动生成代码的逻辑，为了便于理解，代码中采用了大量的注释。
+
+```java
+public class CodeGeneratorUtils {
+
+    public static String projectPath = System.getProperty("user.dir");
+    /**
+     * 根据表名自动生成代码
+     * @param tableName
+     * @param moduleName
+     * @param category
+     */
+    public static void codeGenerator(String tableName, String moduleName, String category){
+        // 代码生成器
+        AutoGenerator mpg = new AutoGenerator();
+        // 全局配置
+        GlobalConfig gc = new GlobalConfig();
+        gc.setOutputDir(projectPath + "\\zcblog-backend\\zcblog-core\\src\\main\\java");
+        gc.setAuthor("zhaochao");
+        gc.setOpen(false); // 不打开输出目录
+        gc.setBaseResultMap(true); // 开启BaseResultMap
+        gc.setBaseColumnList(true); // 开启baseColumnList
+        gc.setSwagger2(true); // 实体属性添加Swagger2注解
+        gc.setControllerName("%sController"); // controller命名方式为在末尾添加Controller
+        gc.setServiceName("%sService"); // service命名方式为在末尾增加Service
+        gc.setServiceImplName("%sServiceImpl"); // service实现类命名方式为在末尾添加ServiceImpl
+        gc.setMapperName("%sMapper"); // mapper命名方式为在末尾增加Mapper
+        gc.setIdType(IdType.AUTO); // 默认主键自增类型为数据库自增
+        gc.setDateType(DateType.ONLY_DATE); // 设置日期格式
+        gc.setFileOverride(false); // 不覆盖原来文件（否则会比较危险），也可在cfg.setFileCreate中进行自定义配置
+        mpg.setGlobalConfig(gc); // 为代码生成器注入全局配置
+
+        // 数据源配置
+        DataSourceConfig dsc = new DataSourceConfig();
+        dsc.setUrl("jdbc:mysql://localhost:3306/zcblog?allowMultiQueries=true&useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=GMT");
+        dsc.setDriverName("com.mysql.cj.jdbc.Driver");
+        dsc.setUsername("root");
+        dsc.setPassword("root");
+        dsc.setDbType(DbType.MYSQL);
+        mpg.setDataSource(dsc); // 添加数据源配置
+
+        // 包配置（后面手动单独配置）
+        PackageConfig pc = new PackageConfig();
+        pc.setParent("com.progzc.blog"); // 设置包名称
+        pc.setModuleName(moduleName);  // 若设置后会生成com.progzc.blog/${moduleName}包
+        // 生成entity文件夹,设置后会生成com.progzc.blog/${moduleName}/entity/${category}包
+        pc.setEntity("entity" + "." + category); 
+        // 生成mapper文件夹,设置后会生成com.progzc.blog/${moduleName}/mapper/${category}包
+        pc.setMapper("mapper" + "." + category); 
+        // 生成service文件夹,设置后会生成com.progzc.blog/${moduleName}/service/${category}包
+        pc.setService("service" + "." + category); 
+        // 生成service.impl文件夹,设置后会生成com.progzc.blog/${moduleName}/service/impl/${category}包
+        pc.setServiceImpl("service.impl" + "." + category); 
+        // 生成controller文件夹,设置后会生成com.progzc.blog/${moduleName}/controller/${category}包
+        pc.setController("controller" + "." + category); 
+        pc.setXml(null); // *Mapper.xml使用自定义配置
+        mpg.setPackageInfo(pc); // 添加包配置信息
+
+        // 自定义配置
+        InjectionConfig cfg = new InjectionConfig() {
+            @Override
+            public void initMap() {
+                // to do nothing
+            }
+        };
+        // 当代码生成器自动生成好代码后，若后续不需再重新生成了，为了防止误操作，应修改为return false
+        cfg.setFileCreate(new IFileCreate() {
+            @Override
+            public boolean isCreate(ConfigBuilder configBuilder, FileType fileType, String filePath) {
+                return !new File(filePath).exists(); // 若文件存在，则不会重新生成
+            }
+        });
+
+        // 以下可以自定义配置，但有个两个注意点：
+        // 1. new FileOutConfig("/templates/mapper.xml.vm")中的模板文件一定要带后缀.vm，否则会报错。
+        // 2. outputFile方法中返回的文件路径中的文件夹需要事先创建好，否则会报错。(这里我们对原程序进行改进)
+        List<FileOutConfig> focList = new ArrayList<>();
+        focList.add(new FileOutConfig("/templates/mapper.xml.vm") { // 这里一定要带后缀.vm告知使用Velocity进行解析
+            @Override
+            public String outputFile(TableInfo tableInfo) {
+                StringBuilder xmlfilePath = new StringBuilder();
+                xmlfilePath.append(projectPath)
+                           .append("\\zcblog-backend\\zcblog-core\\src\\main\\resources/mapper\\")
+                           .append(category);
+                File file = new File(xmlfilePath.toString());
+                if(!file.exists() || !file.isDirectory()){
+                    file.mkdirs();
+                }
+                String xmlfileName = tableInfo.getEntityName() + "Mapper" + StringPool.DOT_XML;
+                return xmlfilePath + "\\" + xmlfileName;
+            }
+        });
+        cfg.setFileOutConfigList(focList);
+        mpg.setCfg(cfg);
+        mpg.setTemplateEngine(new VelocityTemplateEngine()); // 设置使用Velocity模板引擎
+
+        // 配置模板
+        TemplateConfig templateConfig = new TemplateConfig();
+        // 指定自定义模板路径，注意不要带上.ftl/.vm, 会根据使用的模板引擎自动识别
+        templateConfig.setEntity("templates/entity.java");
+        templateConfig.setController("templates/controller.java");
+        templateConfig.setService("templates/service.java");
+        templateConfig.setServiceImpl("templates/serviceImpl.java");
+        templateConfig.setMapper("templates/mapper.java");
+        templateConfig.setXml(null); // *Mapper.xml使用自定义配置
+        mpg.setTemplate(templateConfig);
+
+        // 策略配置
+        StrategyConfig strategy = new StrategyConfig();
+        strategy.setNaming(NamingStrategy.underline_to_camel);
+        strategy.setColumnNaming(NamingStrategy.underline_to_camel);
+        strategy.setEntityLombokModel(true);
+        strategy.setRestControllerStyle(true);
+        strategy.setInclude(tableName); // 设置表名
+        strategy.setLogicDeleteFieldName("deleted"); // 设置逻辑删除
+        TableFill create_time = new TableFill("create_time", FieldFill.INSERT); // 设置自动填充
+        TableFill update_time = new TableFill("update_time", FieldFill.UPDATE); // 设置逻辑删除
+        List<TableFill> fillList = new ArrayList<TableFill>();
+        fillList.add(create_time);
+        fillList.add(update_time);
+        strategy.setTableFillList(fillList);
+        strategy.setVersionFieldName("version"); // 设置乐观锁
+        mpg.setStrategy(strategy);
+        mpg.execute();
+    }
+
+    // 自定义TableModule封装tableName、moduleName和category参数
+    static class TableModule{
+        private String tableName;
+        private String moduleName;
+        private String category;
+
+        /**
+         * 生成的文件：${outputDir}/${parent}/${moduleName}/${fileType}/${category}/文件名
+         * @param tableName 表名
+         * @param moduleName 模块名
+         * @param category 分类
+         */
+        public TableModule(String tableName, String moduleName, String category){
+            this.tableName = tableName;
+            this.moduleName = moduleName;
+            this.category = category;
+        }
+    }
+
+    public static void main(String[] args) {
+        List<TableModule> list = new ArrayList<TableModule>();
+        list.add(new TableModule("article", null, "article"));
+        list.add(new TableModule("gallery", null,  "gallery"));
+        list.add(new TableModule("encrypt", null, "operation"));
+        list.add(new TableModule("tag", null, "operation"));
+        list.add(new TableModule("tag_link", null,  "operation"));
+        list.add(new TableModule("log_like", null,  "log"));
+        list.add(new TableModule("log_view", null,  "log"));
+        list.add(new TableModule("oss_resource", null,  "oss"));
+        list.add(new TableModule("sys_menu", null,  "sys"));
+        list.add(new TableModule("sys_role", null,  "sys"));
+        list.add(new TableModule("sys_role_menu", null,  "sys"));
+        list.add(new TableModule("sys_user", null,  "sys"));
+        list.add(new TableModule("sys_user_role", null,  "sys"));
+        list.forEach( e -> codeGenerator(e.tableName, e.moduleName, e.category));
+    }
+}
+```
+
+## 3.2 设计细节
+
+### 3.2.1 避免误操作覆盖源文件
+
+若第一次使用`CodeGeneratorUtils`工具类生成了源文件后，为了避免第二次误操作运行`CodeGeneratorUtils`后覆盖源文件，代码中添加了相应的避免误操作的逻辑。
+
+```java
+// 针对entity、controller、service、serviceImpl
+gc.setFileOverride(false); // 不覆盖原来文件（否则会比较危险），也可在cfg.setFileCreate中进行自定义配置
+
+// 针对*Mapper.xml
+return !new File(filePath).exists(); // 若文件存在，则不会重新生成
+```
+
+### 3.2.2 可拓展性
+
+设计了内部类`TableModule`用来封装表名、模块名和分类名。其中表名指定用于自动生成代码的表，模块名和分类名共同结合起来生成指定的包名。结合代码生成器的全局配置，最终生成的目录为：
+
+```html
+${outputDir}/${parent}/${moduleName}/${fileType}/${category}
+```
+
+### 3.2.3 xml的生成
+
+由于xml一般放置在src/main/resourcess目录下，需要自定义配置文件用于生成*Mapper.xml。由如下几点需要注意：
+
+1. `new FileOutConfig("/templates/mapper.xml.vm")`中指定模板文件时一定要带后缀.vm，**否则会报错找不到模板文件**；而`templateConfig.setEntity("templates/entity.java")`中指定模板文件时不需要带后缀.vm。
+2. `outputFile方法`中返回文件路径中的文件夹需要事先创建好，否则会报错（这里我们对程序进行改进，若手动未完成，则交由程序自动创建）。
+3. 使用velocity模板引擎而非freemarker模板引擎。
+4. 对模板文件进行适当的修改以满足我们的要求。
+
+> 关于velocity模板和freemarker模板的下载，可以在Github或者码云下载MybatisPlus的源代码、模板文件在mybatis-plus-generator/src/main/resources/templates文件夹中。**注意两点**：
+>
+> - 下载的velocity模板或freemarker模板要与所使用的MyBatisPlus的版本一致。
+> - 如何获取旧版本的模板文件？使用git工具将MybatisPlus源码克隆到本地，切换到指定的标签，然会就可以找到旧版本的模板文件了！
+
+### 3.2.4 常见的错误
+
+1. 显示使用的模板文件报错（如下图所示）。有如下几种可能：一是模板文件的语法出错（**由于是开发团队所提供，出错可能性不大**），二是模板文件与MyBatisPlus版本不一致；三是使用的模板引擎不支持该模板文件。
+
+   ![Snipaste_2020-10-25_10-04-20](zcblog-backend-docs.assets/Snipaste_2020-10-25_10-04-20.png)
+   
+   该错误最终定位为模板引擎不支持模板文件。将模板引擎由freemarker更换为velocity，同时将.ftl模板文件更换为.vm模板文件后解决了问题。
+
+2. 显示找不到指定路径。
+
+   ![Snipaste_2020-10-25_10-39-31](zcblog-backend-docs.assets/Snipaste_2020-10-25_10-39-31.png)
+该错误是由于既未手动创建*Mapper.xml所需的文件目录，也未在程序中自动生成该目录，导致程序在生成文件时出错。严格按照`3.2.3节`所述进行操作可解决该问题。
+
+> 参考博客文章：[Velocity模板引擎语法](https://www.jianshu.com/p/d458d7b8d759)、[代码生成器](https://baomidou.com/guide/generator.html)
 
 
 
