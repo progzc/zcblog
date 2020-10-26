@@ -1,13 +1,15 @@
 package com.progzc.blog.entity.sys;
 
+import com.baomidou.mybatisplus.annotation.FieldStrategy;
 import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.Version;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import java.io.Serializable;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.springframework.data.annotation.Id;
 
 /**
  * @Description 菜单管理
@@ -21,9 +23,11 @@ import lombok.EqualsAndHashCode;
 @ApiModel(value="SysMenu对象", description="菜单管理")
 public class SysMenu implements Serializable {
 
+    private  static final long serialVersionUID = 1L;
 
     @ApiModelProperty(value = "主键,菜单id")
-      @TableId(value = "${field.annotationColumnName}", type = IdType.AUTO)
+    @TableId(value = "menu_id", type = IdType.AUTO)
+    @Id
     private Long menuId;
 
     @ApiModelProperty(value = "父级菜单id")
@@ -36,6 +40,7 @@ public class SysMenu implements Serializable {
     private String url;
 
     @ApiModelProperty(value = "权限")
+    @TableField(strategy = FieldStrategy.IGNORED)
     private String perms;
 
     @ApiModelProperty(value = "菜单类型：0-目录，1-菜单，2-按钮")
@@ -46,6 +51,5 @@ public class SysMenu implements Serializable {
 
     @ApiModelProperty(value = "同级菜单排序")
     private Integer orderNum;
-
 
 }

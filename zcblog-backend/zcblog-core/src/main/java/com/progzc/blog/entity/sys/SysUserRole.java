@@ -1,7 +1,6 @@
 package com.progzc.blog.entity.sys;
 
 import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.Version;
 import com.baomidou.mybatisplus.annotation.TableId;
 import java.io.Serializable;
 import io.swagger.annotations.ApiModel;
@@ -21,9 +20,10 @@ import lombok.EqualsAndHashCode;
 @ApiModel(value="SysUserRole对象", description="用户与角色对应关系")
 public class SysUserRole implements Serializable {
 
+    private  static final long serialVersionUID = 1L;
 
     @ApiModelProperty(value = "主键")
-      @TableId(value = "${field.annotationColumnName}", type = IdType.AUTO)
+    @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     @ApiModelProperty(value = "用户ID")
@@ -31,6 +31,5 @@ public class SysUserRole implements Serializable {
 
     @ApiModelProperty(value = "角色ID")
     private Long roleId;
-
 
 }

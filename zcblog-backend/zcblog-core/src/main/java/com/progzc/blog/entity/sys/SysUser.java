@@ -2,7 +2,6 @@ package com.progzc.blog.entity.sys;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import java.util.Date;
-import com.baomidou.mybatisplus.annotation.Version;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -11,6 +10,10 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.springframework.data.annotation.Id;
+
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
 
 /**
  * @Description 用户
@@ -24,18 +27,24 @@ import lombok.EqualsAndHashCode;
 @ApiModel(value="SysUser对象", description="用户")
 public class SysUser implements Serializable {
 
+    private  static final long serialVersionUID = 1L;
 
     @ApiModelProperty(value = "主键")
-      @TableId(value = "${field.annotationColumnName}", type = IdType.AUTO)
+    @TableId(value = "user_id", type = IdType.AUTO)
+    @Id
     private Long userId;
 
     @ApiModelProperty(value = "用户名")
+    @NotBlank(message = "用户名不能为空") // 校验
     private String username;
 
     @ApiModelProperty(value = "用户密码")
+    @NotBlank(message = "密码不能为空") // 校验
     private String password;
 
     @ApiModelProperty(value = "用户邮箱")
+    @Email(message = "邮箱格式不正确") // 校验（主要在前台进行校验，降低服务器压力）
+    @NotBlank(message = "邮箱不能为空") // 校验
     private String email;
 
     @ApiModelProperty(value = "盐")
@@ -48,8 +57,7 @@ public class SysUser implements Serializable {
     private Boolean status;
 
     @ApiModelProperty(value = "用户创建时间")
-      @TableField(fill = FieldFill.INSERT)
+    @TableField(fill = FieldFill.INSERT)
     private Date createTime;
-
 
 }

@@ -12,6 +12,9 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NonNull;
+import lombok.experimental.Accessors;
+import org.springframework.data.annotation.Id;
 
 /**
  * @Description 云存储资源表
@@ -25,22 +28,27 @@ import lombok.EqualsAndHashCode;
 @ApiModel(value="OssResource对象", description="云存储资源表")
 public class OssResource implements Serializable {
 
+    private  static final long serialVersionUID = 1L;
 
     @ApiModelProperty(value = "主键")
-      @TableId(value = "${field.annotationColumnName}", type = IdType.AUTO)
+    @TableId(value = "id", type = IdType.AUTO)
+    @Id
     private Integer id;
 
     @ApiModelProperty(value = "名称")
+    @NonNull
     private String name;
 
     @ApiModelProperty(value = "资源链接")
+    @NonNull
     private String url;
 
     @ApiModelProperty(value = "自动填充：创建时间")
-    private Date createDate;
+    @TableField(fill = FieldFill.INSERT)
+    private Date createTime;
 
     @ApiModelProperty(value = "自动填充：更新时间")
-      @TableField(fill = FieldFill.UPDATE)
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private Date updateTime;
 
     @ApiModelProperty(value = "乐观锁")
@@ -50,6 +58,4 @@ public class OssResource implements Serializable {
     @ApiModelProperty(value = "逻辑删除：0-未删除，1-已删除")
     @TableLogic
     private Integer deleted;
-
-
 }

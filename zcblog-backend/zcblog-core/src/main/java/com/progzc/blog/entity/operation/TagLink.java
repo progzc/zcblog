@@ -12,6 +12,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NonNull;
 import org.springframework.data.annotation.Id;
 
 /**
@@ -34,12 +35,15 @@ public class TagLink implements Serializable {
     private Integer id;
 
     @ApiModelProperty(value = "标签Id")
+    @NonNull
     private Integer tagId;
 
     @ApiModelProperty(value = "关联Id")
+    @NonNull
     private Integer linkId;
 
     @ApiModelProperty(value = "所属类别：0-文章，1-相册")
+    @NonNull
     private Integer type;
 
     @ApiModelProperty(value = "自动填充：创建时间")
