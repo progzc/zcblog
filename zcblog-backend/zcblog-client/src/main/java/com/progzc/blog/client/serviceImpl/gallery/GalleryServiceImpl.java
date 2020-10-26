@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
  * @Email zcprog@foxmail.com
  * @Version V1.0
  */
-@Service
+@Service("galleryClientService")
 public class GalleryServiceImpl extends ServiceImpl<GalleryMapper, Gallery> implements GalleryService {
 
 }

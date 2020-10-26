@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
  * @Email zcprog@foxmail.com
  * @Version V1.0
  */
-@Service
+@Service("tagClientService")
 public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagService {
 
 }

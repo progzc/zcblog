@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @Email zcprog@foxmail.com
  * @Version V1.0
  */
-@RestController
+@RestController("galleryClientController")
 @RequestMapping("/gallery")
 public class GalleryController {
 

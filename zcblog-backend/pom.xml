@@ -47,7 +47,7 @@
         <commons.io.version>2.5</commons.io.version><!--IO工具包-->
         <jasypt.version>2.1.0</jasypt.version><!--加密与解密-->
         <qiniu.version>[7.2.0, 7.2.99]</qiniu.version><!--使用七牛云的OSS作为云储存-->
-        <springboot.version>2.1.2.RELEASE</springboot.version><!--Spring的版本-->
+        <springboot.version>2.1.6.RELEASE</springboot.version><!--Spring的版本-->
         <lombok.version>1.18.4</lombok.version><!--简化代码-->
         <mysql.version>8.0.11</mysql.version><!--数据库使用MySQL-->
     </properties>
@@ -65,12 +65,12 @@
             <!--Swagger-->
             <dependency>
                 <groupId>io.springfox</groupId>
-                <artifactId>springfox-swagger2</artifactId>
+                <artifactId>springfox-swagger2</artifactId><!--获取API-->
                 <version>${swagger.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.springfox</groupId>
-                <artifactId>springfox-swagger-ui</artifactId>
+                <artifactId>springfox-swagger-ui</artifactId><!--提供UI界面-->
                 <version>${swagger.version}</version>
             </dependency>
             <!--常用工具包-->
@@ -186,6 +186,14 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-amqp</artifactId>
                 <version>${springboot.version}</version>
+            </dependency>
+            <!--使用devtools工具实现项目热部署-->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-devtools</artifactId>
+                <version>${springboot.version}</version>
+                <scope>runtime</scope>
+                <optional>true</optional>
             </dependency>
         </dependencies>
     </dependencyManagement>

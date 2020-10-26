@@ -2,6 +2,7 @@ package com.progzc.blog.mapper.gallery;
 
 import com.progzc.blog.entity.gallery.Gallery;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Mapper;
 
 /**
  * @Description 相册
@@ -10,6 +11,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  * @Email zcprog@foxmail.com
  * @Version V1.0
  */
+@Mapper
 public interface GalleryMapper extends BaseMapper<Gallery> {
 
 }

@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
  * @Email zcprog@foxmail.com
  * @Version V1.0
  */
-@Service
+@Service("articleClientService")
 public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> implements ArticleService {
 
 }

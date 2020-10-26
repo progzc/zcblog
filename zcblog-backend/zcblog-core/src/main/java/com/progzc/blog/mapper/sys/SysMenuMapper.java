@@ -2,6 +2,7 @@ package com.progzc.blog.mapper.sys;
 
 import com.progzc.blog.entity.sys.SysMenu;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Mapper;
 
 /**
  * @Description 菜单管理
@@ -10,6 +11,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  * @Email zcprog@foxmail.com
  * @Version V1.0
  */
+@Mapper
 public interface SysMenuMapper extends BaseMapper<SysMenu> {
 
 }

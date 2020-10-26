@@ -1,7 +1,9 @@
 package com.progzc.blog.client.controller.article;
 
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
 
 /**
  * @Description 文章
@@ -10,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @Email zcprog@foxmail.com
  * @Version V1.0
  */
-@RestController
+@RestController("articleClientController")
 @RequestMapping("/article")
 public class ArticleController {
 

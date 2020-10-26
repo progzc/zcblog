@@ -2,6 +2,7 @@ package com.progzc.blog.mapper.operation;
 
 import com.progzc.blog.entity.operation.Tag;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Mapper;
 
 /**
  * @Description 标签
@@ -10,6 +11,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  * @Email zcprog@foxmail.com
  * @Version V1.0
  */
+@Mapper
 public interface TagMapper extends BaseMapper<Tag> {
 
 }

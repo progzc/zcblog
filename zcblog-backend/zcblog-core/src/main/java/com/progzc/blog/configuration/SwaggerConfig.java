@@ -50,8 +50,6 @@ public class SwaggerConfig implements WebMvcConfigurer {
         // 获取项目的环境
         boolean isDevAndTest = environment.acceptsProfiles(profiles);
 
-        System.out.println("isDevAndTest："+isDevAndTest);
-
         return new Docket(DocumentationType.SWAGGER_2)
                 .apiInfo(apiInfo())
                 // 是否启动Swagger，若为false，则Swagger不能在浏览器中访问

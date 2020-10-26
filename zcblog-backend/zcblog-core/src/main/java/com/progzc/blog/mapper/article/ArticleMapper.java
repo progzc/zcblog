@@ -2,6 +2,7 @@ package com.progzc.blog.mapper.article;
 
 import com.progzc.blog.entity.article.Article;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Mapper;
 
 /**
  * @Description 文章
@@ -10,6 +11,8 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  * @Email zcprog@foxmail.com
  * @Version V1.0
  */
+
+@Mapper
 public interface ArticleMapper extends BaseMapper<Article> {
 
 }

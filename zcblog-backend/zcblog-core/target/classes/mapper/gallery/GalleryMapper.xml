@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.progzc.blog.mapper.oss.OssResourceMapper">
+<mapper namespace="com.progzc.blog.mapper.gallery.GalleryMapper">
 
     <!-- 通用查询映射结果 -->
-    <resultMap id="BaseResultMap" type="com.progzc.blog.entity.oss.OssResource">
+    <resultMap id="BaseResultMap" type="com.progzc.blog.entity.gallery.Gallery">
         <id column="id" property="id" />
-        <result column="name" property="name" />
-        <result column="url" property="url" />
+        <result column="srl_url" property="srlUrl" />
+        <result column="thumb_url" property="thumbUrl" />
+        <result column="description" property="description" />
         <result column="create_time" property="createTime" />
         <result column="update_time" property="updateTime" />
         <result column="version" property="version" />
@@ -15,7 +16,7 @@
 
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        id, name, url, create_date, update_time, version, deleted
+        id, srl_url, thumb_url, description, create_time, update_time, version, deleted
     </sql>
 
 </mapper>

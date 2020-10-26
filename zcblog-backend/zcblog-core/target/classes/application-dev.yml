@@ -1,0 +1,89 @@
+spring:
+  # 配置数据库
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource  # 使用Druid连接池
+    driver-class-name: com.mysql.cj.jdbc.Driver  # 使用MySQL数据库
+    druid:
+      # 配置数据库连接地址并进行相关设置（允许进行批处理、使用utf-8字符集、不进行SSL连接、使用格林威治时间）
+      url: jdbc:mysql://localhost:3306/zcblog?allowMultiQueries=true&useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=GMT
+      username: root  # 数据库用户名
+      password: root  # 数据库密码
+      initial-size: 10  # 初始连接数10个
+      max-active: 100  # 最大连接数100个
+      min-idle: 10  # 最小空闲数是10个
+      max-wait: 60000  # 最长等待时间为60s
+      # 开启缓存preparedStatement(PSCache)，PSCache对支持游标的数据库性能提升巨大，比如说oracle;在MySQL下建议关闭。
+      pool-prepared-statements: true
+      # 要启用PSCache，必须配置大于0，当大于0时，poolPreparedStatements自动触发修改为true。
+      # 在Druid中，不会存在Oracle下PSCache占用内存过多的问题，可以把这个数值配置大一些，比如说100
+      max-pool-prepared-statement-per-connection-size: 20
+      time-between-eviction-runs-millis: 60000  # Destroy线程检测连接的间隔时间为60s
+      min-evictable-idle-time-millis: 300000  # 一个连接在池中最小生存的时间为300s
+      test-while-idle: true  # 若空闲时间大于timeBetweenEvictionRunsMillis,则执行validationQuery检测连接是否有效;不影响性能,但可保证安全性.
+      test-on-borrow: false  # 申请连接时不执行validationQuery检测连接是否有效,会提升性能
+      test-on-return: false  # 归还连接时不执行validationQuery检测连接是否有效,会提升性能
+      stat-view-servlet:
+        enabled: true  #  启用监控页面的配置
+        url-pattern: /druid/*  # 设置监控页面的url
+        login-username: admin  # 设置监控页面的登录名
+        login-password: admin  # 设置监控页面的登录密码
+      filter:
+        # 监控统计
+        stat:
+          db-type: mysql  # 数据库为MySQL
+          log-slow-sql: true  # 记录慢SQL
+          slow-sql-millis: 1000  # 定义执行时间1s以上的为慢SQL
+          merge-sql: false  # 禁止合并SQL
+        wall:
+          db-type: mysql  # 数据库为MySQL
+          enabled: true  # 防止SQL注入
+          config:
+            multi-statement-allow: true  # 允许进行批处理(spring.datasource.druid.url也要进行配置)
+  # 配置redis
+  redis:
+    host: localhost  # 配置主机为本机
+    port: 6379  # 配置端口号
+    timeout: 6s  # 配置连接池超时时长为6s
+    lettuce:
+      pool:
+        max-active: 1000  # 连接池最大连接数
+        max-wait: -1ms  # 连接池最大阻塞等待时间（使用负值表示没有限制）
+        max-idle: 10  # 连接池中的最大空闲连接数
+        min-idle: 5  # 连接池中的最小空闲连接数
+  # 配置Elasticsearch
+#  data:
+#    elasticsearch:
+#      cluster-name: zcblog-cluster  # 配置集群名称
+#      cluster-nodes: 127.0.0.1:9301  # 配置集群中某一节点的地址
+  # 配置RabbitMQ
+  rabbitmq:
+    host: 192.168.175.135  # 配置主机（本项目RabbitMQ运行在虚拟机上）
+    port: 5672  # 配置端口号
+    username: guest  # 配置用户名
+    password: guest  # 配置密码
+
+# 配置MyBatisPlus
+mybatis-plus:
+  global-config:
+    refresh: true  # 刷新Mapper,只在开发环境打开
+
+# 配置七牛云（变量）
+oss:
+  qiniu:
+    domain: http://qhnmn5y5g.hn-bkt.clouddn.com  # 七牛云外链域名
+    prefix: blog # 前缀,相当于项目路径
+    accessKey: ENC(hF4gC+N5O30Z5WEtKxOD1mSZsRox0MBg3YAjBtfIMvetCLWQfBKSTz3HpdMqiaTpHVxriYk0aEo=)  # 配置AccessKey
+    secretKey: ENC(qT3zh/KqVuUJ/l3TxopznzXTniZgb/oPazL4G20G0A5BGmFXnKrBN8EXXe8j5+Y4z36Bboi0a+c=)  # 配置SecretKey
+    bucketName: progzc-blog # 配置空间名
+
+# 配置加密和解密
+jasypt:
+  encryptor:
+    password: zcblog-jasypt  # 配置加密盐
+
+# 配置日志
+logging:
+  level:
+    root: info # 开发测试环境根级别配置info级别日志
+    com.progzc.blog: debug  # 开发测试环境项目配置debug级别日志
+    com.progzc.blog.mapper: trace  # 开发测试环境dao层配置trace级别日志

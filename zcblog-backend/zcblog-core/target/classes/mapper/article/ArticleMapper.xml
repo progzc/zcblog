@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.progzc.blog.mapper.article.ArticleMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.progzc.blog.entity.article.Article">
+        <id column="id" property="id" />
+        <result column="title" property="title" />
+        <result column="description" property="description" />
+        <result column="author" property="author" />
+        <result column="content" property="content" />
+        <result column="content_format" property="contentFormat" />
+        <result column="read_num" property="readNum" />
+        <result column="like_num" property="likeNum" />
+        <result column="recommend" property="recommend" />
+        <result column="publish" property="publish" />
+        <result column="top" property="top" />
+        <result column="need_encrypt" property="needEncrypt" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+        <result column="version" property="version" />
+        <result column="deleted" property="deleted" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, title, description, author, content, content_format, read_num, like_num, recommend, publish, top, need_encrypt, create_time, update_time, version, deleted
+    </sql>
+
+</mapper>

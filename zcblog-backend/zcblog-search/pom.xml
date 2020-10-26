@@ -22,7 +22,7 @@
 
     <!--项目运行配置-->
     <build>
-        <finalName>Clouds' Blog</finalName>
+        <finalName>zcblog-search-1.0-SNAPSHOT</finalName><!--配置最终jar包的名称-->
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
@@ -31,9 +31,11 @@
                 <configuration>
                     <mainClass>com.progzc.blog.BlogRunApplication</mainClass>
                     <layout>ZIP</layout>
+                    <fork>true</fork>
+                    <addResources>true</addResources>
+                    <jvmArguments>-Dfile.encoding=UTF-8</jvmArguments><!--保证控制台输出字符为utf-8-->
                 </configuration>
             </plugin>
         </plugins>
     </build>
-
 </project>
