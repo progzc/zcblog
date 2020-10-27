@@ -218,12 +218,12 @@ CREATE TABLE `oss_resource` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '主键',
   `name` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL COMMENT '名称',
   `url` varchar(500) COLLATE utf8_unicode_ci DEFAULT NULL COMMENT '资源链接',
-  `create_date` datetime DEFAULT NULL COMMENT '自动填充：创建时间',
+  `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '自动填充：创建时间',
   `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '自动填充：更新时间',
   `version` int(11) NOT NULL DEFAULT '1' COMMENT '乐观锁',
   `deleted` tinyint(4) NOT NULL DEFAULT '0' COMMENT '逻辑删除：0-未删除，1-已删除',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='云存储资源表'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLAeTE=utf8_unicode_ci COMMENT='云存储资源表'
 ```
 
 ### 1.3.9 sys_user表
@@ -356,7 +356,7 @@ zcblog-backend         # 父模块
 
 - 整个项目使用Mavon进行构建，利用Git进行版本管理。
 
-- zcblog-backend为父模块，父模块有两个作用：引入SpringBoot启动依赖；管理jar包，统一所有子模块依赖项的版本。
+- zcblog-backend为父模块，父模块有三个作用：引入SpringBoot启动依赖；管理jar包，统一所有子模块依赖项的版本、统一编译所有子模块。
 
 - 父模块下按照项目的功能划分有5个子模块，子模块之间的依赖关系为：
 
@@ -646,8 +646,8 @@ spring:
     # 映射static资源文件(如js/css/img...)
     static-path-pattern: /static/**
   resources:
-    # 为资源文件建立默认映射：若设置为false，会导致不能访问Swagger
-    add-mappings: true
+    # 不要为资源文件建立默认映射
+    add-mappings: false
   rabbitmq:
     listener:
       direct:
@@ -1054,7 +1054,7 @@ GET /articles?published=true  # 查询已发布的文章；URL采用一级URL+�
 3. URL会尽可能避免产生多级，会尽量采用第一级+查询字符串来表达。
 4. 将服务器响应封装到`Result.java`中，`Result.java`中的状态码和数据会遵循RESTful原则。
 5. 服务端提供`JsonUtils.java`工具类，负责对象与JSON字符串之间的转换。
-6. 本项目不提供API连接，使用`Swagger`来实现前后端人员API设计的及时沟通。
+6. 本项目使用`Swagger`来实现前后端人员API设计的及时沟通，API地址：`http://主机地址:端口号/blog/v2/api-docs`。
 
 > 参考博客文章：**[阮一峰-Restful API最佳实践](http://www.ruanyifeng.com/blog/2018/10/restful-api-best-practices.html)**、[Rest服务和Restful API](https://blog.csdn.net/shangrila_kun/article/details/89026968)、[Restful风格的API接口开发教程](https://www.imooc.com/article/28250)
 
@@ -1276,39 +1276,321 @@ ${outputDir}/${parent}/${moduleName}/${fileType}/${category}
 2. 显示找不到指定路径。
 
    ![Snipaste_2020-10-25_10-39-31](zcblog-backend-docs.assets/Snipaste_2020-10-25_10-39-31.png)
-该错误是由于既未手动创建*Mapper.xml所需的文件目录，也未在程序中自动生成该目录，导致程序在生成文件时出错。严格按照`3.2.3节`所述进行操作可解决该问题。
+   该错误是由于既未手动创建*Mapper.xml所需的文件目录，也未在程序中自动生成该目录，导致程序在生成文件时出错。严格按照`3.2.3节`所述进行操作可解决该问题。
 
 > 参考博客文章：[Velocity模板引擎语法](https://www.jianshu.com/p/d458d7b8d759)、[代码生成器](https://baomidou.com/guide/generator.html)
 
+# 4 lombok的使用
+
+lombok主要使用注解来简化代码，使代码更加简洁，其使用方法较简单。使用前需IDEA需要安装lombok插件。
+
+## 4.1 基本使用
+
+lombok中的常见注解：
+
+- **@Setter：生成set方法**
+
+> 1. 可以添加访问权限：`@Setter(AccessLevel.PROTECTED)`（默认是PUBLIC权限）。
+> 2. 对于boolean类型，生成的set方法是setXxx；对于Boolean类型，生成的set方法是setXxx。
+
+- **@Getter：生成get方法**
+
+> 1. 可以添加访问权限，类似于@Setter。
+> 2. 对于boolean类型，生成的get方法是**isXxx**；对于Boolean类型，生成的get方法是getXxx。
+
+- **@Builder：表示该类可以通过builder（建造者模式）构建对象**（非常好用）
+
+> 1. 对属性赋值可以实现链式操作。
+
+- **@RequiredArgsConstructor：生成一个该类的构造函数，禁止无参构造**
+
+> 1. 构造参数只包括**@NonNull**注解的成员变量。
+
+- **@NoArgsConstructor：生成一个无参构造器**
+
+> 1. 使用jackson反序列化对象时，使用无参构造函数创建对象。故而当class会用来序列化未json时，可以使用@NoArgsConstructor来添加一个无参构造函数。
+> 2. 不可变类（含有final field）不要使用@NoArgsConstructor注解，否则编译会报错；若使用@NoArgsConstructor(force = true)，那么final的field会初始化为0/false/null（一般不采用这种做法）。
+> 3. 当成员变量同时有**@NonNull**注解时，依然可以生成无参构造函数。
+
+- **@AllArgsConstructor：生成包含所有成员变量作为构造参数的构造器**
+- **@ToString：重写该类的toString方法**
+- **@EqualsAndHashCode：重写该类的equals和hashCode方法**
+
+> 1. equals方法只比较当前类的属性，hashCode也只根据当前类的属性生成。
+> 2. 对于父类是Object且使用了`@EqualsAndHashCode(callSuper = true)`注解的类，这个类由 lombok 生成的equals方法只有在两个对象是同一个对象时，才会返回 true ，否则总为 false ，无论它们的属性是否相同。一般应设置`@EqualsAndHashCode(callSuper = false)`。
+> 3. 使用@EqualsAndHashCode或@Date时最好不要有继承关系。
+> 4. 若自己重写了equals方法或hashCode方法，则lombok不会对显示重写的方法进行生成。
+> 5. 同时使用@EqualsAndHashCode和@Date，以@EqualsAndHashCode为准。
+
+- **@Data：等价于@Setter + @Getter + @Builder + @RequiredArgsConstructor + @ToString + @EqualsAndHashCode**
+
+- **@Value：生成一个不可变对象，会为成员变量添加final字段**（不太常用）
+
+> 1. @Value等价于@Getter + @AllArgsConstructor + @ToString + @EqualsAndHashCode。
+
+- @Accessors：存取器，用于配置getter和setter方法的生成结果。
+
+> 1. @Accessors(chain = true)：表示setter方法返回当前对象。（**一般用于级联操作**）
+> 2. @Accessors(fluent = true)：表示getter和setter方法的方法名都是基础属性名，且setter方法返回当前对象。（**一般不采用**）
+> 3. 使用这个注解后，bean拷贝工具类可能会报错。
+
+> 参考博客文章：**[Lombok中@Data的使用](https://www.cnblogs.com/death00/p/11722152.html)**、**[lombok使用基础教程](https://www.cnblogs.com/woshimrf/p/lombok-usage.html)**、[建造者模式](https://www.jianshu.com/p/3d1c9ffb0a28)
+
+## 4.2 @Document/@Field/@Id
+
+@Document注解是ElasticSearch的注解，可以用于指定索引库的名称、类型、分区、备份数以及刷新间隔。
+
+- 例如：`@Document(indexName = "zcblog", type = "article")`表示索引库的名称是zcblog、类型名称是article；默认分区数量为5，备份数量为1，刷新间隔为1s。
+- 需要将@Document与@Documented区分开，@Documented是用来将标记元素的注解信息包含在javadoc中。
+
+@Field：是ElasticSearch的注解
+
+@Id：Spring Date的注解，声明该标记属性为主键。
+
+# 5 Swagger的使用
+
+## 5.1 Swagger的介绍
+
+**Swagger的定义**：一款流行的API框架。
+
+**Swagger的作用**：支持自动生成可视化的RESTful API文档；可进行在线测试API，并实现商业API的管理。
+
+**Swagger的应用场景**：主要应用于前后端分离的项目，作为前后端开发工程师进行协同工作；实现类似postman的网络请求测试。
+
+> 参考博客文章：**[B站狂神说Swagger视频](https://www.bilibili.com/video/BV1Y441197Lw)**、[狂神说Swagger](https://mp.weixin.qq.com/s/0-c0MAgtyOeKx6qzmdUG0w)、[Swagger yml完全注释](https://blog.csdn.net/u010466329/article/details/78522992)、[Swagger的介绍](https://blog.csdn.net/weixin_37509652/article/details/80094370)、[swagger注释API](https://blog.csdn.net/chinassj/article/details/81875038)、[添加Header全局配置](https://www.jianshu.com/p/6e5ee9dd5a61)
+
+## 5.2 Swagger的配置
+
+Swagger的配置在`SwaggerConfig.java`中设置：
+
+```java
+@Configuration
+@EnableSwagger2 // 启用Swagger
+public class SwaggerConfig implements WebMvcConfigurer {
+
+    // 加载Swagger的默认U界面
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("swagger-ui.html")
+                .addResourceLocations("classpath:/META-INF/resources/");
+        registry.addResourceHandler("/webjars/**")
+                .addResourceLocations("classpath:/META-INF/resources/webjars/");
+    }
+
+    // 配置Swagger的Docket的Bean实例（每一个Docket的Bean实例对应于一个分组，这样可以方便协同开发）
+    @Bean
+    public Docket createRestApiGroup1(Environment environment){
+        // 设置要显示的Swagger环境
+        Profiles profiles = Profiles.of("dev", "test");
+        // 获取项目的环境
+        boolean isDevAndTest = environment.acceptsProfiles(profiles);
+
+        System.out.println("isDevAndTest："+isDevAndTest);
+
+        return new Docket(DocumentationType.SWAGGER_2)
+                .apiInfo(apiInfo())
+                // 是否启动Swagger，若为false，则Swagger不能在浏览器中访问
+                .enable(isDevAndTest) // 可以控制Swagger在开发及测试环境中使用，在生产环境不使用
+                .select()
+                // RequestHandlerSelectors.basePackage("包名")：扫描指定的包
+                // RequestHandlerSelectors.any()：扫描全部
+                // RequestHandlerSelectors.none()：不扫描
+                // RequestHandlerSelectors.withMethodAnnotation(注解.class)：扫描方法上的注解
+                // RequestHandlerSelectors.withClassAnnotation(注解.class)：扫描类上的注解
+                .apis(RequestHandlerSelectors.withMethodAnnotation(ApiOperation.class)) // 配置要扫描接口的方式
+                // PathSelectors.any()：放行所有路径
+                // PathSelectors.ant("/article")：只放行/article路径
+                .paths(PathSelectors.any()) // 过滤映射路径
+                .build()
+                .groupName("Clouds")
+                // 可以由使用者设置全局token（一般登录成功后都会设置一个token作为通行证）放置到HTTP请求头中，在跨域访问时作为通行证
+                .securitySchemes(security());
+    }
+
+    private ApiInfo apiInfo() {
+        // 作者信息
+        Contact contact = new Contact("Clouds", "http://blog.progzc.com", "zcprog@foxmail.com");
+        return new ApiInfoBuilder()
+                .title("zcblog")
+                .description("zcblog的接口文档")
+                .termsOfServiceUrl("http://blog.progzc.com")
+                .version("v1.0")
+                .contact(contact)
+                .license("Apache 2.0")
+                .licenseUrl("http://www.apache.org/licenses/LICENSE-2.0")
+                .build();
+    }
+
+    private List<ApiKey> security() {
+        // 设置登录的用户名为token，登录的密码为token
+        return newArrayList(new ApiKey("token", "token", "header"));
+    }
+
+}
+```
+
+**注意事项：**
+
+1. SpringBoot项目中可以通过WebMvcConfigurer对网络请求进行拦截处理、加载资源等。使用Swagger需要加载`swagger-ui.html`这一静态资源。
+2. 为了安全以及提高性能，需要控制Swagger在开发及测试环境中使用，但在生产环境中禁用。Docket的enable方法设置为true表示允许访问`swagger-ui.html`，设置为false表示禁止访问；**application.yml中的spring.resources.add-mappings设置为true或false均不会影响`swagger-ui.html`的访问（已实践验证）**。
+3. 可以在请求头中设置全局token作为登录成功后的通行证，可以解决由于登录权限问题，每次进行API测试都要输入token才能访问接口API的问题。
+
+## 5.3 基本使用
+
+- **@Api：一般作用在类（如Controller）上，用于标记该类作为Swagger文档资源**
+
+> 例如：`@Api(value = "/user", description = "Operations about user")`表示映射路径和描述。
+
+- **@ApiOperation：一般作用在类（如Controller）的方法上**
+- **@ApiParam：一般作用在类（如Controller）方法的参数上**
+- **@ApiModel：一般给entity类（或者PO/VO/...）添加此注解**
+
+- **@ApiModelProperty：一般给entity类（或者PO/VO/...）的成员变量添加此注解**
+
+> 例如：`@ApiModelProperty(value = "xxx属性说明", hidden = true)`，其中hidden默认为false，若设置为true可以隐藏该属性。
+
+- @ApiResponse：响应配置。
+
+> 例如：`@ApiResponse(code = 400, message = "Invalid user supplied")`表示响应状态码和响应消息。
+
+- @ApiResponses：响应集配置。
+
+> 例如：`@ApiResponses({ @ApiResponse(code = 400, message = "Invalid Order") })`。
+
+- @ResponseHeader：响应头配置。
+
+> 例如：`@ResponseHeader(name="head1",description="response head conf")`。
+
+## 5.4 切换其他UI样式
+
+除了Swagger官方提供的UI样式外，一些第三方也根据Swagger源码开发了其他的更美观友好的UI样式供选用。使用方法也很简单，直接使用第三方的UI Jar包替换掉Swagger官方提供的UI Jar包即可。
+
+```xml
+<!--Swagger默认的UI界面-->
+<!--默认地址：http://localhost:8080/swagger-ui.html-->
+<dependency>
+   <groupId>io.springfox</groupId>
+   <artifactId>springfox-swagger-ui</artifactId>
+   <version>2.9.2</version>
+</dependency>
+
+<!--Bootstrap UI界面-->
+<!--默认地址：http://localhost:8080/doc.html-->
+<dependency>
+   <groupId>com.github.xiaoymin</groupId>
+   <artifactId>swagger-bootstrap-ui</artifactId>
+   <version>1.9.1</version>
+</dependency>
+
+<!--Layui UI界面-->
+<!--默认地址：http://localhost:8080/docs.html-->
+<dependency>
+   <groupId>com.github.caspar-chen</groupId>
+   <artifactId>swagger-ui-layer</artifactId>
+   <version>1.1.3</version>
+</dependency>
+
+<!--mgui UI界面-->
+<!--默认地址：http://localhost:8080/document.html-->
+<dependency>
+   <groupId>com.zyplayer</groupId>
+   <artifactId>swagger-mg-ui</artifactId>
+   <version>1.0.6</version>
+</dependency>
+```
+
+# 6 项目热部署
+
+在开发项目时，每次修改完代码都要重新启动项目，会导致开发效率很低。项目实现热部署可以解决这一问题。
+
+## 6.1 项目热部署的两种方式
+
+### 6.1.1 使用devtools工具
+
+使用devtools工具包来进行热部署简单方便，但是有一个缺点：**这种热部署方式会重启项目，清空session中的值；如果有用户登录的话，项目重启后需要重新登录。**
+
+具体步骤：
+
+- 第1步：引入`spring-boot-devtools`依赖（可以在父模块引入版本号，子模块中引入依赖）。
+
+```xml
+<dependency>
+	<groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-devtools</artifactId>
+    <version>2.1.6.RELEASE</version>
+    <scope>runtime</scope>
+    <optional>true</optional>
+</dependency>
+```
+
+- 第2步：在`BlogRunApplication.java`所在子模块的pom.xml中添加插件。
+
+```xml
+<build>
+	<finalName>Clouds' Blog</finalName>
+	<plugins>
+		<plugin>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+            <!--指定全局入口文件-->
+            <configuration>
+                <mainClass>com.progzc.blog.BlogRunApplication</mainClass>
+                <layout>ZIP</layout>
+                <fork>true</fork>
+                <addResources>true</addResources>
+			</configuration>
+		</plugin>
+	</plugins>
+</build>
+```
+
+- 第3步：在application.yml中配置开启热部署。
+
+```yaml
+spring.devtools.restart.enabled: true
+```
+
+- 第4步：在IDEA中设置勾选`Build project automatically`。
+
+![image-20201026210800865](zcblog-backend-docs.assets/image-20201026210800865.png)
+
+- 第5步：按住`ctrl + shift + alt + /`出现如下界面，点击Registry...，然后勾选`compiler.automake.allow.when.app.running`。
+
+![image-20201026211003150](zcblog-backend-docs.assets/image-20201026211003150.png)
+
+![image-20201026211216171](zcblog-backend-docs.assets/image-20201026211216171.png)
+
+- 第6步：在IDEA中设置`Running Application Update Policies`策略为`Update classes and resources`。（**网上的教程缺这一步，不会生效**）。
+
+![image-20201026212416118](zcblog-backend-docs.assets/image-20201026212416118.png)
 
 
 
+### 6.1.2 使用Springloaded
 
+前面提到过，`devtools`实现热部署的方式是重启应用，导致会清除清空session中的值；此外，这种热部署更新的方式较慢。使用Springloaded进行热部署时不会重启应用，可以保证session中的值不会被清除，但是SpringLoaded对于方法内修改代码时热部署可以生效，**增加方法时热部署却不能生效(即使采用Debug模式启动也不行)**。
 
+具体步骤：
 
+- 第1步：下载`springloaded-1.2.8.RELEASE.jar`到本地（下载方式有：Mavon下载到本地仓库、mvnrepository.com网站直接下载、Github进行下载）。
+- 第2步：在IDEA中进行配置，使得在启动项目时在jvm命令中增加：`-javaagent:springloaded-1.2.8.RELEASE.jar包本地绝对路径 -noverify`。
 
+![image-20201026230320973](zcblog-backend-docs.assets/image-20201026230320973.png)
 
+> 参考博客文章：[ spring-boot-devtools实现热部署](https://www.cnblogs.com/zhukf/p/12672180.html)、[Springloaded实现热部署](https://blog.csdn.net/tang86100/article/details/78772079)
 
+# 7 hibernate-validator参数校验
 
+## 7.1 基本使用
 
+- @NotBlank
+- @NotNull
 
+@Mapper？？
 
+# 8 Spring 缓存
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Controller层可以使用Spring缓存
 
 # # 个人建站流程
 
@@ -1324,7 +1606,7 @@ ${outputDir}/${parent}/${moduleName}/${fileType}/${category}
 
 在阿里云ICP备案系统平台按照步骤备案：基础信息校验-->主办者信息填写-->网站信息填写-->上传资料（**本省注册不需要提交暂住证**）。
 
-
+## ## Docker部署项目
 
 
 
