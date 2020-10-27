@@ -10,15 +10,15 @@
 
 `ElasticSearch`：搜索模块；
 
-`quartz`：定时器，定时发送文章（**此功能不一定实现**），定时清除OSS上的无效图片，将云存储上逻辑删除的资源间隔指定时间彻底清除，相当于完成回收站的类似功能（**此功能不一定实现**）；
+`quartz`：定时任务框架，定时发送文章（**此功能不一定实现**），定时清除OSS上的无效图片，将云存储上逻辑删除的资源间隔指定时间彻底清除，相当于完成回收站的类似功能（**此功能不一定实现**）；
 
 `MySql` + `Druid`：数据库 + 连接池；
 
-`Swagger`：Restful风格的web服务框架（方便与前端人员即时沟通；也可进行测试发送请求，实现postman类似的功能）；
+`Swagger`：RESTful风格的API框架（方便与前端人员即时沟通；也可进行测试发送请求，实现postman类似的功能）；
 
 `Spring`：启用缓存（提升IO性能）+  hibernate-validator 参数校验（基于JSR的参数校验规范，降低代码冗余度） + XSS过滤；
 
-工具：Git（版本管理）+ 七牛云 （云存储）+  lombok（简化代码 + 日志记录） + Kaptcha（验证码工具）+ MyBatisPlus（通用Mapper + 代码生成器）+ MyBatisX（生成mapper的xml插件）+ jasypt （加密与解密） + 阿里云短信服务。
+工具：Git（版本管理）+ 七牛云 （云存储）+  lombok（简化代码 + 日志记录） + Kaptcha（验证码工具）+ MyBatisPlus（通用Mapper + 代码生成器）+ MyBatisX（生成mapper的xml插件）+ Jasypt （加密与解密） + 阿里云短信服务。
 
 > 后续改进：使用SpringCloud进行微服务构建（或者使用Zookeeper + Dubbo 将项目变成一个RPC应用，方便进行水平伸缩拓展）。
 
@@ -324,7 +324,7 @@ CREATE TABLE `sys_role_menu` (
 
 本项目中采用了5张表来完成权限的管理：`sys_user`、`sys_role`、`sys_user_role`、`sys_menu`、`sys_role_menu`。其中`sys_menu`表中包含了权限相关的内容。
 
-主流的权限管理表应该至少需要10张表，包括`权限表`、`角色表`、`组表`、`用户表`4张主表；`用户权限表`、`用户角色表`、`用户组表`、`角色权限表`、`组角色表`、`组权限表`6张中间表。本项目相当于做了一定的简化。关于"用户·角色·权限·表"的设计可以参见相关博客文章：**[用户·角色·权限·表的设计](https://blog.csdn.net/weixin_42476601/article/details/82346740)**
+> 主流的权限管理表应该至少需要10张表，包括`权限表`、`角色表`、`组表`、`用户表`4张主表；`用户权限表`、`用户角色表`、`用户组表`、`角色权限表`、`组角色表`、`组权限表`6张中间表。本项目相当于做了一定的简化。关于"用户·角色·权限·表"的设计可以参见相关博客文章：**[用户·角色·权限·表的设计](https://blog.csdn.net/weixin_42476601/article/details/82346740)**
 
 # 2 项目搭建
 
@@ -1347,6 +1347,8 @@ lombok中的常见注解：
 
 @Id：Spring Date的注解，声明该标记属性为主键。
 
+@JsonIclude：例如：`@JsonInclude(IsonInclude.Include.NON_NULL)`作用在类上，表示只有非空的属性才会参与实例化。
+
 # 5 Swagger的使用
 
 ## 5.1 Swagger的介绍
@@ -1357,7 +1359,7 @@ lombok中的常见注解：
 
 **Swagger的应用场景**：主要应用于前后端分离的项目，作为前后端开发工程师进行协同工作；实现类似postman的网络请求测试。
 
-> 参考博客文章：**[B站狂神说Swagger视频](https://www.bilibili.com/video/BV1Y441197Lw)**、[狂神说Swagger](https://mp.weixin.qq.com/s/0-c0MAgtyOeKx6qzmdUG0w)、[Swagger yml完全注释](https://blog.csdn.net/u010466329/article/details/78522992)、[Swagger的介绍](https://blog.csdn.net/weixin_37509652/article/details/80094370)、[swagger注释API](https://blog.csdn.net/chinassj/article/details/81875038)、[添加Header全局配置](https://www.jianshu.com/p/6e5ee9dd5a61)
+> 参考博客文章：**[B站狂神说Swagger视频](https://www.bilibili.com/video/BV1Y441197Lw)**、[狂神说Swagger](https://mp.weixin.qq.com/s/0-c0MAgtyOeKx6qzmdUG0w)、[Swagger yml完全注释](https://blog.csdn.net/u010466329/article/details/78522992)、[Swagger的介绍](https://blog.csdn.net/weixin_37509652/article/details/80094370)、[Swagger注解](https://blog.csdn.net/chinassj/article/details/81875038)、[添加Header全局配置](https://www.jianshu.com/p/6e5ee9dd5a61)
 
 ## 5.2 Swagger的配置
 
@@ -1431,9 +1433,11 @@ public class SwaggerConfig implements WebMvcConfigurer {
 
 **注意事项：**
 
-1. SpringBoot项目中可以通过WebMvcConfigurer对网络请求进行拦截处理、加载资源等。使用Swagger需要加载`swagger-ui.html`这一静态资源。
-2. 为了安全以及提高性能，需要控制Swagger在开发及测试环境中使用，但在生产环境中禁用。Docket的enable方法设置为true表示允许访问`swagger-ui.html`，设置为false表示禁止访问；**application.yml中的spring.resources.add-mappings设置为true或false均不会影响`swagger-ui.html`的访问（已实践验证）**。
-3. 可以在请求头中设置全局token作为登录成功后的通行证，可以解决由于登录权限问题，每次进行API测试都要输入token才能访问接口API的问题。
+1. SpringBoot项目中可以通过WebMvcConfigurer对网络请求进行拦截处理、加载资源等。使用Swagger需要加载`swagger-ui.html`这一静态资源（前提是spring.resources.add-mappings设置为false，则需要这一步）。
+2. 为了安全以及提高性能，需要控制Swagger在开发及测试环境中使用，但在生产环境中禁用。Docket的enable方法设置为true表示允许访问`swagger-ui.html`，设置为false表示禁止访问；
+3. **若application.yml中的spring.resources.add-mappings设置为false，则需要在addResourceHandlers方法中添加指定的静态资源文件这样才能访问`swagger-ui.html`；若为false，则可以不要指定静态资源文件**。
+4. 可以在请求头中设置全局token作为登录成功后的通行证，可以解决由于登录权限问题，每次进行API测试都要输入token才能访问接口API的问题。
+5. **多人协同开发不同模块，可以采用分组功能。这样每个人的业务API都会在一个分组中，便于查询或与前端人员沟通。**
 
 ## 5.3 基本使用
 
@@ -1564,8 +1568,6 @@ spring.devtools.restart.enabled: true
 
 ![image-20201026212416118](zcblog-backend-docs.assets/image-20201026212416118.png)
 
-
-
 ### 6.1.2 使用Springloaded
 
 前面提到过，`devtools`实现热部署的方式是重启应用，导致会清除清空session中的值；此外，这种热部署更新的方式较慢。使用Springloaded进行热部署时不会重启应用，可以保证session中的值不会被清除，但是SpringLoaded对于方法内修改代码时热部署可以生效，**增加方法时热部署却不能生效(即使采用Debug模式启动也不行)**。
@@ -1581,16 +1583,426 @@ spring.devtools.restart.enabled: true
 
 # 7 hibernate-validator参数校验
 
+## 7.1 来源介绍
+
+项目开发的时候，基本上每个接口都要对参数进行校验，比如一些格式检验、非空校验。若参数比较多，代码中就会出现大量的if...else...，这样会让代码看起来很复杂，本质上处理业务逻辑的代码不容易显现处理，造成代码主次不分、冗余度过高的问题。
+
+幸好的是Bean Validator（Java定义的一套基于注解的数据校验规范）可以帮我们解决这一难题。Bean Validator的校验规范版本有JSR 303（V1.0版本）、JSR 349（V2.0版本）、JSR 380（V3.0版本）。目前Springboot的`starter-web`中已经集成了基于JSR检验规范的`hibernate-validator`（没错，`hibernate-validator`就来自于曾经大名鼎鼎的持久层框架Hibernate）。**注意：javax.validation是一个基于JSR的接口规范，而hibernate-validator是其的一种具体实现。**
+
+![image-20201027084516470](zcblog-backend-docs.assets/image-20201027084516470.png)
+
 ## 7.1 基本使用
 
-- @NotBlank
-- @NotNull
+### 7.1.1 使用场景
 
-@Mapper？？
+**根据项目架构选择在哪个业务层进行参数校验**：
 
-# 8 Spring 缓存
+- 针对普通的应用：一般在Controller层做检验。
+- 针对RPC应用：一般在Service层做检验。
+- **不仅可以对参数进行验证，还可以对返回值进行验证。**
 
-Controller层可以使用Spring缓存
+```yaml
+# 1. 在Controller层做验证
+  # 1.1 首先在Controller类上添加@Validated注解。
+  # 1.2 然后在COntroller类的方法参数上添加@Valid注解（可去掉1.1的@Validated注解，详见@Valid与@Validated的区别）。
+  # 1.3 最后给方法参数添加指定的校验方式(如@NotNoll、@NotBlank...);若在entity类的成员变量中指定的话，则对所有使用的ServiceImpl层均生效。
+  
+# 2. 在ServiceImpl层做验证
+  # 1.1 首先在ServiceImpl类上添加@Validated注解。
+  # 1.2 然后在ServiceImpl类的方法参数上添加@Valid注（可去掉1.1的@Validated注解，详见@Valid与@Validated的区别）。
+  # 1.3 最后给方法参数添加指定的校验方式(如@NotNoll、@NotBlank...);若在entity类的成员变量中指定的话，则对所有使用的ServiceImpl层均生效。
+  
+# 3. 在Service层（接口）做验证（这里要注意与前两者的区别）
+  # 1.1 首先在Service类的方法参数上添加@Valid注解
+  # 1.2 然后在ServiceImpl类上添加@Validated注解（若在Service类上添加@Validated注解，则对Service的所有实现类都生效）。
+  # 1.3 最后给方法参数添加指定的校验方式(如@NotNoll、@NotBlank...);若在entity类的成员变量中指定的话，则对所有使用的Service层均生效。
+  
+# 4. 对返回值添加注解：与方法参数校验类似，只是作用在返回值上。
+```
+
+### 7.1.2 使用注解
+
+- @NotBlank：不能为null，并且长度大于0（**只能用于String上面不能为null，调用trim()后，长度必须大于0**）
+- @NotNull：不能为null（**适用于任何类型被注解的元素必须不能为null**）
+- @NotEmpty：不能为null且@Size(min = 1)（**适用于String Map或者数组不能为null且长度必须大于0**）
+- **@Valid和Validated的区别：**
+
+> 1. @Validated是@Valid 的一次封装，是Spring提供的校验机制使用。
+> 2. @Valid和@Validated均用于校验，但作用地方有区别。**@Valid作用在方法、字段、构造器和参数上；而@Validated作用在类、方法和参数上。**
+> 3. @Valid可进行**级联校验（即嵌套校验）**，而@Validated却不支持级联校验。
+> 4. @Valid不提供分组功能；而@Validated提供分组功能（可实现**分组检验**、**按组序列校验**、**同时校验多个参数**）。
+> 5. 针对**有接口的实现类的方法参数添加校验**时，应该在接口的方法参数上添加@Valid注解，在接口的实现类的方法参数上添加注解会报错（**详见7.1.1使用场景3**）。
+
+### 7.1.3 级联及一对多检验
+
+级联即一对一验证。级联及一对多验证采用@Valid注解。
+
+```java
+// 举个例子
+public Class Employee {
+    ... 
+    // 级联(一对一)验证
+    @Valid 
+    private Department department; // 员工与部门一对一
+    // 一对多验证
+    private List<@Valid Project> projects; // 员工与项目一对多
+    ...
+} 
+```
+
+### 7.1.4 规范异常信息
+
+将异常信息（由**状态码+消息**组成）封装成枚举类，这样便于统一管理。**异常信息遵循RETSTful原则**。
+
+将异常信息封装到`ErrorEnum.java`枚举类中：
+
+```java
+public enum ErrorEnum {
+    // 系统错误
+    UNKNOWN(500,"系统内部错误，请联系管理员"),
+    PATH_NOT_FOUND(404,"路径不存在，请检查路径"),
+    NO_AUTH(403,"没有权限，请联系管理员"),
+    DUPLICATE_KEY(501,"数据库中已存在该记录"),
+    TOKEN_GENERATOR_ERROR(502,"token生成失败"),
+    NO_UUID(503,"uuid为空"),
+    SQL_ILLEGAL(504,"sql非法"),
+
+    //用户权限错误
+    INVALID_TOKEN(1001,"token不合法"),
+
+    //登录模块错误
+    LOGIN_FAIL(10001,"登录失败"),
+    CAPTCHA_WRONG(10002,"验证码错误"),
+    USERNAME_OR_PASSWORD_WRONG(10003,"用户名或密码错误"),
+
+    //七牛云OSS错误
+    OSS_CONFIG_ERROR(10050,"七牛云配置信息错误"),
+    OSS_UPLOAD_ERROR(10051,"Article图片上传失败");
+
+    private int code;
+    private String msg;
+}
+```
+
+### 7.1.5 处理异常
+
+为了使参数校验后返回给前端的结果更加优雅，需要自定义全局异常处理器（**这个全局处理异常不仅仅处理参数校验返回的异常，还可以对项目中出现的其他异常进行处理**）。
+
+在`MyExceptionHandler.java`中对全局异常进行处理：
+
+```java
+// @ControllerAdvice有三种功能：处理全局异常、绑定全局数据、预处理全局数据。（本项目用到的是第一种功能）
+@RestControllerAdvice // 相当于@ResponseBody+@ControllerAdvice表示处理全局异常,且返回字符串
+@Slf4j
+public class MyExceptionHandler { // MyExceptionHandler用于处理全局异常
+    // 处理自定义异常（包含校验异常）
+    @ExceptionHandler(MyException.class)
+    public Result handleMyException(MyException e){
+        Result result=new Result();
+        result.put("code",e.getCode());
+        result.put("msg",e.getMsg());
+        return result;
+    }
+    
+    // 处理Spring中的404异常
+    // 需要在yml配置文件中设置：spring.mvc.throw-exception-if-no-handler-found: true  #出现错误时, 直接抛出异常
+    // 需要在yml配置文件中设置：spring.resources.add-mappings: false  #关闭工程中的静态资源映射所以此时需要访问swagger-ui.html就必须要在Swagger配置文件中添加资源路径
+    @ExceptionHandler(NoHandlerFoundException.class)
+    public Result handlerNoFoundException(Exception e){
+        log.error(e.getMessage(),e);
+        return Result.exception(ErrorEnum.PATH_NOT_FOUND);
+    }
+
+    // 处理向数据库中插入数据时出现的异常
+    // 继承关系：DuplicateKeyException-->DataIntegrityViolationException-->NonTransientDataAccessException-->DataAccessException-->NestedRuntimeException-->RuntimeException-->Exception
+    @ExceptionHandler(DuplicateKeyException.class)
+    public Result handleDuplicateKeyException(DuplicateKeyException e){
+        log.error(e.getMessage(),e);
+        return Result.exception(ErrorEnum.DUPLICATE_KEY);
+    }
+
+    // 处理登录与鉴权中出现的异常
+    @ExceptionHandler(AuthorizationException.class)
+    public Result handleAuthorizationException(AuthorizationException e){
+        log.error(e.getMessage(),e);
+        return Result.exception(ErrorEnum.NO_AUTH);
+    }
+
+    // 处理其他异常
+    @ExceptionHandler(Exception.class)
+    public Result handleException(Exception e){
+        log.error(e.getMessage(),e);
+        return Result.exception();
+    }
+    
+   // 可以在这里直接对校验异常进行处理（但是本项目并未采用这种方式，本项目中参数校验的异常是在自定义校验工具类ValidatorUtils中进行处理，转成自定义异常然后再在MyExceptionHandler中进行处理的）
+   ...
+ 
+}
+```
+**注意事项：**可以在这里MyExceptionHandler.java对校验异常进行直接处理（但是本项目并未采用这种方式）；本项目中参数校验的异常是在自定义校验工具类ValidatorUtils中进行处理的），这是因为本项目并未使用@Valid或@Validated注解自动将参数校验交由Spring处理；而是主动在ValidatorUtils中进行参数校验和处理异常（转为自定义异常，这种灵活性更大）。
+
+在`ValidatorUtils.java`中处理校验异常（校验若不通过就抛出MyException异常）：
+
+```java
+public class ValidatorUtils {
+    private static Validator validator;
+    static {
+        validator = Validation.buildDefaultValidatorFactory().getValidator();
+    }
+
+    /**
+     * 校验对象
+     * @param object        待校验对象
+     * @param groups        待校验的组
+     * @throws MyException  校验不通过，则报MyException异常
+     */
+    public static void validateEntity(Object object, Class<?>... groups)
+            throws MyException {
+        Set<ConstraintViolation<Object>> constraintViolations = validator.validate(object, groups);
+        if (!constraintViolations.isEmpty()) {
+            List<String> collect = constraintViolations.stream().map(constant -> constant.getMessage()).collect(Collectors.toList());
+            String msg = StringUtils.join(collect, ",");
+            throw new MyException(msg);
+        }
+    }
+}
+```
+自定义异常`MyException.java`：
+
+```java
+public class MyException extends RuntimeException{
+    private String msg;
+    private int code = 500; // 默认500异常
+
+    public MyException(){
+        super(ErrorEnum.UNKNOWN.getMsg());
+        this.msg=ErrorEnum.UNKNOWN.getMsg();
+    }
+    
+    public MyException(ErrorEnum eEnum,Throwable e){
+        super(eEnum.getMsg(),e);
+        this.msg=eEnum.getMsg();
+        this.code=eEnum.getCode();
+    }
+
+    public MyException(ErrorEnum eEnum){
+        this.msg=eEnum.getMsg();
+        this.code=eEnum.getCode();
+    }
+
+    public MyException(String exception){
+       this.msg=exception;
+    }
+}
+```
+
+> 参考博客文章：[关于NoHandlerFoundException异常](https://blog.csdn.net/qq_36666651/article/details/81135139)
+
+### 7.1.6 分组校验
+
+有这样的场景：需要在插入/更新时保证某个字段不为空；查询时却没有这个要求。那么分组校验就可以很好地解决这个问题了。
+
+分组校验的步骤：
+
+```java
+// 1. 定义两个接口类（不需要有任何内容）
+public interface AddGroup {
+   
+}
+public interface UpdateGroup {
+
+}
+
+// 2. 在成员变量的校验注解参数上添加指定分组
+@NotBlank(message="博文内容不能为空", groups = {AddGroup.class, UpdateGroup.class})
+private Employee employee  // 在entity类中
+
+// 3. 在Controller层/Service层/ServiceImpl层做校验
+@RestController
+@RequestMapping("/employee")
+@Validated
+public class EmployeeController{
+    @PutMapping("/update")
+    public Result update(@RequestBody @Validated({AddGroup.class}) Employee employee){
+        ...
+        return new Result();
+        ...
+    }
+}
+```
+
+**注意事项：**
+
+- **如果指定了验证组，那么该参数只属于指定的验证组**；未指定验证组的属性属于默认组。
+- 也可以自定义检验工具类控制校验的颗粒度。（**本项目采用这种方式**）
+
+**特别提示：**关于参数校验的高级用法（如自定义注解、list中做分组检验、bean参数间的逻辑校验，本项目并未使用到。可以需要时再去学习...）
+
+> 参考博客文章：**[B站Hibernate Validator参数校验视频](https://www.bilibili.com/video/BV1UE411t7BZ)**、**[SpringBoot参数校验](https://www.cnblogs.com/mooba/p/11276062.html)**、[@NotBlank/@NotNull/@NotEmpty](https://www.cnblogs.com/xinruyi/p/11257663.html)、[@Valid与@Validated的区别](https://blog.csdn.net/gaojp008/article/details/80583301)、[@Valid与@Validated总结](https://www.cnblogs.com/javastack/p/10297550.html)、[深入了解数据校验](https://cloud.tencent.com/developer/article/1497733)、[@ControllerAdvice的三种功能](https://www.cnblogs.com/lenve/p/10748453.html)
+
+# 8 封装响应结果
+
+对于网络请求，将响应数据封装到HashMap中，主要包括三个部分**状态码、消息和数据**。
+
+在`Result.java`中封装响应结果：
+
+```java
+public class Result extends HashMap<String, Object> {
+
+    public Result() {
+        put("code", 200);
+        put("msg", "success");
+    }
+
+    public static Result ok() {
+        return new Result();
+    }
+
+    public static Result error() {
+        return error(ErrorEnum.UNKNOWN);
+    }
+
+    public static Result error(ErrorEnum eEnum) {
+        return new Result().put("code", eEnum.getCode()).put("msg", eEnum.getMsg());
+    }
+
+    public static Result error(String msg) {
+        return new Result().put("msg",msg).put("code", ErrorEnum.UNKNOWN.getCode());
+    }
+
+    public static Result error(Integer code , String msg){
+        return new Result().put("code",code).put("msg",msg);
+    }
+
+    public static Result exception() {
+        return exception(ErrorEnum.UNKNOWN);
+    }
+
+    public static Result exception(ErrorEnum eEnum) {
+        return new Result().put("code", eEnum.getCode()).put("msg", eEnum.getMsg());
+    }
+    
+    /**
+     * 封装业务数据
+     *
+     * @param key
+     * @param value
+     * @return
+     */
+    @Override
+    public Result put(String key, Object value) {
+        super.put(key, value);
+        return this; 
+    }
+}
+```
+
+# 9 跨域配置
+
+本博客项目采用前后端分离的形式，前端访问后端数据存在跨域访问的问题。
+
+WebMvcConfigurer是Springboot内部的一个配置接口，用来代替传统xml的配置文件，可以自定义一些Handler、Interceptor、ViewResolver、MessageConverter。继承WebMvcConfigurer接口后常用的一些配置方法是：addInterceptors方法（配置拦截器）、addViewControllers方法（配置页面跳转）、**addResourceHandlers方法**（配置静态资源访问，例如Swagger的`swagger-ui.html`的页面访问就是在SwaggerConfig的addCorsMappings方法中进行配置的）、**addCorsMappings方法**（配置跨域）
+
+> 跨域问题：CORS是一个W3C标准，全称是"跨域资源共享"（Cross-origin resource sharing）。它允许浏览器向跨源服务器，发出XMLHttpRequest请求，从而克服了Ajax只能同源使用的限制。
+
+在`CorsConfig.java`中进行跨域的配置：
+
+```java
+@Configuration
+public class CorsConfig implements WebMvcConfigurer {
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**") // 表示对所有发往控制器的请求都放行
+                .allowedOrigins("*") // *表示对所有的地址都可以访问
+                .allowCredentials(true) //可以携带cookie，最终的结果是可以 在跨域请求的时候获取同一个 session
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .maxAge(3600);
+    }
+}
+```
+
+> 参考博客文章：[WebMvcConfigurer详解](https://blog.csdn.net/zhangpower1993/article/details/89016503)、[Spring官网doc](https://docs.spring.io/spring-framework/docs/5.2.9.RELEASE/spring-framework-reference/web.html#mvc-cors)
+
+# 10 Shiro完成登录与鉴权
+
+
+
+# 11 Spring 缓存
+
+在项目开发过程中，可以使用Spring缓存技术将数据存入服务器的缓存中（**本质上缓存是在Spring的容器中，位于服务器的内存上**），这样对于一些重复的查询操作可以避免频繁访问数据库，提高响应速度。
+
+## 11.1 使用缓存的步骤
+
+使用Spring缓存（保证Springd的版本高于V3.1）的步骤如下：
+
+1. 第1步：在Springboot**启动类**或者**某一配置类**上使用**@EnableCaching**注解启用Spring缓存技术。
+2. 第2步：在类上或类中的方法上（**该类必须注入到容器中，否则缓存不会生效**）使用缓存注解（例如：@Cacheable添加缓存、@CacheEvict清除缓存...）。
+
+## 11.2 缓存注解
+
+- **@EnableCaching**：开启缓存。在项目启动类或某个配置类上使用此注解后，则表示允许使用注解的方式进行缓存操作。
+- **@CacheEvict**：可用于类或方法上。在执行完目标方法后，清除缓存中对应key的数据（如果缓存中有对应key的数据缓存的话）。
+- **@Cacheable**：可用于类或方法上。在目标方法执行前，会根据key先去缓存中查询看是否有数据，若存在就直接返回缓存中的key对应的value值。不再执行目标方法；若不存在则执行目标方法，并将方法的返回值作为value，并以键值对的形式存入缓存。
+- **@CachePut**：可用于类或方法上。在执行完目标方法后，并将方法的返回值作为value，并以键值对的形式存入缓存中。
+- @Caching：可作为@Cacheable、@CacheEvict、@CachePut三种注解中的的任何一种或几种来使用。
+- **@CacheConfig**：@Cacheable、@CacheEvict、@CachePut这三个注解的cacheNames属性是必填项（或value属性是必填项，因为value属性是cacheNames的别名属性）；如果上述三种注解都用的是同一个cacheNames的话，那么在每次都写cacheNames的话，就会显得麻烦。@CacheConfig注解就是来配置一些公共属性（如：cacheNames、keyGenerator等）的值。该注解一般用于类上。
+
+## 11.3 缓存注解的常用属性
+
+- **key属性**：默认/keyGenerator生成/主动指定。**（优先级：主动指定>keyGenerator>默认）**
+
+> 默认key：
+>
+> 1. 方法无参时，默认key为SimpleKey[]；
+> 2. 方法只有一个参数时，默认key为传入的参数的toString的值；
+> 3. 方法有多个参数时，默认的key为SimpleKey [参数1的toString的值,参数2的toString的值...]。
+>
+> keyGenerator生产key：
+>
+> 1. 编写配置类（配置类需继承CachingConfigurerSupport类，重写keyGenerato()方法），定制化key生成器。
+>
+> 主动指定key：
+>
+> 1. 若key为常量，需要使用导引号引起来；
+> 2. 也可以使用Spring表达式语言（SpEL）动态为key设置值（可以通过"#形参名"或"#p参数索引"或"#a参数索引"）；
+> 3. 可以通过打点的方式对获得的参数进行方法或属性调用（如key="#str.hashCode()"或key="#p1.name"）；
+> 4. SpEL中可以是以Spring提供的隐藏根对象，如key="#root.target"表示以全限定类型@内存地址作为key值。
+
+- **condition属性**：若condition结果为true，则注解生效，否则注解不生效（condition的作用时机在缓存注解检查缓存中是否有对应key-value 之前）。
+
+- **cacheNames属性**：命名空间（指开辟的一块内存空间），与value属性互为别名（作用一致）。
+
+> 1. 不同cacheNames下可以有相同的key。
+> 2. 若cacheNames（或value）指定了多个命名空间，当进行缓存存储时会在每个命名空间下均存有一份key-value；当进行缓存读取时，会按照cacheNames值里命名空间的顺序，依次从命名空间中查找对应的key，查到即返回key对应的value值。
+
+- **unless属性**：是否令注解（在方法执行后的功能）不生效。若unless结果为true，则不生效；若unless结果为false，则生效。unless默认值为false。
+
+> 1. unless的作用时机在目标方法运行后；若因为直接从缓存中获取到了数据，而导致目标方法没有被执行，那么unless字段不生效。
+> 2. unless的作用时机是在方法运行完毕后，所以我们可以用SpEL表达式#result 来获取方法的返回值。
+
+- **allEntries属性**：主要出现在@CacheEvict注解中，表示是否清除指定命名空间中的所有数据，默认为false（即不清除所有数据）。
+- **beforeInvocation属性**：出现在@CacheEvict注解中，表示是否在目标方法执行前使此注解生效， 默认为false（即不生效）。
+
+> 参考博客文章：[Spring缓存注解](https://blog.csdn.net/justry_deng/article/details/89283664)、[B站Spring缓存视频](https://www.bilibili.com/video/BV1ZE411J7Yb?from=search&seid=4715812049534535936)
+
+# 12 Redis
+
+
+
+
+
+> 参考博客文章：[B站狂神说Redis视频](https://www.bilibili.com/video/BV1S54y1R7SB?from=search&seid=5939754712593162694)
+
+
+
+ElasticSearch
+
+
+
+RabbitMq
+
+
 
 # # 个人建站流程
 
