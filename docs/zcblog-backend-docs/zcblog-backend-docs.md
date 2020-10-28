@@ -1922,7 +1922,7 @@ public class CorsConfig implements WebMvcConfigurer {
 }
 ```
 
-> 参考博客文章：[WebMvcConfigurer详解](https://blog.csdn.net/zhangpower1993/article/details/89016503)、[Spring官网doc](https://docs.spring.io/spring-framework/docs/5.2.9.RELEASE/spring-framework-reference/web.html#mvc-cors)
+> 参考博客文章：[WebMvcConfigurer详解](https://blog.csdn.net/zhangpower1993/article/details/89016503)、[Spring官网doc](https://docs.spring.io/spring-framework/docs/5.2.9.RELEASE/spring-framework-reference/web.html#mvc-cors)、[@CrossOrigin解决跨域问题](https://blog.csdn.net/testcs_dn/article/details/86537605)
 
 # 10 Shiro完成登录与鉴权
 
@@ -1982,17 +1982,712 @@ public class CorsConfig implements WebMvcConfigurer {
 > 2. unless的作用时机是在方法运行完毕后，所以我们可以用SpEL表达式#result 来获取方法的返回值。
 
 - **allEntries属性**：主要出现在@CacheEvict注解中，表示是否清除指定命名空间中的所有数据，默认为false（即不清除所有数据）。
-- **beforeInvocation属性**：出现在@CacheEvict注解中，表示是否在目标方法执行前使此注解生效， 默认为false（即不生效）。
+- **beforeInvocation属性**：主要出现在@CacheEvict注解中，表示是否在目标方法执行前使此注解生效， 默认为false（即不生效）。
 
 > 参考博客文章：[Spring缓存注解](https://blog.csdn.net/justry_deng/article/details/89283664)、[B站Spring缓存视频](https://www.bilibili.com/video/BV1ZE411J7Yb?from=search&seid=4715812049534535936)
 
-# 12 Redis
+# 12 Redis的使用
+
+## 12.1 背景
+
+### 12.1.1 互联网项目的架构演进
+
+**架构模型的演进**：单机MySQL—>Memcached + MySQL读写分离（垂直拆分）—> 分库分表+ MySQL集群（水平拆分）—>负载均衡 + 分库分表 + MySQ集群（水平拆分）+ 图片/文件/流媒体...服务器
+
+MySQL引擎：以前采用MyISAM（表锁）、现在采用Innodb（行锁）。
+
+NoSQL（Not only SQL）特点：
+
+1. 数据之间没有关系，方便扩展。
+2. 大数据量高性能（Redis每秒写8万次，每秒读11万次）。
+3. 数据类型多样型（不需要事先设计数据库，随取随用）。
+
+大数据的3V+3高：数据3V（海量Volume、多样Variety、实时Velocity）；程序要3高（高并发、高可拓、高性能）。
+
+### 12.1.2 NoSQL的四大分类
+
+- KV键值对：新浪（**Redis**）、美团（Redis+Tair）、阿里/百度（Redis + Memcache）。
+- 文档型数据库：**MongoDB**（是一个介于关系型数据库和非关系型数据库的中间的产品）、ConthDB。
+- 列存储数据库：**HBase**、分布式文件系统。
+- 图形关系数据库：**Neo4J**、InfoGrid，主要用于社交网络、推荐系统。
+
+### 12.1.3 Redis介绍
+
+Redis（Remote Dictionary Server）：远程字典服务。
+
+**Redis的作用**：内存存储、持久化（rdb和aof）；**高速缓存**；发布订阅系统；地图信息分析；计时器、计数器（**浏览量**）...
+
+> 本项目使用Redis做**高速缓存**及使用Hyperloglog统计博客文章**浏览量**、统计页面**访客数**。
+
+**Redis的特性**：数据类型多样化；持久化；集群；事务...
+
+**Redis的基本指令**（指令不区分大小写，但key-value区分大小写）：
+
+- SELECT 3：切换到第3个数据库（Redis默认有16个数据库，默认使用的是第0个）。
+- DBBASE：查看数据库大小。
+- KEYS pattern：查看满足pattern正则表达式的key。
+- FLUSHDB：清空当前数据库。
+- FLUSHALL：清空全部数据库。
+
+**为什么Redis这么块**：Redis是单线程的（CPU不是Redis的性能瓶颈，机器的内存和网络带宽才是）。
+
+1. 误区一：高性能的服务器一定是多线程的？（错误）
+
+2. 误区二：多线程（CPU上下文切换也很耗时）一定比单线程效率高（错误）
+
+   原因：Redis是将所有的数据全部存放在内存中，使用单线程操作效率最高；多线程存在CPU上下文切换（很耗时）。因此，对于内存系统而言，没有上下文切换效率更高。
+
+## 12.2 基本使用
+
+### 12.2.1 常用的命令
+
+命令的使用需要在Redis官网或者菜鸟网站上查询即可。
+
+- EXISTS key：判断某个键是否存在。
+- MOVE key：移除某个键。
+- EXPIRE key seconds：设置某个键的存货时间（单位是秒）。
+- TTL key：查看某个键的剩余存活时间。
+- SET key value：设置键值对。
+- GET key：获取键位key的值。
+- TYPE key：查看某个key的数据类型。
+
+### 12.2.2 五种基本数据类型
+
+五大基本数据类型是**String**、**List**、**Set**、**Hash**、**Zset**
+
+- String（字符串）
+
+```yaml
+APPEND key value  # 在原来的值上拼接字符串(若key不存在，则相当于新建一个key-value)
+STRLEN key  # 获得字符串的长度
+incr key / decr key  # 自增1/自减1
+INCRBY key num / DECRBY key num  # 自增num/自减num
+GETRANGE key start end  # 截取字符串(GETRANGE key 0 -1可以截取全部字符串)
+SETRANGE key offset value  # 替换(从offset索引处开始替换，替换的长度位value的长度)
+SETEX key seconds value  # 设置过期时间
+SETNX key value  # 若key不存在再设置key-value(在分布式锁中会常常使用);若存在则创建失败
+mset key value [key value...]  # 设置多个key-value
+mget key [key...]  # 获取多个key
+msetnx key value [key value...]  # 不存在再设置key-value(原子性的操作:要么一起成功,要么一起失败)
+getset key value  # 若存在就获取该key对应的value;若不存在就返回nil,再设置key-value
+
+# 使用场景:
+# 1. 计数器
+# 2. 统计多单位的数量
+# 3. 粉丝数
+# 4. 对象缓存存储
+```
+
+- List（链表）：可以把List当成栈、队列、阻塞队列
+
+```yaml
+LPUSH key value [value...]  # 将一个值或者多个值插入到链表的头部(左)
+RPUSH key value [value...]  # 将一个值或者多个值插入到链表的尾部(右)
+LRANGE key start stop  # 截取哪几个value（LRANGE key 0 -1 截取链表的所有元素）（不会改变链表）
+LPOP key  # 移除链表的头部元素(第一个元素)
+RPOP key  # 移除链表的尾部元素(最后一个元素)
+LINDEX key index  # 获取链表中索引位index(index从0开始)的元素
+LLEN key  # 返回链表的长度
+LREM key count value  # 移除链表中指定个数的value元素，精确匹配
+LTRIM key start stop  # 通过下表截取指定的长度（会改变链表）
+RPOPLPUSH source destination  # 移除源链表的尾部元素，并添加到目标链表的头部元素中
+LSET key index value  # 改变链表中索引位index的元素的值，设置为value(要求链表必须先存在,若不存在会报错)
+LINSERT key BEFORE|AFTER pivot value  # 在链表中哪个元素之前/或之后插入一个元素
+
+# 使用场景：
+# 1. 消息排队
+# 2. 消息队列
+# 3. 栈
+```
+
+- Set（集合）：Set中的值不能重复
+
+```yaml
+SADD key value  # 添加一个元素到Set集合中
+SMEMBERS key  # 查看Set集合中的所有元素
+SISMEMBER key value  # 判断某个元素是否在Set集合中
+SCARD key  # 获取Set集合中的元素个数
+SREM key value  # 移除Set集合中的某个元素
+SRANDMEMBER key [count]  # 随机抽取出count个元素(若未设置count,则随机抽取出1个元素)
+SPOP key  # 随机删除Set集合中的一个元素
+SMOVE source destination member  # 将source集合中的member元素移除，并添加到destination集合中
+SDIFF key1 key2  # 以key1集合为标准，比较两个集合的差集
+SINTER key1 key2  # 比较两个集合的交集（如查找共同好友）
+SUNION key1 key2  #  求两个集合的并集
+
+# 使用场景：
+# 1. 共同关注、共同爱好、推荐好友
+```
+
+- Hash（哈希）：key的value值是Map集合，相当于是key-Map
+
+```yaml
+HSET key field value  # 在hash表中设置一个field-value
+HGET key field  # 获取hash表的一个字段值
+HMSET key field value [field value...]  # 在hash表中设置多个field-value
+HMGET key field [field...]  # 获取hash表的多个字段值
+HGETALL key  # 获取hash表的field-value
+HDEL key field  # 删除hash表中的某个字段
+HLEN key  # 获取hash表的字段数量
+HEXISTS key field  # 判断hash表中的某个字段是否存在
+HkEYS key  # 获取hash表中所有字段
+HVALS key  # 获取hash表中所有字段值
+HINCRBY key field num  # 使hash表中的字段值自增num
+HDECRBY key field num  # 使hash表中的字段值自减num
+HSETNX key field value  # 若hash表中某个字段不存在，则设置字段值；若存在，则设置失败
+
+# 使用场景：
+# 1. Hash一般用于存储需要经常变动的信息（如用户信息）
+# 2. Hash更适合于对象的存储，String更加适合于字符串的存储
+```
+
+- Zset（有序集合）
+
+```yaml
+ZADD key score member [score member...]  # 添加一个或多个元素到有序集合中，并为元素设置score
+ZRANGE key start end  # 截取部分元素（如ZRANGE key 0 -1表示截取所有元素）
+ZRANGEBYSCORE key min max  # 显示score值在min到max之间的member
+ZRANGEBYSCORE key min max WITHSCORES  # 显示score值在min到max之间的member,并附带score值
+ZREM key member  # 移除有序集合中的某个元素
+ZCARD key  # 获取有序集合中的元素个数
+ZREVRANGE key start stop  # 有序集合中索引从start到stop的元素按照从大到小排序
+ZCOUNT key min max  # 有序集合中score值在min到max之间的元素数量
+
+# 使用场景：
+# 1. 主要用在需要排序的场景：如排行榜、取TOP N测试...
+```
+
+### 12.2.3 三种特殊数据类型
+
+- Geospatial（地理位置）
+
+```yaml
+# 规则：两级无法直接添加（有效的经度从-180度到180度，有效的纬度从-85.05112878度到85.05112878度）
+# 一般会下载城市数据，直接通过Java程序导入
+GETADD key longitude latitude member [longitude latitude member...]  # 将经度、纬度、城市名称添加到地理空间中
+GEOPOS key member  # 获取指定名称的经纬度信息
+GEODIST key member1 member2 km  # 获取两个城市之间的直线距离，指定距离单位是km（默认单位即是km）
+# 以给定的经纬度为中心，找出某一半径(单位是km)内的元素
+# WITHDIST表示显示到中心的距离、WITHCOORD表示显示他人的定位信息、COUNT num表示只显示num个结果
+GEORADIUS key longitude latitude radius km [WITHDIST] [WITHCOORD] [COUNT num] 
+# 以给定的城市为中心，找出某一半径(单位是km)内的元素
+GEORADIUSBYMEMBER key member radius km
+GEOHASH key member1 member2  # 将二维的经纬度转换为一维的字符串（如果两个字符串越接近，那么则距离越近）
+
+# GEO底层的实现原理其实就是ZSet，可以使用Zset命令来操作GEO
+ZRANGE key 0 -1  # 查看地图中的所有元素
+ZREM key member  # 移除地图中的某个元素
+
+
+# 使用场景：
+# 1. 朋友的定位
+# 2. 附近的人
+# 3. 打车距离计算...
+```
+
+- Hyperloglog（基数统计）
+
+Hyperloglog基数统计的优点：占用的内存固定，只需要12KB内存（2），从内存角度来比较的话使用Hyperloglog作为统计计数是首选。
+
+Hyperloglog基数统计的错误率：0.81%（**针对于统计UV任务，可以忽略不计**）
+
+```yaml
+PFADD key element [element...]  # 添加元素到key中
+PFCOUNT key  # 统计key中元素的数量
+PFMERGE destkey sourcekey [sourcekey...]  # 合并sourcekey1和sourcekey2中的元素（去掉重复值，即并集）
+
+# 使用场景：
+# 1. 统计网页的UV(一个人访问一个网站多次，但是还是算作一个人)
+# 1.1 传统的解决方式：使用Set保存用户的id（IP地址），然后统计set中的元素数量作为标准判断！但弊端是会保存大量的用户id（IP地址），会造成资源的浪费，而我们的目的是为了计数，而不是保存用户的id。
+# 1.2 现在采用Redis Hyperloglog基数统计的方式（如果允许容错）就可以更加优雅地解决我们的问题。
+```
+
+- Bitmaps（位图）：操作二进制位来进行记录，只有0和1两个状态（查询的时间复杂度：O(1)）
+
+```yaml
+SETBIT key offset value  # 对key所储存的字符串值,设置或清除指定偏移量上的位(bit)
+GETBIT key offset  # 对key所储存的字符串值,获取指定偏移量上的位(bit)
+BITCOUNT key  # 统计给定字符串中,被设置为1的比特位的数量
+
+# 使用场景：
+# 1. 使用位储存统计用户信息（如活跃/不活跃；登录/未登录...）
+# 2. 统计365天打卡信息（某天是否打卡、总的打卡天数...）
+```
+
+## 12.3 事务
+
+### 12.3.1 事务的处理
+
+**Redis事务的本质**：一组命令（如多个set命令）的集合。一个事务中的所有命令都会被序列化，在事务执行的过程中，会按照顺序执行。
+
+**Redis事务的特性**：一次性、顺序性、排他性。
+
+> 注意事项：
+>
+> 1. Redis事务没有隔离级别的概念（需回顾Spring中的隔离级别）。
+> 2. 所有的命令在事务中，并未被直接执行，只有发起执行命令（EXEC）的时候才会执行。
+> 3. **Redis单条命令是原子性的，但是Redis事务不是原子性的。**
+>    - 开启（MULTI）事务后，若将命令加入队列时报错（这种错误是**编译型错误**）；执行（EXEC）事务后，所有入队的命令都不会执行。
+>    - 开启（MULTI）事务后，若将命令加入队列时成功；执行（EXEC）事务后，部分入队的指令出错（这种错误是**运行时错误**），则未出错的命令依旧会执行成功（**体现了Redis的事务不是原子性的**）。
+> 4. 虽然Redis自带的事务并不具备原子性，但是我们可以在java程序中通过异常处理来回滚（详见`12.4.1`）。
+
+**Redis事务的处理**：开启事务（MULTI）-->命令入队（...）-->（EXEC）
+
+```yaml
+# 开启事务
+MULTI
+# 取消事务
+DISCARD
+# 执行事务
+EXEC
+```
+
+### 12.3.2 悲观锁/乐观锁
+
+**悲观锁**：很悲观，认为在什么时候都会出问题，无论做什么都会加锁。
+
+**乐观锁**：很乐观，认为什么时候都不会出问题，所以不会上锁。更新数据的时候去判断一下，在此期间是否有人修改过这个数据（先获取version，更新的时候比较version）。
+
+**使用watch可以当作Redis的乐观锁操作，使用unwatch可以取消监视。**
+
+```yaml
+# 举个例子
+# 步骤一：线程1
+watch money  # 监视money（类似于添加乐观锁）
+multi  # 开启事务
+DECRBY money 20
+INCRBY out 20 # 为了模拟多线程操作，先不提交线程1的事务
+# 步骤二：线程2
+INCRBY money 10  # 线程2修改了money的值
+# 步骤三：提交线程1的事务
+EXEC  # 执行后输出（nil），表示线程1的事务执行失败了，这是由于watch监视到了线程2对money的改动，起到了乐观锁的作用
+
+# 使用unwatch可以取消监视
+# 结合使用watch和unwatch可以实现自旋锁的功能
+```
+
+## 12.4 操作Redis
+
+### 12.4.1 使用Jedis操作Redis
+
+使用步骤如下：
+
+```java
+// 1. 导入依赖包
+...
+// 2. 使用Jedis操作Redis（这里截取部分关键代码）
+    Jedis jedis = New Jedis("127.0.0.1", 6379);
+	// jedis的所有命令就是之前学习客户端操作的哪些指令
+	System.out.println(jedis.ping()); // 输出PONG表示已连接上
+	// 其他指令不一一讲解
+	...
+// 3. 使用jedis操作Redis事务
+// 注意事项：虽然Redis自带的事务并不具备原子性，但是我们可以在程序中通过异常处理来回滚
+public class TestMulti {
+    public static void main(String[] args) {
+        //创建客户端连接服务端，redis服务端需要被开启
+        Jedis jedis = new Jedis("127.0.0.1", 6379);
+        jedis.flushDB();
+
+        JSONObject jsonObject = new JSONObject(); // 此处需要重点回顾Jackson与FastJson
+        jsonObject.put("hello", "world");
+        jsonObject.put("name", "java");
+        Transaction multi = jedis.multi(); //开启事务
+        String result = jsonObject.toJSONString();
+        try{
+            multi.set("json", result); //向redis存入一条数据
+            multi.set("json2", result); //再存入一条数据
+            int i = 100/0; //这里引发了异常，用0作为被除数
+            multi.exec(); //如果没有引发异常，执行进入队列的命令
+        }catch(Exception e){
+            e.printStackTrace();
+            multi.discard(); // 如果出现异常，回滚(放弃事务)
+        }finally{
+            System.out.println(jedis.get("json"));
+            System.out.println(jedis.get("json2"));
+            jedis.close(); //最终关闭客户端
+        }
+    }
+}
+```
+
+### 12.4.2 使用Springboot操作Redis
+
+**注意**：在SpringBoot2.x之后，原来使用的JEDIS被替换成了Lettuce。
+
+**原因**：Jedis采用的是直连，多个线程操作的话，是不安全的；若为了避免不安全，使用Jedis pool连接池，又会造成性能的降低（类似BIO模式）。而Lettuce采用Netty，实例可以在多个线程中共享，不存在线程不安全的情况，可以减少线程数据，提高性能（类似NIO模式）。
+
+`RedisAutoConfiguration.java`中的部分源码分析：
+
+```java
+	@Bean
+    @ConditionalOnMissingBean(name = {"redisTemplate"}) // 可以自定义一个redisTemplate来替换这个默认的Bean
+    public RedisTemplate<Object, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) throws UnknownHostException {
+        // 默认的RedisTemplate没有过多的设置，Redis对象都是需要序列化的！
+		// 两个泛型都是Object、Object的类型，我们后面使用需要强制转换<String, Object>
+        RedisTemplate<Object, Object> template = new RedisTemplate();
+        template.setConnectionFactory(redisConnectionFactory);
+        return template;
+    }
+
+    @Bean
+    @ConditionalOnMissingBean // 由于String是Redis中最常使用的类型，所以单独封装了一个stringRedisTemplate Bean
+    public StringRedisTemplate stringRedisTemplate(RedisConnectionFactory redisConnectionFactory) throws UnknownHostException {
+        StringRedisTemplate template = new StringRedisTemplate();
+        template.setConnectionFactory(redisConnectionFactory);
+        return template;
+    }
+```
+
+使用步骤下：
+
+```java
+// 1. 导入依赖
+// 2. 配置连接
+// 3. 测试或使用
+//   3.1 实际使用时，一般会根据Spring提供的redisTemplate进行自定义（例如默认的RedisTemplate采用的时JDK序列化的方式，这种方式中文在Redis客户端中的显示不友好（会乱码），一般会自定义使用Jackson或者fastjson进行序列化）。
+// 	 3.2 值得注意的是，Jackson或者fastjson进行序列化需要Entity类实现Serializable接口。
+//   3.3 除此之外，一般会封装一个RedisUtils工具类。
+```
+
+#### 12.4.2.1 自定义redisTemplate
+
+在`RedisConfig.java`中配置自定义redisTemplate Bean：
+
+```java
+@Configuration
+@EnableCaching // 开启Spring缓存注解
+public class RedisConfig {
+  
+  // 配置Spring缓存管理器
+  @Bean
+  public CacheManager cacheManager(RedisConnectionFactory redisConnectionFactory) {
+        return new RedisCacheManager(RedisCacheWriter.nonLockingRedisCacheWriter(redisConnectionFactory),
+			// 未配置的 key 的默认一周过期
+			RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofDays(7))
+				.serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(
+				new GenericJackson2JsonRedisSerializer())),this.getRedisCacheConfigurationMap());
+  }
+  private Map<String, RedisCacheConfiguration> getRedisCacheConfigurationMap() {
+        Map<String, RedisCacheConfiguration> redisCacheConfigurationMap = new HashMap<>(1);
+        // 文章的缓存默认一天失效
+        redisCacheConfigurationMap.put(RedisCacheNames.ARTICLE, RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofDays(1))
+                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer())));
+        return redisCacheConfigurationMap;
+    }  
+  
+  @Bean
+  // 通过改造Spring提供的RedisTemplate实现自定义RedisTemplate
+  public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
+      // 为了开发方便，一般直接使用<String,Object>
+      RedisTemplate<String, Object> template = new RedisTemplate<String, Object>();
+      template.setConnectionFactory(factory);
+      Jackson2JsonRedisSerializer jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer(Object.class);
+      ObjectMapper om = new ObjectMapper();
+      om.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
+      om.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
+      jackson2JsonRedisSerializer.setObjectMapper(om);
+      StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
+
+      template.setKeySerializer(stringRedisSerializer); // key采用String的序列化方式
+      template.setHashKeySerializer(stringRedisSerializer); // hash的key也采用String的序列化方式
+      template.setValueSerializer(jackson2JsonRedisSerializer); // value序列化方式采用jackson
+      template.setHashValueSerializer(jackson2JsonRedisSerializer); // hash的value序列化方式采用jackson
+      template.afterPropertiesSet();
+
+      return template;
+  }
+  
+  @Bean
+  public HashOperations<String, String, Object> hashOperations(RedisTemplate<String, Object> redisTemplate) {
+      return redisTemplate.opsForHash(); // 简化原生API调用
+  }
+
+  @Bean
+  public ValueOperations<String, String> valueOperations(RedisTemplate<String, String> redisTemplate) {
+      return redisTemplate.opsForValue(); // 简化原生API调用
+  }
+
+  @Bean
+  public ListOperations<String, Object> listOperations(RedisTemplate<String, Object> redisTemplate) {
+      return redisTemplate.opsForList(); // 简化原生API调用
+  }
+
+  @Bean
+  public SetOperations<String, Object> setOperations(RedisTemplate<String, Object> redisTemplate) {
+      return redisTemplate.opsForSet(); // 简化原生API调用
+  }
+
+  @Bean
+  public ZSetOperations<String, Object> zSetOperations(RedisTemplate<String, Object> redisTemplate) {
+      return redisTemplate.opsForZSet(); // 简化原生API调用
+  }
+}
+```
+
+#### 12.4.3.2 自定义RedisUtils工具类
+
+在`RedisUtils.java`中封装Redis工具类：
+
+```java
+@Component
+public class RedisUtils {
+    @Autowired
+    private RedisTemplate<String,Object> redisTemplate;
+    @Autowired
+    private ValueOperations<String, String> valueOperations;
+    @Autowired
+    private HashOperations<String, String, Object> hashOperations;
+    @Autowired
+    private ListOperations<String, Object> listOperations;
+    @Autowired
+    private SetOperations<String, Object> setOperations;
+    @Autowired
+    private ZSetOperations<String, Object> zSetOperations;
+    /**  默认过期时长，单位：秒 */
+    public final static long DEFAULT_EXPIRE = 60 * 60 * 24;
+    /**  不设置过期时长 */
+    public final static long NOT_EXPIRE = -1;
+
+    /**
+     * 设置值与过期时间
+     * @param key
+     * @param value
+     * @param expire
+     */
+    public void set(String key,Object value, long expire) {
+        valueOperations.set(key, JsonUtils.toJson(value));
+        if(expire != NOT_EXPIRE){
+            redisTemplate.expire(key, expire, TimeUnit.SECONDS);
+        }
+    }
+
+    /**
+     * 设置值，默认过期时间1天
+     * @param key
+     * @param value
+     */
+    public void set(String key, Object value){
+        set(key, value, DEFAULT_EXPIRE);
+    }
+
+    /**
+     * 获取对象，同时设置过期时间
+     * @param key
+     * @param clazz
+     * @param expire
+     * @param <T>
+     * @return
+     */
+    public <T> T getObj(String key, Class<T> clazz, long expire) {
+        String value = valueOperations.get(key);
+        if(expire != NOT_EXPIRE){
+            redisTemplate.expire(key, expire, TimeUnit.SECONDS);
+        }
+        return value == null ? null : JsonUtils.toObj(value, clazz);
+    }
+
+    /**
+     * 获取对象，不设置过期时间
+     * @param key
+     * @param clazz
+     * @param <T>
+     * @return
+     */
+    public <T> T getObj(String key, Class<T> clazz) {
+        return getObj(key, clazz, NOT_EXPIRE);
+    }
+
+    /**
+     * 获取值，同时设置过期时间
+     * @param key
+     * @param expire
+     * @return
+     */
+    public String get(String key, long expire) {
+        String value = valueOperations.get(key);
+        if(expire != NOT_EXPIRE){
+            redisTemplate.expire(key, expire, TimeUnit.SECONDS);
+        }
+        return value;
+    }
+
+    /**
+     * 获取值，不设置过期时间
+     * @param key
+     * @return
+     */
+    public String get(String key) {
+        return get(key, NOT_EXPIRE);
+    }
+
+    /**
+     * 删除
+     * @param key
+     */
+    public void delete(String key) {
+        redisTemplate.delete(key);
+    }
+
+    /**
+     * 更新过期时间
+     * @param key
+     */
+    public void updateExpire(String key) {
+        redisTemplate.expire(key,DEFAULT_EXPIRE,TimeUnit.SECONDS);
+    }   
+}
+```
+
+## 12.5 高级使用
+
+### 12.5.1 Redis.conf
+
+在Windows下的配置文件是redis.windows.conf，Linux下的配置文件是Redis.conf。**值得注意的是**：Windows平台的Redis官方已经放弃维护了（目前是微软在维护），且Redis官方也推荐在Linux环境下使用，在Windows环境下使用Redis可能会出现一些未知的错误。
+
+```yaml
+# Redis.conf配置文件详解
+# 1. 配置文件相关
+### 1.1 配置文件对大小写不敏感
+### 1.2 可以使用include引入其他的配置文件，例如：include /path/to/local.conf
+
+# 2. 网络相关
+### 2.1 绑定IP：bind 127.0.0.1
+### 2.2 一般开启保护模式：protected-mode yes
+### 2.3 开启端口：port 6379
+
+# 3. 通用设置
+### 3.1 是否以守护线程方式运行，默认未no，需要手动开启未yes：daemonize yes
+### 3.2 若以后台方式运行(即以守护线程方式运行)，则需要指定一个pid文件：pidfile /var/run/redis_6379.pid
+### 3.3 配置日志级别(debug/verbose/notice/warning)：loglevel notice
+### 3.4 配置输出的日志的文件名及位置（若为空，则为标准的输出）：logfile ""
+### 3.5 默认的数据库数量为16个：databases 16
+### 3.6 是否总是显示Logo（即启动Redis时的彩蛋Banner）：always-show-logo yes
+
+# 4. 快照配置
+### 4.1 配置持久化(会持久化到.rdb/.aof中)规则：
+		save 900 1  # 若900s内，至少有1个key进行了修改，则会即时进行持久化操作
+		save 300 10  # 若300s内，至少有10个key进行了修改，则会即时进行持久化操作
+		save 60 10000  # 若60s内，至少有10000个key进行了修改，则会即时进行持久化操作
+### 4.2 持久化之后，是否需要Redis继续工作：stop-writes-on-bgsave-error yes
+### 4.3 是否压缩rdb文件，需要消耗一些CPU资源：rdbcompression yes
+### 4.4 保存rdb文件的时候，是否进行错误的检查校验：rdbchecksum yes
+### 4.5 rdb文件保存的目录：dir ./
+### 4.6 rdb文件的名称：dbfilename dump.rdb
+
+# 5. 主从复制的配置（在12.5.5详细介绍）
+
+# 6. 安全配置
+### 6.1 默认没有密码，但可以设置登录密码（更多地通过命令设置密码:config set requirepass;登录时使用命令: auth 密码）：requirepass 密码
+
+# 7. 客户端限制配置
+### 7.1 设置能连接上Redis的最大客户端的数量：maxclients 10000
+### 7.2 配置Redis的最大内存容量（默认单位是字节）：maxmemory <bytes>
+### 7.3 配置内存到达上限时的处理策略：maxmemory-policy noeviction
+##### 7.3.1 volatile-lru策略：只对设置了过期时间的key进行LRU(默认值)
+##### 7.3.2 allkeys-lru策略：删除lru算法的key
+##### 7.3.3 volatile-random策略：随机删除即将过期的key
+##### 7.3.4 allkeys-random策略：随机删除
+##### 7.3.5 volatile-ttl策略：删除即将过期的
+##### 7.3.6 noeviction策略：永不过期，返回错误
+
+# 8. aof配置
+### 8.1 默认不开启aof模式，默认使用rdb方式持久化；在大部分所有的情况下，rdb完全够用：appendonly no
+### 8.2 持久化的文件名字：appendfilename "appendonly.aof"
+### 8.3 持久化同步机制: 
+		appendfsync always  # 每次修改都会同步，消耗性能
+		appendfsync everysec  # 每秒执行一次同步，可能会丢失这1s的数据（默认是这种机制）
+		appendfsync no  # 不执行同步，这个时候操作系统自己同步数据，速度最快	
+### 8.4 配置重写规则
+		auto-aof-rewrite-percentage 100  # 
+		auto-aof-rewrite-min-size 64mb  # 若aof文件大于64m，会fock一个新的进程来将文件进行重写
+```
+
+> 参考博客文章：[Redis的缓存淘汰策略LRU与LFU](https://www.jianshu.com/p/c8aeb3eee6bc)
+
+### 12.5.2 持久化
+
+Redis是内存数据库，如果不将内存中的数据库状态保存到磁盘，那么一旦服务器进程退出，服务器中的数据库状态也会消息，故而使用Redis必须学会持久化（**持久化是面试和工作的重点**）。
+
+#### 12.5.2.1 RDB（Redis DataBase）
+
+**RDB持久化**：在指定的时间间隔内将内存中的数据集快照写入磁盘（即Snapshot快照），恢复时会将快照文件直接读到内存里。Redis会单独创建（fork）一个子进程来进行持久化，会先将数据写入到一个临时文件中，待持久化过程都结束了，再用这个临时文件替换上次持久化好的文件（文件默认名称是`dump.rdb`）。整个过程中，主进程是不进行任何IO操作的，这就确保了极高的性能。**如果需要进行大规模数据的恢复，且对数据恢复的完整性不是很敏感，那么RDB方式要比AOF方式更加的高效。RDB的缺点是最后一次持久化后的数据可能丢失。我们默认的就是RDB，一般情况下不需要修改这个配置**。在生产环境一般会对rdb文件进行备份。在主从复制中，RDB一般用在从机上面进行备用。
+
+**RDB持久化触发机制**：
+
+1. save规则满足的情况下，会自动触发rdb规则，生成rdb文件。
+2. 执行FLUSHALL命令，也会触发rdb规则，生成rdb文件。
+3. 退出Redis，也会产生rdb文件。
+
+**RDB恢复机制**：
+
+1. 只需要将rdb文件放在Redis的启动目录，那么启动的时候就会自动检查dump.rdb，并恢复其中的数据。
+2. 查看rdb文件需要存在的位置：config get dir
+
+**RDB持久化优点**：
+
+1. 适合大规模的数据恢复。
+2. 对数据的完整性要求不高。
+
+**RDB持久化的缺点**：
+
+1. 需要一定的时间间隔进程操作。若Redis意外宕机了，这个最后一次修改的数据就没有了。
+2. fork进程的时候，会占用一定的内容空间。
+
+#### 12.5.2.2 AOF（Append Only File）
+
+**AOF持久化**： Redis同样会单独创建（fork）一个子进程来进行持久化，将所有的命令都记录下来，恢复的时候将文件（文件默认名称是`appendonly.aof`）全部执行一遍即可。以日志的形式来记录每个写操作，将Redis执行过的所有指令记录下来（**读操作不记录**），只允许追加文件但不可以改写文件。Redis启动之初会读取该文件重新构建数据。AOF持久化默认是不开启的，需要手动进行配置（设置：`appendonly yes`）（详见`12.5.1`）。
+
+**注意**：若`appendonly.aof`有错误，那么Redis是启动不起来的，我们需要使用Redis的`redis-check-aof`工具来修复这个文件（Linux下的修复命令为`redis-check-aof --fix appendonly.aof`）。修复成功后，重启就可以恢复了。
+
+**AOF持久化的优点**：
+
+1. 每一次修改都同步，文件的完整性会更加好。
+2. 每秒同步一次，可能会丢失1s的数据。
+3. 永不同步，效率最高。
+
+**AOF持久化的缺点**;
+
+1. 相对于数据文件来说，AOF远远大于RDB，修复的速度也比RDB慢。
+2. AOF运行效率要比RDB慢，故而Redis默认的配置是RDB持久化。
+
+#### 15.5.2.3 持久化总结
+
+
+
+### 12.5.3 发布订阅
+
+
+
+### 12.5.4 主从复制
+
+
+
+### 12.5.5 哨兵模式
+
+
+
+### 12.5.6 缓存穿透与雪崩
 
 
 
 
 
-> 参考博客文章：[B站狂神说Redis视频](https://www.bilibili.com/video/BV1S54y1R7SB?from=search&seid=5939754712593162694)
+## 12.6 本项目中的应用
+
+### 12.6.1 高速缓存
+
+
+
+
+
+### 12.6.2 统计网站UV/PV
+
+
+
+
+
+> 参考博客文章：**[Redis命令参考](http://doc.redisfans.com/index.html)**、**[B站狂神说Redis视频](https://www.bilibili.com/video/BV1S54y1R7SB?from=search&seid=5939754712593162694)**、**[Redis深度历险-钱文品]()**、[Redis中文网站](https://www.redis.net.cn/)、[Redis菜鸟教程](https://www.runoob.com/redis/)
 
 
 
@@ -2016,7 +2711,7 @@ RabbitMq
 
 ## ## 进行ICP备案
 
-在阿里云ICP备案系统平台按照步骤备案：基础信息校验-->主办者信息填写-->网站信息填写-->上传资料（**本省注册不需要提交暂住证**）。
+在阿里云ICP备案系统平台按照步骤备案：基础信息校验-->主办者信息填写-->网站信息填写-->上传资料（**本省注册不需要提交暂住证**）--> 5天作用ICP备案成供
 
 ## ## Docker部署项目
 
