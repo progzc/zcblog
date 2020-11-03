@@ -1058,6 +1058,12 @@ GET /articles?published=true  # 查询已发布的文章；URL采用一级URL+�
 
 > 参考博客文章：**[阮一峰-Restful API最佳实践](http://www.ruanyifeng.com/blog/2018/10/restful-api-best-practices.html)**、[Rest服务和Restful API](https://blog.csdn.net/shangrila_kun/article/details/89026968)、[Restful风格的API接口开发教程](https://www.imooc.com/article/28250)
 
+## 2.6 代码规范检查插件
+
+代码规范与质量检测插件可以很好的对不规范的代码进行提示，规范程序员的代码书写习惯。本项目中使用`Alibaba Java Coding Guidelines`和`SonarLint`两个插件。安装好插件后如下所示：
+
+![image-20201103210639390](zcblog-backend-docs.assets/image-20201103210639390.png)
+
 # 3 代码生成器
 
 ## 3.1 自定义代码生成工具类
@@ -1359,7 +1365,7 @@ lombok中的常见注解：
 
 **Swagger的应用场景**：主要应用于前后端分离的项目，作为前后端开发工程师进行协同工作；实现类似postman的网络请求测试。
 
-> 参考博客文章：**[B站狂神说Swagger视频](https://www.bilibili.com/video/BV1Y441197Lw)**、[狂神说Swagger](https://mp.weixin.qq.com/s/0-c0MAgtyOeKx6qzmdUG0w)、[Swagger yml完全注释](https://blog.csdn.net/u010466329/article/details/78522992)、[Swagger的介绍](https://blog.csdn.net/weixin_37509652/article/details/80094370)、[Swagger注解](https://blog.csdn.net/chinassj/article/details/81875038)、[添加Header全局配置](https://www.jianshu.com/p/6e5ee9dd5a61)
+> 参考博客文章：**[B站Swagger视频](https://www.bilibili.com/video/BV1Y441197Lw)**、[Swagger](https://mp.weixin.qq.com/s/0-c0MAgtyOeKx6qzmdUG0w)、[Swagger yml完全注释](https://blog.csdn.net/u010466329/article/details/78522992)、[Swagger的介绍](https://blog.csdn.net/weixin_37509652/article/details/80094370)、[Swagger注解](https://blog.csdn.net/chinassj/article/details/81875038)、[添加Header全局配置](https://www.jianshu.com/p/6e5ee9dd5a61)
 
 ## 5.2 Swagger的配置
 
@@ -1937,7 +1943,8 @@ public class CorsConfig implements WebMvcConfigurer {
 使用Spring缓存（保证Springd的版本高于V3.1）的步骤如下：
 
 1. 第1步：在Springboot**启动类**或者**某一配置类**上使用**@EnableCaching**注解启用Spring缓存技术。
-2. 第2步：在类上或类中的方法上（**该类必须注入到容器中，否则缓存不会生效**）使用缓存注解（例如：@Cacheable添加缓存、@CacheEvict清除缓存...）。
+2. 第2步：配置缓存管理器。
+3. 第3步：在类上或类中的方法上（**该类必须注入到容器中，否则缓存不会生效**）使用缓存注解（例如：@Cacheable添加缓存、@CacheEvict清除缓存...）。
 
 ## 11.2 缓存注解
 
@@ -1984,7 +1991,45 @@ public class CorsConfig implements WebMvcConfigurer {
 - **allEntries属性**：主要出现在@CacheEvict注解中，表示是否清除指定命名空间中的所有数据，默认为false（即不清除所有数据）。
 - **beforeInvocation属性**：主要出现在@CacheEvict注解中，表示是否在目标方法执行前使此注解生效， 默认为false（即不生效）。
 
-> 参考博客文章：[Spring缓存注解](https://blog.csdn.net/justry_deng/article/details/89283664)、[B站Spring缓存视频](https://www.bilibili.com/video/BV1ZE411J7Yb?from=search&seid=4715812049534535936)
+## 11.4 配置CacheManager
+
+Spring缓存本质上是将缓存存储在Spring容器中，使用缓存管理器可以将Spring缓存储存在Redis内存中，可以给不同的缓存空间进行不同的设置（如过期时间、序列化方式...）
+
+在`RedisConfig.config`中开启Spring缓存并配置缓存管理器，相关代码如下：
+
+```java
+@Configuration
+@EnableCaching // 开启Spring缓存注解
+public class RedisConfig {
+    /**
+     * 配置Redis缓存管理器，处理Spring缓存
+     * @param redisConnectionFactory
+     * @return
+     */
+    @Bean
+    public CacheManager cacheManager(RedisConnectionFactory redisConnectionFactory) {
+        // 未配置的key默认缓存一周过期
+        RedisCacheWriter redisCacheWriter = RedisCacheWriter.nonLockingRedisCacheWriter(redisConnectionFactory);
+        RedisCacheConfiguration redisCacheConfiguration = RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofDays(7)).serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer()));
+        Map<String, RedisCacheConfiguration> redisCacheConfigurationMap = getRedisCacheConfigurationMap();
+        return new RedisCacheManager(redisCacheWriter, redisCacheConfiguration, redisCacheConfigurationMap);
+    }
+
+    private Map<String, RedisCacheConfiguration> getRedisCacheConfigurationMap() {
+        HashMap<String, RedisCacheConfiguration> redisCacheConfigurationMap = new HashMap<>(1);
+        // ZCBLOG:ARTICLE缓存空间过期时间为1天（文章缓存1天）
+        redisCacheConfigurationMap.put(RedisCacheNames.ARTICLE, RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofDays(1))
+                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer())));
+        // ZCBLOG:GALLERY缓存空间过期时间为1天（相册缓存1天）
+        redisCacheConfigurationMap.put(RedisCacheNames.GALLERY, RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofDays(1))
+                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer())));
+        return redisCacheConfigurationMap;
+    }
+}
+```
+
+> 参考博客文章：[Spring缓存注解](https://blog.csdn.net/justry_deng/article/details/89283664)、[B站Spring缓存视频](https://www.bilibili.com/video/BV1ZE411J7Yb?from=search&seid=4715812049534535936)、[Spring缓存与CacheManager](https://www.cnblogs.com/top-housekeeper/p/11865399.html)、[配置RedisCacheManager](https://blog.csdn.net/weixin_43526498/article/details/106621180)
 
 # 12 Redis的使用
 
@@ -2352,78 +2397,75 @@ public class TestMulti {
 
 #### 12.4.2.1 自定义redisTemplate
 
-在`RedisConfig.java`中配置自定义redisTemplate Bean：
+在`RedisConfig.java`中配置自定义redisTemplate Bean，部分代码如下：
 
 ```java
 @Configuration
 @EnableCaching // 开启Spring缓存注解
 public class RedisConfig {
-  
-  // 配置Spring缓存管理器
-  @Bean
-  public CacheManager cacheManager(RedisConnectionFactory redisConnectionFactory) {
-        return new RedisCacheManager(RedisCacheWriter.nonLockingRedisCacheWriter(redisConnectionFactory),
-			// 未配置的 key 的默认一周过期
-			RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofDays(7))
-				.serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(
-				new GenericJackson2JsonRedisSerializer())),this.getRedisCacheConfigurationMap());
-  }
-  private Map<String, RedisCacheConfiguration> getRedisCacheConfigurationMap() {
-        Map<String, RedisCacheConfiguration> redisCacheConfigurationMap = new HashMap<>(1);
-        // 文章的缓存默认一天失效
-        redisCacheConfigurationMap.put(RedisCacheNames.ARTICLE, RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofDays(1))
-                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer())));
-        return redisCacheConfigurationMap;
-    }  
-  
-  @Bean
-  // 通过改造Spring提供的RedisTemplate实现自定义RedisTemplate
-  public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
-      // 为了开发方便，一般直接使用<String,Object>
-      RedisTemplate<String, Object> template = new RedisTemplate<String, Object>();
-      template.setConnectionFactory(factory);
-      Jackson2JsonRedisSerializer jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer(Object.class);
-      ObjectMapper om = new ObjectMapper();
-      om.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
-      om.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
-      jackson2JsonRedisSerializer.setObjectMapper(om);
-      StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
 
-      template.setKeySerializer(stringRedisSerializer); // key采用String的序列化方式
-      template.setHashKeySerializer(stringRedisSerializer); // hash的key也采用String的序列化方式
-      template.setValueSerializer(jackson2JsonRedisSerializer); // value序列化方式采用jackson
-      template.setHashValueSerializer(jackson2JsonRedisSerializer); // hash的value序列化方式采用jackson
-      template.afterPropertiesSet();
+    /**
+     * 通过改造Spring提供的RedisTemplate实现自定义RedisTemplate
+     * @return redisTemplate Bean
+     */
+    @Bean
+    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory){
+        // 为了开发方便，一般直接使用<String, Object>
+        RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setConnectionFactory(redisConnectionFactory);
 
-      return template;
-  }
-  
-  @Bean
-  public HashOperations<String, String, Object> hashOperations(RedisTemplate<String, Object> redisTemplate) {
-      return redisTemplate.opsForHash(); // 简化原生API调用
-  }
+        // 处理编码问题
+        Jackson2JsonRedisSerializer<Object> jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer<>(Object.class);
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
+        objectMapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
+        jackson2JsonRedisSerializer.setObjectMapper(objectMapper);
+        StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
 
-  @Bean
-  public ValueOperations<String, String> valueOperations(RedisTemplate<String, String> redisTemplate) {
-      return redisTemplate.opsForValue(); // 简化原生API调用
-  }
+        redisTemplate.setKeySerializer(stringRedisSerializer); // key采用String的序列化方式
+        redisTemplate.setHashKeySerializer(stringRedisSerializer); // hash的key也采用String的序列化方式
+        redisTemplate.setValueSerializer(jackson2JsonRedisSerializer); // value序列化方式采用jackson
+        redisTemplate.setHashValueSerializer(jackson2JsonRedisSerializer); // hash的value序列化方式采用jackson
+        redisTemplate.afterPropertiesSet(); // 初始化redisTemplate
 
-  @Bean
-  public ListOperations<String, Object> listOperations(RedisTemplate<String, Object> redisTemplate) {
-      return redisTemplate.opsForList(); // 简化原生API调用
-  }
+        return redisTemplate;
+    }
 
-  @Bean
-  public SetOperations<String, Object> setOperations(RedisTemplate<String, Object> redisTemplate) {
-      return redisTemplate.opsForSet(); // 简化原生API调用
-  }
+    @Bean
+    public ValueOperations<String, String> valueOperations(RedisTemplate<String, String> redisTemplate) {
+        return  redisTemplate.opsForValue(); // 简化原生String类型的API调用
+    }
 
-  @Bean
-  public ZSetOperations<String, Object> zSetOperations(RedisTemplate<String, Object> redisTemplate) {
-      return redisTemplate.opsForZSet(); // 简化原生API调用
-  }
-}
+    @Bean
+    public ListOperations<String, Object> listOperations(RedisTemplate<String, Object> redisTemplate) {
+        return redisTemplate.opsForList(); // 简化原生List类型的API调用
+    }
+
+    @Bean
+    public SetOperations<String, Object> setOperations(RedisTemplate<String, Object> redisTemplate) {
+        return redisTemplate.opsForSet(); // 简化原生Set类型的API调用
+    }
+
+    @Bean
+    public ZSetOperations<String, Object> zSetOperations(RedisTemplate<String, Object> redisTemplate) {
+        return redisTemplate.opsForZSet(); // 简化原生ZSet类型的API调用
+    }
+
+    @Bean
+    public HashOperations<String, String, Object> hashOperations(RedisTemplate<String, Object> redisTemplate) {
+        return redisTemplate.opsForHash(); // 简化原生Hash类型的API调用
+    }
 ```
+
+**注意事项**：
+
+1. 使用Jackson2JsonRedisSerializer反序列化带泛型的数据时会报错，而使用GenericJackson2JsonRedisSerializer可以正常反序列化；这是因为GenericJackson2JsonRedisSerializer序列化时，会保存序列化的对象的包名和类名，反序列化时以这个作为标示就可以反序列化成指定的对象。
+2. Jackson2JsonRedisSerializer要比GenericJackson2JsonRedisSerializer效率要高。
+3. 使用StringRedisSerializer进行序列化的值，在Java和Redis中保存的内容一致；使用Jackson2JsonRedisSerializer进行序列化的值，在Redis中保存的内容，比Java中多了一对双引号。
+
+本项目使用Jackson2JsonRedisSerializer进行序列化，针对带泛型的数据反序列化时不能将map解析成对象这一问题，**解决方案是：序列化存储时，使用工具类将对象转成json字符串；反序列化时再使用工具类将字符串转换为对象**。
+
+> 参考文章：[Jackson2JsonRedisSerializer与GenericJacksonRedisSerializer对比](https://www.cnblogs.com/nieaojie625/p/13772906.html)、[Redis序列化问题](https://gitee.com/fengzxia/spring-boot-redis-cache/blob/master/Jackson%20Serializer%E7%BC%93%E5%AD%98%E6%95%B0%E6%8D%AE%E5%BA%8F%E5%88%97%E5%8C%96%E9%97%AE%E9%A2%98.md)
 
 #### 12.4.3.2 自定义RedisUtils工具类
 
@@ -2575,7 +2617,9 @@ public class RedisUtils {
 ### 4.5 rdb文件保存的目录：dir ./
 ### 4.6 rdb文件的名称：dbfilename dump.rdb
 
-# 5. 主从复制的配置（在12.5.5详细介绍）
+# 5. 主从复制的配置（在12.5.4详细介绍）
+### 5.1 在从机的配置文件中配置主机的ip地址和端口号：replicaof <masterip> <masterport>
+### 5.2 若主机有密码，在从机的配置文件中需配置密码：masterauth <master-password>
 
 # 6. 安全配置
 ### 6.1 默认没有密码，但可以设置登录密码（更多地通过命令设置密码:config set requirepass;登录时使用命令: auth 密码）：requirepass 密码
@@ -2651,27 +2695,175 @@ Redis是内存数据库，如果不将内存中的数据库状态保存到磁盘
 1. 相对于数据文件来说，AOF远远大于RDB，修复的速度也比RDB慢。
 2. AOF运行效率要比RDB慢，故而Redis默认的配置是RDB持久化。
 
-#### 15.5.2.3 持久化总结
+#### 15.5.2.3 总结
 
+1. RDB持久化方式能够在指定的时间间隔内对数据进行快早存储。
+2. AOF持久化方式记录每次对服务器写的操作，当服务器重启的时候会重新执行这些命令来恢复原始的数据，AOF命令以Redis协议追加保存每次写的操作到文件末尾。Redis还能对AOF文件进行后台重写，使AOF文件的体积不至于过大。
+3. 只做缓存，如果只希望数据在服务器运行的时候存在，也可以不使用任何持久化。
+4. 同时开启两种持久化方式：
+   - 在这种情况下，当Redis重启的时候会优先载入AOF文件来恢复原始的数据，因为在通常情况下AOF文件保存的数据集要比RDB文件保存的数据集要完整。
+   - RDB的数据不实时，同时使用两者时服务器重启也只会查找AOF文件，那要不要只使用AOF呢？建议不要，因为RDB更适合用于备份数据库（AOF在不断变化不好备份）、快速重启，而且不会有AOF可能潜在的Bug，留着作为一个万一的手段。
 
+5. 性能建议：
+   - 因为RDB文件只用作后备用途，建议只在Slave上持久化RDB文件，而且只要15分钟备份一次就够了，只需要save 900 1这条规则。
+   - 如果使用AOF，好处是在最恶劣情况下也只会丢失不超过两秒的数据，启动脚本较简单只load自己的AOF文件就可以了，代价一是带来了持续的IO，二是AOF rewrite的最后将rewrite过程中产生的新数据写到新文件造成的阻塞几乎是不可避免的。只要硬盘许可，应该尽量减少AOF rewrite的频率。AOF重写的基础大小默认值64M太小了，可以设到5G以上，默认超过原大小100%时重写可以改到适当的数值。
+   - 如果不使用AOF，仅靠master-slave-replication实现高可用也可以，能省掉一大笔IO，也减少了rewrite时带来的系统波动。代价是如果master/slave同时挂掉，会丢失十几分钟的数据，启动脚本也要比较两个master/slave中的RDB文件，载入较新的那个，微博就是这种架构。
 
 ### 12.5.3 发布订阅
 
+Redis发布订阅（pub/sub）是一种消息通信模式（类似于RabbitMQ\Kafka等消息中间件）：发送者（pub）发送消息、订阅者（sub）接收消息。
 
+Redis客户端可以订阅任意数量的频道。
+
+```yaml
+SUBSCRIBE channel [channel...]  # 订阅一个或多个频道（订阅端）
+PSUBSCRIBE pattern [pattern...]  # 使用模式匹配订阅一个或多个符合给定模式的频道（订阅端）
+UNSUBSCRIBE channel [channel...]  # 取消订阅一个或多个频道（订阅端）
+
+PUBLISH channel message  # 将信息message发送到指定的频道channel（发布端）
+
+# 使用场景（针对复杂的场景就会使用消息中间件如RabbitMQ/kafka）：
+# 1. 订阅关注系统：例如微信公众号、微博的关注系统
+# 2. 构建即时通信应用：例如网络聊天室、实时消息系统、实时提醒
+```
+
+**发布订阅的原理**：Redis是使用C语言实现的，可以分析源码里的pubsun.c文件，了解发布和订阅机制的底层实现。
+
+1. 通过SUBSCRIBE命令订阅某个频道后，redis-server里维护了一个字典，字典的键就是一个个channel，而字典的值则是一个链表，链表中保存了所有订阅这个channel的客户端。SUBSCRIBE命令就是将客户端添加到给定channel的订阅链表中。
+2. 通过PUBLISH命令向订阅者发送消息，redis-server会使用给定的频道作为键，在它所维护的channel字典中查找记录了订阅这个频道的所有客户端的链表，遍历这个链表，将消息发布给所有订阅者。
+3. 在Redis中，可以设定对某一个key值进行消息发布及消息订阅；当一个key值上进行了消息发布后，所有订阅它的客户端都会收到相应的消息。这一功能最明显的用法就是用作实时消息系统，如普通的即时聊天、群聊等功能。
+
+![image-20201029091123620](zcblog-backend-docs.assets/image-20201029091123620.png)
 
 ### 12.5.4 主从复制
 
+**主从复制的概念**：是指将一台Redis服务器的数据，复制到其他的Redis服务器。前者称为主节点（master/leader），后者称为从节点（slave/follower）；数据的复制的单向的，只能由主节点到从节点；master以写为主，salve以读为主。默认情况下，每台Redis服务器都是主节点；且一个主节点可以有多个从节点（或没有从节点），但一个从节点只能有一个主节点。
 
+**主从复制的作用**：
+
+1. 数据冗余：主从复制实现了**数据的热备份**，是持久化之外的一种数据冗余方式。
+2. 故障恢复：当主节点出现问题时，可以由从节点提供服务，实现快速的故障恢复；实际上是一种**服务的冗余**。
+3. 负载均衡：在主从复制基础上，配合**读写分离**，可以由主节点提供写服务，由从节点提供读服务（即写Redis数据时应用连接主节点，读Redis数据时应用连接从节点），分担服务器负载。尤其是在写少读多的场景下，通过多个从节点分担读负载，可以大大提高Redis服务器的并发量。
+4. 高可用基石：除了上述作用外，主从复制还是哨兵模式和集群能够实施的基础。
+
+**为什么要使用Redis集群**：
+
+1. 从结构上，单个Redis服务器会发生单点故障；并且一台服务器需要处理所有的请求负载，压力较大。
+2. 从容量上，单个Redis服务器内存容量有限，就算一台Redis服务器内存容量为256G，也不能将所有内存用作Redis存储内存（一般来说，单台Redis最大使用内存不应超过20G）。
+
+**主从复制使用场景**：例如电商网站上的商品，一般都是一次上传、无数次浏览（即读写少多），这是应该使用主从复制来进行读写分离。主从复制至少需要3台Redis服务器（1主2从）搭建集群。
+
+Redis集群的搭建步骤如下：
+
+```yaml
+# 主从复制只需配置从库，不用配置主库（默认即是主库）
+info replication  # 查看当前库主从复制的信息
+
+# 1. 复制多个Redis.conf文件并编辑相应配置
+### 1.1 修改端口号
+### 1.2 修改pidfile（与端口号同步）
+### 1.3 修改logfile
+### 1.4 修改dbfilename
+# 2. 启动多个Redis服务：redis-server config文件
+# 3. 主从配置，搭建集群：
+### 3.1 在需要作为从机的服务器上使用命令行配置：SLAVEOF host port
+### 3.2 也可以在从机的配置文件中配置主机的ip地址和端口号：replicaof <masterip> <masterport>
+### 3.3 若主机有密码，在从机的配置文件中需配置密码：masterauth <master-password>
+
+# Linux相关知识
+## 1. 启动后可以采用ps -ef|grep redis查看进程信息
+## 2. 在进程中可以使用shutdown（是Redis的命令）
+## 3. 在linux系统中（非程序进程中）可以使用shutdown关机、使用"kill 端口号"杀死进程
+```
+
+**集群使用注意事项**：
+
+1. 真实的主从配置应该在配置文件中配置（这样才是永久生效的），使用命令`SLAVEOF host port`配置是暂时的。
+2. 主机可以写，从机不可写只能读。主机中的所有信息和数据，都会自动被从机保存。
+3. 若主机断开连接，从机依旧会连接到主机，但是没有写操作；若主机重新回来，从机依旧可以直接获取到主机写的信息。
+4. 通过命令行配合的主从关系，若从机断开连接，重新会变回主机；只要再次变为从机，立马就会从主机中获取值。
+
+**主从复制的原理**：
+
+1. slave启动成功连接到master后会发送一个sync同步命令。
+2. master接到命令后会启动后台的存盘进程，同时收集所有接收到的用于修改数据集的命令；在后台进程执行完毕之后，master将传送整个数据文件到salve，并完成一次完全同步。
+3. 全量复制：slave在接收到数据库文件数据后，将其存盘并加载到内存中。
+4. 增量复制：master继续将新的所有收集到的修改命令依次传给slave，完成同步。
+5. 只要重新连接master，一次完全同步（全量复制）将被自动执行。
+
+**宕机后手动配置主机**：层层链路模式下（**主机1-->从机1，主机1-->从机2，从机1-->从机2**：即从机1既是主机1的从机，也是从机2的主机；从机2既是主机1的从机，又是从机1的从机），若主机1断开，系统并不会主动挑选从机1作为主机，需要在从机1中使用命令"谋权篡位"成为新的主机（命令：`SLAVEOF no one`）；若主机1修复，不会重新连接从机1和从机2。（**了解即可，工作中会使用哨兵模式解决这一问题**）
 
 ### 12.5.5 哨兵模式
 
+**哨兵（Sentinel）模式**：`12.5.4`所述主从切换的瓶颈在于，当主机宕机后，需要手动将一台从机配置成主机，这就需要人工干预，费时费力，还会造成一段时间内服务不可用。在工作方式中，会优先使用哨兵模式来解决这一问题。**哨兵模式会依据投票数自动将从机变为主机**。**哨兵是一个独立的进程，会独立运行**；哨兵通过发送命令，等待Redis服务器的响应，从而监控运行的多个Redis实例（**哨兵可以类比于调度中心**）。
 
+**哨兵模式原理**：若主服务器宕机，哨兵1先检测到这个结果，系统并不会马上进行failover过程，仅仅是哨兵1主观地认为主服务器不可用，这个现象称为**主观下线**。当后面的哨兵也检测到主服务器不可用，并且数量达到一定值时，那么哨兵之间就会进行一次投票，投票的结果由一个哨兵发起，进行failover（故障转移）操作。切换成功后，就会通过发布订阅模式，让各个哨兵把自己监控的从服务器实现切换主机，这个过程称之为**客观下线**。**若宕机的主机在客观下机后又重新恢复，只能归并到新的主机下，当作从机使用了**。
+
+<img src="zcblog-backend-docs.assets/image-20201029115713647.png" alt="image-20201029115713647" style="zoom: 50%;" />
+
+配置哨兵的步骤如下：
+
+```yaml
+# 12.5.4节中Redis集群搭建[续]
+# 4. 配置哨兵：
+### 4.1 创建哨兵的配置文件：sentinel.conf
+### 数字1表示当1个哨兵统一认为master主节点失联，那么这时客观上就认为主节点失联了
+### 4.2 配置哨兵：SENTINEL MONITOR 主节点名称名 被监控机器的IP地址 被监控机器的端口号 1 
+# 5. 启动哨兵：redis-sentinel 配置文件名
+```
+
+**哨兵模式的优点**：
+
+1. 哨兵集群，基于主从复制模式，所有的主从配置优点，它全有。
+2. 主从可以切换、故障可以转移，系统的可用性会更好。
+3. 哨兵模式就是主从模式的升级，手动到自动，更加健壮。
+
+**哨兵模式的缺点**
+
+1. Redis不好在线扩容，集群容量一旦到达上限，在线扩容就十分麻烦。
+2. 实现哨兵模式的配置很麻烦，里面有很多选择。
+
+哨兵模式的全部配置如下：
+
+```yaml
+# 1. 哨兵sentinel实例运行的端口：port 26379
+# 2. 哨兵sentinel的工作目录：dir /tmp
+# 3. 配置哨兵监控Redis节点：sentinel monitor <master-name> <ip> <redis-port> <quorum>
+# 4. 设置哨兵连接主从的密码：sentinel auth-pass <master-name> <password>
+# 5. 指定多少毫秒之后，主节点没有答应哨兵时，此时哨兵主观上认为主节点下线：
+	sentinel down-after-milliseconds <master-name> <milliseconds>
+# 6. 设置在发生failover主从切换时，最多可以有多少个salve可以同时对新的master进行同步：
+	sentinel parallel-syncs <master-name> <numslaves>
+# 7. 设置故障转移的超时时间：sentinel failover-timeout <master-name> <milliseconds>
+# 8. 设置通知脚本（当出现故障时可以发送邮件通知相关人员）：sentinel notification-script <master-name> <script-path>
+# 9. 当master由于failover而发生改变时，这个脚本将会执行通知客户端关于master地址已经发生改变：
+	sentinel client-reconfig-script <master-name> <script-path>
+```
 
 ### 12.5.6 缓存穿透与雪崩
 
+> **缓存穿透（查不到）** ：用户想要查询一个数据，发现Redis内存数据库中没有，也就是缓存没有命中；于是向持久层数据库查询，发现也没有，于是本次查询失败。当用户很多的时候，缓存都没有命中，于是都去请求了持久层数据库，这会给持久层数据库造成很大的压力，这个时候就相当于出现了缓存穿透。
 
+**缓存穿透的解决方案**：
 
+1. **使用布隆过滤器**：布隆过滤器是一种数据结构，对所有可能查询的参数以hash形式存储，在控制层先进行校验，不符合则丢弃，从而避免了对底层存储系统的查询压力。
 
+2. **缓存空对象**：当存储层不命中后，即使返回的空对象也将其缓存起来，同时会设置一个过期时间，之后再访问这个数据将会从缓存中获取，保护了后端数据源。这种方法存在两个问题：一是浪费存储空间、二是缓存层和存储层的数据会有一段时间窗口的不一致，对于需要保持一致性的业务会有影响。
+
+> **缓存击穿（量太大）**：缓存击穿是指当某个key在过期的瞬间，有大量的请求并发访问，这类数据一般是热点数据，由于缓存过期，会同时访问数据库来查询最新数据，并且回写缓存，会导致数据库瞬间压力过大。
+
+**缓存击穿的解决方案**：
+
+1. **设置热点数据永不过期**：从缓存层面来看，没有设置过期时间，所以不会出现热点key过期后产生的问题。
+2. **加互斥锁**：使用分布式锁，保证对于每个key同时只有一个线程去查询后端服务，其他线程没有获得分布式锁的权限，因此只需要等待即可。这种方式将高并发的压力转移到了分布式锁，因此对分布式锁的考验很大。*
+
+> **缓存雪崩**：指在某一个时间段，缓存集中过期失效，这是产生雪崩的原因之一；缓存服务器的某个节点宕机或断网，这是产生雪崩的原因之二。
+
+**缓存雪崩的解决方案**：
+
+1. **Redis高可用**：既然Redis有可能挂掉，那就多增设几台Redis，这样一台挂掉之后其他的还可以继续工作，其实就是搭建Redis集群（异地多活）。
+2. **限流降级**：在缓存失效后，通过加锁或者队列来控制读数据库写缓存的线程数量。比如对某个key只允许一个线程查询数据和写缓存，其他线程等待（消息中间件如RabbitMQ、Kafka都可以实现）。
+3. **数据预热**：在正式部署前，先把可能的数据预先访问一遍，这样部分可能大量访问的数据就会加载到缓存中。在即将发生大并发访问前手动触发加载缓存不同的key，设置不同的过期时间，让缓存失效的时间点尽量均匀。
 
 ## 12.6 本项目中的应用
 
@@ -2687,15 +2879,498 @@ Redis是内存数据库，如果不将内存中的数据库状态保存到磁盘
 
 
 
-> 参考博客文章：**[Redis命令参考](http://doc.redisfans.com/index.html)**、**[B站狂神说Redis视频](https://www.bilibili.com/video/BV1S54y1R7SB?from=search&seid=5939754712593162694)**、**[Redis深度历险-钱文品]()**、[Redis中文网站](https://www.redis.net.cn/)、[Redis菜鸟教程](https://www.runoob.com/redis/)
+> 参考博客文章：**[Redis命令参考](http://doc.redisfans.com/index.html)**、**[B站Redis视频](https://www.bilibili.com/video/BV1S54y1R7SB?from=search&seid=5939754712593162694)**、**[Redis深度历险-钱文品]()**、[Redis中文网站](https://www.redis.net.cn/)、[Redis菜鸟教程](https://www.runoob.com/redis/)
 
 
 
-ElasticSearch
+# 13 博客搜索
+
+本项目中的博客搜索功能采用ElasticSearch来完成。
+
+## 13.1 关于ElasticSearch
+
+Lucene、hadoop、mapreduce、Hbase都是出自Doug Cutting。ElasticSearch是基于Lucene封装和增强的一个开源的高扩展的分布式全文检索引擎，可以近乎实时的存储、检索数据；本身扩展性很好，可以扩展到上百台服务器，处理PB级别的数据；ElasticSearch通过简单的RESTful API来隐藏Lucene的复杂性，从而让全文搜索变得更加简单。在2016年1月，ElasticSearch超过Solr（也是基于Lucene封装的），成为排名第一的搜索引擎类应用。
+
+使用ElasticSearch的公司：维基百科、Stack Overflow、GitHub、电商网站、**商品价格监控系统**（做完本博客项目后拟开发一个这个小功能使用）...
+
+**ElasticSearch VS Solr**：
+
+1. ElasticSearch基本是开箱即用（解压缩即可使用），但相对于Solr较新；Solr安装略微复杂一些，但拥有更大的用户群、更稳定，生态系统更加发达。
+2. ElasticSearch自身带有分布式协调管理功能；而Solr利用Zookeeper进行分布式管理。
+3. ElasticSearch仅支持JSON文件格式；而Solr支持更多格式的数据（如JSON、XML、CSV）。
+4. ElasticSearch本身更注重于核心功能，高级功能多由第三方插件提供（例如图形化界面需要Kibana友好支撑）；Solr官方提供的功能更多。
+5. ElasticSearch处理实时搜索时效率更高；Solr对已有数据进行搜索时速度更快，但当实时建立索引时，会产生IO阻塞，查询性能较差。此外，随着数据量的增加，Solr的搜索效率会变得更低，而Elasticsearch却没有明显的变化。
+6. Elasticsearch常用于查询、过滤和分组分析统计，而Solr则专注于文本搜索。
+
+**ElasticSearch的配置文件**：
+
+```yaml
+config/log4j2.properties  # 日志配置文件
+config/jvm.options  # java虚拟机相关配置（其中默认虚拟机内存为1g(-Xms1g),若阿里云机器配置低，需要修改jvm.options文件）
+config/elasticsearch.yml  # yml配置文件(包括集群配置，网络配置(默认端口是9200)、网关信息、跨域配置...)
+```
+
+**注意**：
+
+1. 使用可视化组件ElasticSearch Head工具时存在跨域问题，需要在`config/elasticsearch.yml`文件中进行如下配置：
+
+```yaml
+# ElasticSearch配置跨域
+http.cors.enabled: true
+http.cors.allow-origin: "*"
+```
+
+2. 可以把ElasticSearch Head当作数据展示工具，查询使用Kibana工具。
+
+**ELK**：不仅仅是日志分析架构技术栈（只是日志分析和收集更具代表性），还能支持任何数据分析和收集的场景。
+
+1. ELK指ElasticSearch + Logstash + Kibana三大开源框架的简称，也被称为Elastic Stack。
+2. ElasticSearch是一个基于Lucene、分布式、通过RESTful方式进行交互的近实时搜索平台框架。
+3. Logstash是ELK的中央数据流引擎，用于从不同目标（文件/数据存储/MQ）收集的不同格式数据，经过过滤后支持输出到不同目的地（文件/MQ/Redis/ElasticSearch/Kafka等）
+4. Kibana可以将ElasticSearch的数据通过友好的页面展示出来，提供实时分析的功能。
+
+**测试工具**：Postman、curl、Head、谷歌浏览器插件、Kibana（**这里使用Kibana作为测试工具**）
+
+**Kibana汉化**：
+
+```yaml
+# 在config/kibana.yml中配置国际化
+i18n.locale: "zh-CN"
+```
+
+## 13.2 基本使用
+
+### 13.2.1 基本概念
+
+基本概念：**集群、节点、索引、类型、文档、分片、映射**
+
+RDB（Relational DB） VS ElasticSearch
+
+|   Relational DB    |          ElasticSearch          |
+| :----------------: | :-----------------------------: |
+| 数据库（database） |   索引（indices）：就是数据库   |
+|    表（tables）    | 类型（types）：类型是文档的容器 |
+|     行（rows）     |        文档（documents）        |
+|   列（columns）    |         字段（fields）          |
+
+**倒排索引**（例子如下）：
+
+| 博客文章（原始数据） |             | 索引列表（倒排索引） | |
+| :--: | :--: | :--: | :--: |
+| 博客文章ID | 标签 | 标签 | 博客文章ID |
+| 1 | python | python | 1,2,3 |
+| 2 | python | linux | 3,4 |
+| 3 | linux、python | | |
+| 4 | linux | | |
+
+**ElasticSearch索引与Lucene索引的区别**：在ElasticSearch中，索引被分为多个分片、每份分片是一个Lucene的索引。因此，一个ElasticSearch索引是由多个Lucene索引组成的（如无特指，一般索引指ElasticSearch索引）。
+
+### 13.2.2 IK分词器
+
+分词：把一段文字分成一个个的关键词。在搜索的时候会把索引库中的数据进行分词，然后进行匹配操作；默认的中文分词是将每个字看成一个词，这不符合实际应用，中文分词器IK可以解决这一问题。
+
+IK提供了两个分词算法：ik_smart和ik_max_word，其中ik_smart为最少切分，ik_max_word为最细粒度划分（穷尽词库的可能）。
+
+**配置自定义的词库**：
+
+```yaml
+# 1. 在IK分词器的config目录下自定义词库文件（.dic文件）：
+	config/Clouds.dic
+# 2. 将自定义词库文件引入config/IKAnalyzer.cfg.xml文件中：
+	config/IKAnalyzer.cfg.xml
+```
+
+`IKAnalyzer.cfg.xml`文件配置如下：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+	<comment>IK Analyzer 扩展配置</comment>
+	<!--用户可以在这里配置自己的扩展字典 -->
+	<entry key="ext_dict">Cloud.dic</entry>
+	 <!--用户可以在这里配置自己的扩展停止词字典-->
+	<entry key="ext_stopwords"></entry>
+	<!--用户可以在这里配置远程扩展字典 -->
+	<!-- <entry key="remote_ext_dict">words_location</entry> -->
+	<!--用户可以在这里配置远程扩展停止词字典-->
+	<!-- <entry key="remote_ext_stopwords">words_location</entry> -->
+</properties>
+```
+
+### 13.3.3 REST风格
+
+REST是一种软件架构风格，而不是标准；只是提供了一组设计原则和约束条件。它主要用于客户端和服务器交互类的软件。基于这个风格设计的软件可以更简洁、更有层次，更易于实现缓存等机制。
+
+基本的REST命令如下（可结合`2.5`节）：
+
+| method |                     url地址                     |          描述          |
+| :----: | :---------------------------------------------: | :--------------------: |
+|  PUT   |     localhost:9200/索引名称/类型名称/文档id     | 创建文档（指定文档id） |
+|  POST  |        localhost:9200/索引名称/类型名称         | 创建文档（随机文档id） |
+|  POST  | localhost:9200/索引名称/类型名称/文档id/_update |        修改文档        |
+| DELETE |     localhost:9200/索引名称/类型名称/文档id     |        删除文档        |
+|  GET   |     localhost:9200/索引名称/类型名称/文档id     |   查询文档通过文档id   |
+|  POST  |    localhost:9200/索引名称/类型名称/_search     |      查询所有数据      |
+
+### 13.3.4 索引/文档增删改查
+
+关于es中的字段类型：
+
+- 字符串类型：text、keyword
+- 数值类型：long、integer、short、byte、double、float、half float 、scaled float
+- 日期类型：data
+- 布尔类型：boolean
+- 二进制类型：binary
+
+关于索引的基本操作：
+
+- **创建索引（不指定字段类型）并添加数据**：
+
+```json
+PUT /索引名/~类型名~/文档id
+{
+  // 这里输入文档id对应的文档数据
+}
+```
+
+- **创建索引（指定字段类型）**：
+
+```json
+PUT /索引名
+{
+  "mappings": {
+    "properties": {
+      // 这里指定字段类型
+    }
+  }
+}
+```
+
+- **获取索引信息**
+
+```json
+// 获取索引信息
+GET /索引名
+// 获取文档信息
+GET /索引名/~类型名~/文档id
+```
+
+- **创建索引（不指定字段类型）**：
+
+```json
+// 创建索引时未指定字段类型，那么es就会进行智能推断
+PUT /索引名/_doc/文档id  //_doc表示不使用文档类型（es7/es8会渐渐抛弃掉文档类型）
+{
+  // 这里输入文档id对应的文档数据
+}
+```
+
+- **使用PUST修改文档数据**：以前采用这种方法
+
+```json
+// 使用PUST命令修改已存在的文档数据，修改完成后version会增加1
+PUT /索引名/~类型名~/已存在的文档id
+{
+  // 这里输入文档id对应的文档数据
+}
+```
+
+- **使用POST修改文档数据**：现在一般采用这种方法。（**与PUT方法的区别**：PUT方法更新数据，如果不传递值，就会被覆盖未空，现在一般推荐使用POST修改文档数据）
+
+```json
+// 使用POST命令修改已存在的文档数据，修改完成后version会增加1
+POST /索引名/~类型名~/已存在的文档id/_update
+{
+   // 这里输入文档id对应的文档数据
+}
+```
+
+- **删除索引或文档**：
+
+```json
+// 使用DELETE命令删除索引
+DELETE /索引名
+// 使用DELETE命令删除指定id的文档
+DELETE /索引名/~类型名~/已存在的文档id
+```
+
+### 13.3.5 文档复杂查询
+
+复杂查询：匹配、条件匹配、精确匹配、区间范围匹配、匹配字段过滤、多条件查询、高亮查询。
+
+```json
+// 若字段的fields的type为"keyword"，则分词器不会起作用，会采用精确查询
+GET /索引名/~类型名~/_search?q=查询条件  // 例查询条件为：name:张三
+
+// 如果条件比较复杂，会采用下面的这种形式
+GET /索引名/~类型名~/_search
+{
+   "query": { // query表示查询条件
+       "match": { // match表示精确匹配（还有许多其他匹配模式）
+           "name": "张三" // 具体条件
+       }
+   },
+   "_source": ["name", "desc"],  // 过滤结果：只显示查询结果中的name和desc信息
+   "sort": [
+      {
+         "age": {
+            "order": "asc" // 表示按照age升序排列
+         }
+      }
+   ],
+   "from": 0, // from和size一起设置分页查询，from表示从第几条数据开始，size表示返回多少条数据，等价于MySQL中的limit start pageSize
+   "size": 1
+}
+
+// 布尔查询、过滤数据
+GET /索引名/~类型名~/_search
+{
+   "query": { // query表示查询条件
+       "bool": { // 布尔查询，可以实现多条件精确查询
+           "must": [ // must相当于MySQL里的add;should相当于MySQL里的or;must_not相当于MySQL里的not
+              {
+                 "match": {
+                    "name": "张三"
+                 }
+              },
+              {
+                 "match": {
+                    "age": 3
+                 }
+              }
+           ],
+          "filter": [
+             "range": {
+              	"age": {
+              	  "gte": 10, // 过滤数据：大于等于10岁且小于等于25岁的结果才显示
+              	  "lte": 25
+              	}
+            }
+          ]
+       }
+   }
+}
+
+
+// 多条件查询
+GET /索引名/~类型名~/_search
+{
+   "query": { // query表示查询条件
+       "match": { // match表示精确匹配（还有许多其他匹配模式）
+           "tags": "男 技术" // 多个条件使用空格隔开，只要满足其中一个结果即可被查出，这个时候可以通过分值进行基本的判断
+       }
+   }
+}
+
+// 精确查询请使用term查询
+// term查询是采用倒排索引进行查询的，效率很高
+// term查询与match查询：term查询会直接查询精确的结果；而match查询会使用分词器解析（先分析文档，再通过分析的文档进行查询）
+// text类型与keyword类型：text类型会被分词器解析，而keyword类型不会被分词器解析
+GET _analyze
+{
+  "analyzer": "keyword", // 设置"Java study"在被查询时不会进行分词匹配
+  "text": "Java study"
+}
+GET _analyze
+{
+  "analyzer": "standard", // 设置"python study"在被查询时会进行分词匹配
+  "text": "python study"
+}
+
+// 精确查询多个值
+GET /索引名/_search
+{
+   "query": {
+      "bool": {
+         "should": [
+            {
+               "term": {
+                  "name": "张三"
+               }
+            },
+            {
+               "term": {
+                  "name": "李四"
+               }
+            }
+         ]
+      }
+   }
+}
+
+// 高亮查询
+GET /索引名/~类型名~/_search
+{
+   "query": {
+      "match": {
+         "name": "张三"
+      }
+   },
+   "hightlight": {
+      "pre_tags": "<p class="className" style='color:red'>", // 若不想使用默认的<em>标签，可以自定义高亮条件
+      "post_tags": "</p>",
+      "fields": {
+         "name": {} // name字段会高亮，高亮的字段默认会被<em>标签包裹
+      }
+   }
+}
+```
+
+## 13.3 API使用
+
+**注意事项**：一定要保证导入的依赖与使用的ElasticSearch的客户端版本一致。
+
+### 13.3.1 索引API
+
+```java
+// 1. 引入依赖（保证与使用的ElasticSearch的客户端版本一致），这里略
+// 2. 创建ElasticSearchConfig.java配置类
+
+```
 
 
 
-RabbitMq
+### 13.3.2 文档API
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+> 参考文章博客：[B站 ElasticSearch视频](https://www.bilibili.com/video/BV17a4y1x7zq)、[Java High Level REST Client官方文档](https://www.elastic.co/guide/en/elasticsearch/client/java-rest/current/java-rest-high.html#java-rest-high)
+
+# 14 使用消息队列
+
+
+
+
+
+
+
+
+
+# 15 关于Netty
+
+
+
+
+
+# 16 关于Nginx
+
+## 16.1 反向代理与负载均衡
+
+
+
+## 16.2 防盗链操作
+
+
+
+# 17 测试与改进
+
+## 17.1 并发测试
+
+
+
+## 17.2 程序调优
+
+
+
+
+
+
+
+# 18 开发过程的坑
+
+## 18.1 @Resource与@Autowired
+
+@AutoWried按by type自动注入，而@Resource默认按byName自动注入。
+
+> [@AutoWired和@Resource的区别](https://blog.csdn.net/weixin_40423597/article/details/80643990)
+
+
+
+
+
+# 19 提高编码效率
+
+## 19.1 使用快捷键
+
+根据实际编码经验，IDEA中常用的快捷键归纳如下：
+
+|     快捷键      |                       释义                       |       快捷键        |                释义                |
+| :-------------: | :----------------------------------------------: | :-----------------: | :--------------------------------: |
+|  CTRL+SHIFT+Y   |                     即时翻译                     |      Shift+F10      |         启动SrpingBoot项目         |
+|     Ctrl+I      |                  实现接口的方法                  |     Ctrl+Alt+L      |             格式化代码             |
+|    Ctrl+F12     |                   调出类的方法                   |       Ctrl+Y        |           删除光标所在行           |
+|    Alt+Enter    |               导入包，自动修正代码               |       Ctrl+D        | 复制光标所在行并插入在光标位置下面 |
+|     Ctrl+/      |                     单行注释                     |    Ctrl+Shift+N     |              查找文件              |
+|  Ctrl+Shift+/   |                     多行注释                     |  Ctrl+Shift+Alt+N   |           按照类名查找类           |
+|      Alt+/      |                 自动代码补全提示                 |         TAB         |            整体向右缩进            |
+|     Ctrl+B      |             快速打开光标处的类或方法             |      shift+TAB      |            整体向左缩进            |
+|     Ctrl+E      |                  最近打开的文件                  | shift+alt +方向键上 |  选中代码（或者是光标所在行）上移  |
+|     Ctrl+R      |                     替换文本                     | shift+alt +方向键下 |  选中代码（或者是光标所在行）下移  |
+|     Ctrl+F      |                     查找文本                     |       Ctrl+G        |             定位行和列             |
+|     Ctrl+P      |                   方法参数提示                   |    Ctrl+Shift+C     |          拷贝文件绝对路径          |
+|   ALT+Insert    |          快速生成get、set和toString方法          |  Ctrl+Alt+Shift+C   |  拷贝相关数据（包括路径和所在行）  |
+|   Ctrl+Alt+V    |          快速生成方法返回值，生成变量名          |    Ctrl+Shift+V     |          从历史记录中粘贴          |
+|   Ctrl+Alt+T    | 选中代码块或者光标所在行，快速添加try...catch... |  Ctrl+Shift+Enter   |               新建行               |
+| ALT+SHIFT+ENTER |                     抛出异常                     |  Ctrl+Alter+Enter   |         在当前行前面新建行         |
+|  Ctrl+shift+F9  |                     重新编译                     |                     |                                    |
+
+## 19.2 实时代码模板
+
+IDEA中的部分实时代码模块如下：
+
+| 代码模板 |                    释义                    | 代码模板 |                      释义                       |
+| :------: | :----------------------------------------: | :------: | :---------------------------------------------: |
+|   psvm   |             快捷生成 main 方法             |   sout   |          快捷输出System.out.println()           |
+|   fori   |              快捷生成for循环               |  soutp   | 快捷输出System.out.println("变量名 = " + 变量)  |
+|   iter   |            快捷生成增强for循环             |  soutm   | 快捷输出System.out.println("当前类名.当前方法") |
+|   itar   |            快捷生成普通for循环             |   prsf   |          快捷生成 private static final          |
+| list.for |         快捷生成集合list的for循环          |   psf    |          快捷生成 public static final           |
+|   ifn    |           快捷生成if(xxx = null)           |   psfi   |        快捷生成 public static final int         |
+|   inn    | 快捷生成if(xxx != null) 或xxx.nn或xxx.null |   psfs   |       快捷生成 public static final String       |
+
+## 19.3 环绕功能
+
+环绕功能（对前端页面特别有用）：
+
+- Ctrl+Alt+T：选中代码块或者光标所在行，快速添加try...catch...
+
+## 19.4 Emmet语法
+
+**Emmet**的前身是**Zen Coding**，可以加速HTML/CSS代码的快速编写。下面举几个例子：
+
+- 带有层级结构：ul>li
+- 同级结构：ul+li
+- 带有优先级：(ul>li)+p
+- 不带优先级：ul>li+p
+- 批量赋值：ul>li*3
+- 创建带有指定class样式的标签：div.box
+- 创建带有指定id样式的标签：div#box
+- 一个标签创建多个class：div.box1.box2.box3
+- 一个标签同时创建class和id：div.box#box2
+- 自定义属性内容：ul>li>a[href='#']
+- $符号自增：`ul>li.$*3`、`ul>li{第$$条项目}*3`、`ul>li[id='item$']{第$$$条数据}*10`
+- 快速生成HTML5结构：html:5
+- 引入css：link:css
+- 引入js：script:src
+
+
+
+> [IDEA使用教程](https://github.com/judasn/IntelliJ-IDEA-Tutorial)
 
 
 
@@ -2711,7 +3386,21 @@ RabbitMq
 
 ## ## 进行ICP备案
 
-在阿里云ICP备案系统平台按照步骤备案：基础信息校验-->主办者信息填写-->网站信息填写-->上传资料（**本省注册不需要提交暂住证**）--> 5天作用ICP备案成供
+在阿里云ICP备案系统平台按照步骤备案：基础信息校验-->主办者信息填写-->网站信息填写-->上传资料（**本省注册不需要提交暂住证**）--> 5天左右ICP备案
+
+## ## OSS设置
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## ## Docker部署项目
 
