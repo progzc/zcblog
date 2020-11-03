@@ -8,7 +8,7 @@
 *.mvn
 *.cmd
 
-# Compiled class files 
+# Compiled class files
 *.class
 
 # Log Files
@@ -31,7 +31,6 @@
 .DS_Store
 
 # Vue Project
-.DS_Store
 node_modules/
 /dist/
 npm-debug.log*
