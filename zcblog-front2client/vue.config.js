@@ -26,13 +26,13 @@ module.exports = {
     hotOnly: true, // 开启热更新
     // 若前端应用和后端API服务器没有运行在同一个主机上，则需要将API请求代理到API服务器
     proxy: {
-      // 例如将'https://localhost:8080/api/xxx'代理到'https://localhost:8082/api/xxx'
+      // 例如将'http://localhost:8080/api/xxx'代理到'https://localhost:8082/api/xxx'
       '/api': {
         target: 'http://localhost:8082', // 目标代理接口地址
         secure: false, // 忽略https安全提示(如果是https接口，需要配置这个参数)
         changeOrigin: true, // 本地会虚拟一个服务器接收请求并代发该请求
         ws: true, // 启用websockets
-        pathRewrite: { // 重写地址，将前缀 '/api' 转为 '/',相当于此时代理到'https://localhost:8082/xxx'
+        pathRewrite: { // 重写地址，将前缀 '/api' 转为 '/',相当于此时代理到'http://localhost:8082/xxx'
           '^/api': '/'
         }
       }
