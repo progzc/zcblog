@@ -235,7 +235,7 @@ module.exports = {
 const IS_PROD = ['production', 'prod'].includes(process.env.NODE_ENV)
 
 module.exports = {
-  publicPath: IS_PROD ? process.env.VUE_APP_PUBLIC_PATH : './', // 默认'/'，部署应用包时的基本 URL
+  publicPath: IS_PROD ? process.env.VUE_APP_PUBLIC_PATH : '/', // 默认'/'，部署应用包时的基本 URL
   outputDir: 'dist', // 默认值,生产环境构建文件的目录
   assetsDir: '', // 默认值,放置生成的静态资源(js、css、img、fonts)的(相对于outputDir的)目录
   lintOnSave: false, // 不会将lint错误输出为编译警告,即有不符合lint语法时，也会编译成功
@@ -259,20 +259,19 @@ module.exports = {
     hotOnly: true, // 开启热更新
     // 若前端应用和后端API服务器没有运行在同一个主机上，则需要将API请求代理到API服务器
     proxy: {
-      // 例如将'https://localhost:8080/api/xxx'代理到'https://localhost:8082/api/xxx'
+      // 例如将'http://localhost:8080/api/xxx'代理到'https://localhost:8082/api/xxx'
       '/api': {
 		target: 'http://localhost:8082', // 目标代理接口地址
         secure: false, // 忽略https安全提示(如果是https接口，需要配置这个参数)
         changeOrigin: true, // 本地会虚拟一个服务器接收请求并代发该请求
         ws: true, // 启用websockets
-        pathRewrite: { // 重写地址，将前缀 '/api' 转为 '/',相当于此时代理到'https://localhost:8082/xxx'
+        pathRewrite: { // 重写地址，将前缀 '/api' 转为 '/',相当于此时代理到'http://localhost:8082/xxx'
           '^/api': '/'
         }
       }
     }
   }
 }
-
 ```
 
 ## 3.3 配置扩展名
