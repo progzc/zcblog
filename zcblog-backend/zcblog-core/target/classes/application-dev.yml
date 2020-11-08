@@ -42,7 +42,7 @@ spring:
   # 配置redis
   redis:
     host: localhost  # 配置主机为本机
-    port: 6379  # 配置端口号
+    port: 6380  # 配置端口号
     timeout: 6s  # 配置连接池超时时长为6s
     lettuce:
       pool:
@@ -70,7 +70,7 @@ mybatis-plus:
 # 配置七牛云（变量）
 oss:
   qiniu:
-    domain: http://qhnmn5y5g.hn-bkt.clouddn.com  # 七牛云外链域名
+    domain: http://cloud.progzc.com  # 七牛云外链域名
     prefix: blog # 前缀,相当于项目路径
     accessKey: ENC(hF4gC+N5O30Z5WEtKxOD1mSZsRox0MBg3YAjBtfIMvetCLWQfBKSTz3HpdMqiaTpHVxriYk0aEo=)  # 配置AccessKey
     secretKey: ENC(qT3zh/KqVuUJ/l3TxopznzXTniZgb/oPazL4G20G0A5BGmFXnKrBN8EXXe8j5+Y4z36Bboi0a+c=)  # 配置SecretKey

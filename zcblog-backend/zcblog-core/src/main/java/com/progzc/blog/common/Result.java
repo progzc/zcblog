@@ -22,7 +22,7 @@ public class Result extends HashMap<String, Object> {
     // 默认响应成功
     public Result(){
         put("code", 200);
-        put("masg", "success");
+        put("msg", "success");
     }
 
     // 响应成功200
@@ -46,7 +46,7 @@ public class Result extends HashMap<String, Object> {
     }
 
     // 响应错误信息
-    private static Result exception(ErrorEnum errorEnum) {
+    public static Result exception(ErrorEnum errorEnum) {
         return new Result().put("code", errorEnum.getCode()).put("msg", errorEnum.getMsg());
     }
 
