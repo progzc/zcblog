@@ -136,8 +136,8 @@ img {
         color: #fff;
         &:focus,
         &:hover {
-          color: #fff;
-          background-color: mix(#000, $navbar--background-color, 15%);
+          color: #ffffff;
+          background-color: mix(#000000, $navbar--background-color, 15%);
         }
       }
       > .el-menu-item.is-active,

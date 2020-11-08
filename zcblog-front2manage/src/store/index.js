@@ -16,5 +16,6 @@ export default new Vuex.Store({
   mutations,
   actions,
   modules: {
-  }
+  },
+  strict: process.env.NODE_ENV !== 'production' // 不要在生产环境下启用严格模式
 })

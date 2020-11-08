@@ -14,20 +14,20 @@ module.exports = {
   parallel: require('os').cpus().length > 1, // 默认值,作用于生产构建,在系统的 CPU 有多于一个内核时自动启用
   devServer: {
     open: true, // npm run serve后自动打开页面
-    host: 'localhost', // 匹配本机IP地址
-    port: 8081, // 开发服务器运行端口号
+    host: '127.0.0.1', // 匹配本机IP地址
+    port: 8083, // 开发服务器运行端口号
     https: false, // 不开启https
     hotOnly: true, // 开启热更新
     // 若前端应用和后端API服务器没有运行在同一个主机上，则需要将API请求代理到API服务器
     proxy: {
-      // 例如将'http://localhost:8081/api/xxx'代理到'http://localhost:8082/api/xxx'
+      // 例如将'http://localhost:8083/api/xxx'代理到'http://localhost:8082/api/xxx'
       '/api': {
-        target: 'http://localhost:8082', // 目标代理接口地址
+        target: 'http://127.0.0.1:8082', // 目标代理接口地址
         secure: false, // 忽略https安全提示(如果是https接口，需要配置这个参数)
         changeOrigin: true, // 本地会虚拟一个服务器接收请求并代发该请求
         ws: true, // 启用websockets
-        pathRewrite: { // 重写地址，将前缀 '/api' 转为 '/',相当于此时代理到'http://localhost:8082/xxx'
-          '^/api': '/'
+        pathRewrite: { // 重写地址，将前缀 '/api' 转为 '/',相当于此时代理到'http://127.0.0.1:8082/xxx'
+          '^/api': '/blog'
         }
       }
     }
@@ -35,7 +35,7 @@ module.exports = {
 
   configureWebpack: config => {
     // 配置扩展名
-    config.resolve.extensions = ['.js', '.vue', '.json']
+    config.resolve.extensions = ['.js', '.vue', '.json', '.css']
     // 配置开启自动修复检测SCSS、CSS
     const plugins = []
     if (IS_DEV) {
@@ -56,8 +56,8 @@ module.exports = {
       .set('@', resolve('src'))
       .set('assets', resolve('src/assets'))
       .set('common', resolve('src/common'))
-      .set('components', resolve('src/elementUI'))
-      .set('elementUI', resolve('src/components'))
+      .set('components', resolve('src/components'))
+      .set('elementUI', resolve('src/elementUI'))
       .set('icons', resolve('src/icons'))
       .set('network', resolve('src/network'))
       .set('router', resolve('src/router'))
