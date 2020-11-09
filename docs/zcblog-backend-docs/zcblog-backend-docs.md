@@ -1064,6 +1064,12 @@ GET /articles?published=true  # 查询已发布的文章；URL采用一级URL+�
 
 ![image-20201103210639390](zcblog-backend-docs.assets/image-20201103210639390.png)
 
+## 2.7 添加实时翻译插件
+
+在IDEA中添加`Translation插件`，插件安装后，选中对象，按下`Ctrl + Shift +Y`快捷键即可实时翻译。
+
+![image-20201109213238604](zcblog-backend-docs.assets/image-20201109213238604.png)
+
 # 3 代码生成器
 
 ## 3.1 自定义代码生成工具类
@@ -2089,7 +2095,7 @@ Redis（Remote Dictionary Server）：远程字典服务。
 命令的使用需要在Redis官网或者菜鸟网站上查询即可。
 
 - EXISTS key：判断某个键是否存在。
-- MOVE key：移除某个键。
+- DEL key：移除某个键。
 - EXPIRE key seconds：设置某个键的存货时间（单位是秒）。
 - TTL key：查看某个键的剩余存活时间。
 - SET key value：设置键值对。
@@ -3298,6 +3304,217 @@ GET /索引名/~类型名~/_search
 @AutoWried按by type自动注入，而@Resource默认按byName自动注入。
 
 > [@AutoWired和@Resource的区别](https://blog.csdn.net/weixin_40423597/article/details/80643990)
+
+## 18.2 Test测试下@Autowired失效
+
+**问题描述**：SpringBoot在Test测试类或自定义类中通过@Autowired注入为null。
+
+**解决办法**：暂停自动热部署，在测试类上加上`@RunWith(SpringRunner.class)`和`@SpringBootTest`注解，正常注入bean，然后开始使用Junit正常测试即可。**目前还未发现在自动热部署时执行自动化测试的方法。**
+
+## 18.3 java.util.Date和java.sql.Date
+
+- java.util.Date 是 java.sql.Date 的父类。
+- java.util.Date是常用的表示时间的类，通常格式化或者得到当前时间都是采用java.util.Date；java.sql.Date常用在读写数据库的时候，用于数据库的时间字段。
+- java.util.Date用于一般环境都可，而java.sql.Date主要用于sql中。
+
+## 18.4 MySQL表中id自增问题
+
+**问题描述**：MySQL表中删除自增id数据后，再次添加数据时，id不会毗邻。例如：
+
+1. 初始数据中id=1、2、3、4；
+2. 删除id=4的数据后，id=1、2、3；
+3. 再次插入数据，id=1、2、3、5；而我们理想的数据是：id=1、2、3、4。
+
+**解决办法：**插入数据之前先执行：`ALTER TABLE table_name AUTO_INCREMENT = 1`
+
+## 18.5 Redis单机多实例
+
+**问题描述**：由于多个项目同时跑在本机上，Redis需要同时运行多个实例。
+
+**解决办法**：先在`redis.windows.conf`中配置端口号；使用`redis-cli.exe`查看某一实例的缓存：
+
+> 参考博客文章：[Redis部署及开启多个端口服务](https://blog.csdn.net/weixin_42290280/article/details/89158513)
+
+## 18.6 IDEA Debug的深入使用
+
+- **Step Over：**步过调试。作用：步过，一行一行往下走，若这一行上有方法**不会进入方法**；常用于调试过程中不想进入调用的方法体的情况。
+- **Setp Into：**步入调试。作用：步入，一步一步往下执行，若这一行上有方法，则**进入方法内部**；一般用于进入自定义方法内，不会进入官方类库的方法。
+- **Force Step Into：**强制步入调试。作用：**进入官方类库方法**；常用于我们学习和查看JDK源码。
+- **Step Out：**步出调试。作用：**从方法内退出到方法调用处**；常用于调试时跳入到自己不想查看的方法体内后，可以使用步出。
+- **Drop Frame：**回退断点。作用：**回退到当前方法的调用处**；当想重新查看该方法体的执行过程时，不用重新启动Debug，可以使用回退断点方式。
+- **Run to Cursor：**运行到光标处。作用：**使程序运行到光标处，而无需设置断点**。
+
+## 18.7 字符串与json字符串Bug
+
+**问题描述：**从Redis中将数据取回后使用工具类将其转换为json字符串报错（大概意思是字符串解析出错了）。
+
+![image-20201109211222069](zcblog-backend-docs.assets/image-20201109211222069.png)
+
+**解决办法：**需要注意普通字符串与json字符串有着本质的区别（如"zhangsan"是一个字符串；"{name: 'zhangshan', age: '15'}"是json字符串），json工具类只能将json字符串转化为对象，针对字符串转化为对象会报异常。为此，我选择在Redis工具类中对其做一次过滤操作。关键代码如下：
+
+```java
+/**
+ * String类型设置key-vue及过期时间
+ */
+public void set(String key, Object value, long expire) {
+    // 若是字符串则直接存储；若是对象先转化为json字符串再存储
+    if (value.getClass() == String.class){
+        valueOperations.set(key, value);
+    } else {
+        valueOperations.set(key, JsonUtils.toJson(value));
+    }
+
+    if (expire != NOT_EXPIRE) {
+        redisTemplate.expire(key, expire, TimeUnit.SECONDS);
+    }
+}
+
+/**
+ * String类型根据key获取value,同时设置过期时间
+ */
+public <T> T getObj(String key, Class<T> clazz, long expire) {
+    String value = (String)valueOperations.get(key);
+    if (expire != NOT_EXPIRE) {
+        redisTemplate.expire(key, expire, TimeUnit.SECONDS);
+    }
+
+    // 若获取的是字符串，直接返回即可；若获取的是对象，则将json字符串转化为对象再返回
+    return clazz == String.class ? (T) value : JsonUtils.toObj(value, clazz);
+}
+```
+
+## 18.8 请求中增加时间戳
+
+**为什么需要在请求中增加时间戳？**
+
+其作用在于：URL 的末尾追加了时间。这就确保了请求不会在它第一次被发送后即缓存，而是会在此方法每次被调用后重新创建和重发；此 URL 会由于时间戳的不同而稍微有些不同。这种技巧常被用于确保到脚本的 POST 每次都会实际生成新请求且 Web 服务器不会尝试缓存来自服务器的响应。（简而言之：**在URL中加时间戳就会保证每一次发起的请求都是一个不同于之前的请求，这样就能避免浏览器对URL的缓存**）。
+
+统一在拦截器中（`request.js`）为请求增加时间戳：
+
+```javascript
+// 2.1 请求拦截
+  instance.interceptors.request.use(config => {
+    const timestamp = { // 对每次请求生成当前时间戳
+      t: new Date().getTime()
+    }
+    if (config.params) { // get请求参数处理添加时间戳，并json化
+      config.params = merge(timestamp, config.params)
+    }
+    if (config.data) { // post请求参数添加时间戳，并json化
+      config.data = JSON.stringify(merge(timestamp, config.data))
+    }
+    config.headers.token = Vue.cookie.get('token') // 请求头带上token
+    return config
+  }, error => {
+    // console.log(error)
+    return Promise.reject(error)
+  })
+```
+
+## 18.9 Redis中的缓存策略
+
+- 验证码
+  1. 写入验证码时设置**5分钟**过期。（写入时若未设置过期时间，则默认设置过期时间为1天）
+  2. 验证码校验之后（无论校验成功与否），都要从缓存中删掉。
+  3. 读取验证码时不设置过期时间。
+
+- 用户token与用户id
+  1. 写入用户token与用户id时设置**12h**过期。（写入时若未设置过期时间，则默认设置过期时间为1天）
+  2. 
+
+## 18.10 json字符串转化为集合
+
+本项目采用jackson（由谷歌开发）实现json字符串与Object的相互转换（**阿里巴巴的fastjson速度更快**），其中一个难点是如何实现json字符串转化为集合，本人采用以下方案：
+
+- 第1步：先从Redis获取json字符串。
+- 第2步：再从json字符串转化为集合。
+
+测试代码如下：
+
+```java
+// JsonUtils.java（Json字符串与Object互相转换的工具类）
+
+@Slf4j
+public class JsonUtils {
+
+    private static ObjectMapper objMapper = new ObjectMapper();
+
+    /**
+     * Json字符串转换为Object（不包含集合）
+     */
+    public static <T> T toObj(String jsonString, Class<T> clazz) {
+        objMapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
+        try {
+            return objMapper.readValue(jsonString, clazz);
+        } catch (IOException e) {
+            log.error("Json字符串转换为对象出错", e);
+        }
+        return null;
+    }
+
+    /**
+     * Object（包含集合）转换为Json字符串
+     */
+    public static String toJson(Object obj) {
+        if (obj instanceof Integer || obj instanceof Long || obj instanceof Float ||
+                obj instanceof Double || obj instanceof Boolean || obj instanceof String) {
+            return String.valueOf(obj);
+        }
+        try {
+            return objMapper.writeValueAsString(obj);
+        } catch (JsonProcessingException e) {
+            log.error("对象转换为Json字符串出错", e);
+        }
+        return null;
+    }
+
+    /**
+     * json字符串转化为Collection<JavaBean>
+     */
+    public static <T,E> T toObjArray(String jsonString, Class<T> collectionClass, Class<E>... elementClasses){
+        try {
+            JavaType javaType = objMapper.getTypeFactory().constructParametricType(collectionClass, elementClasses);
+            return objMapper.readValue(jsonString, javaType);
+        } catch (IOException e) {
+            log.error("json字符串转化为集合出错", e);
+        }
+        return null;
+    }
+}
+
+// RedisUtilsTest.java（Redis工具类测试）
+@RunWith(SpringRunner.class)
+@SpringBootTest
+public class RedisUtilsTest {
+
+    @Autowired
+    private RedisUtils redisUtils;
+
+    /**
+     * 测试集合
+     */
+    @Test
+    public void test5(){
+        List<SysLoginForm> list = new ArrayList<>();
+        for (int i = 0; i < 4; i++) {
+            SysLoginForm sysLoginForm = new SysLoginForm();
+            sysLoginForm.setCaptcha("abcde" + i);
+            sysLoginForm.setUsername("admin" + i);
+            sysLoginForm.setPassword("admin" + i);
+            sysLoginForm.setUuid("uuid" + i);
+            list.add(sysLoginForm);
+        }
+        redisUtils.set("abc3", list, 60*5L);
+        // 第1步：先从Redis获取json字符串
+        String str5 = redisUtils.getObj("abc3", String.class);
+        // 第2步：再从json字符串转化为集合
+        ArrayList<SysLoginForm> queryList = JsonUtils.toObjArray(str5, ArrayList.class, SysLoginForm.class);
+        queryList.forEach(System.out::println);
+    }
+}
+```
+
+
 
 
 

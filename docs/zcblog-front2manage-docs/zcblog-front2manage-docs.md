@@ -425,10 +425,121 @@ module.exports = {
 在`package.json`中主要对项目运行配置及依赖包进行管理：
 
 ```json
-
+{
+  "name": "zcblog-front2manage",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "lint": "vue-cli-service lint"
+  },
+  "dependencies": {
+    "axios": "^0.21.0",
+    "core-js": "^3.6.5",
+    "echarts": "^4.9.0",
+    "element-ui": "^2.14.0",
+    "lodash": "^4.17.20",
+    "marked": "^1.2.3",
+    "mavon-editor": "^2.9.0",
+    "vue": "^2.6.11",
+    "vue-cookie": "^1.1.4",
+    "vue-count-to": "^1.0.13",
+    "vue-router": "^3.2.0",
+    "vuex": "^3.4.0"
+  },
+  "devDependencies": {
+    "@vue/cli-plugin-babel": "~4.5.0",
+    "@vue/cli-plugin-eslint": "~4.5.0",
+    "@vue/cli-plugin-router": "~4.5.0",
+    "@vue/cli-plugin-vuex": "~4.5.0",
+    "@vue/cli-service": "~4.5.0",
+    "@vue/eslint-config-standard": "^5.1.2",
+    "babel-eslint": "^10.1.0",
+    "eslint": "^6.7.2",
+    "eslint-plugin-import": "^2.20.2",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.0",
+    "eslint-plugin-vue": "^6.2.2",
+    "sass": "^1.28.0",
+    "sass-loader": "^10.0.5",
+    "stylelint": "^13.7.2",
+    "stylelint-config-prettier": "^8.0.2",
+    "stylelint-config-standard": "^20.0.0",
+    "stylelint-webpack-plugin": "^2.1.1",
+    "svg-sprite-loader": "^5.0.0",
+    "vue-template-compiler": "^2.6.11"
+  }
+}
 ```
 
 > 参考博客文章：[Stylelint规则用户指南](https://cloud.tencent.com/developer/section/1489630)、[配置Stylelint检测Scss、CSS语法](https://staven630.github.io/vue-cli4-config/#stylelint)
+
+## 3.8 开发环境配置
+
+​	开发环境配置一般有开发环境（development）、测试环境（test）、预发服务器环境（crm）、生产环境（production）；其中基于Vue的前端项目有部分公司有test环境，有大部分是没有test环境的；预发服务器环境和生产环境基本一致。
+
+​		还有项目的开发环境是这样配置的：.env（配置基本环境）、.env.development（配置开发环境）、.env.test（配置测试环境）、.env.production（配置生产环境）。
+
+### 3.8.1 本地开发环境
+
+本地开发环境在`.env`文件中配置：
+
+```json
+// serve 默认的本地开发环境配置
+NODE_ENV = "development"
+BASE_URL = "http://localhost:8081/"
+VUE_APP_API = "http://localhost:8081/api"
+VUE_APP_PUBLIC_PATH = "/"
+// 配置Valine评论系统
+// VUE_APP_Valine_APPID = "z0GnFIFva6YrfBpFL8Uy8BTP-gzGzoHsz"
+// VUE_APP_Valine_APPKEY = "wOR9EzOL58zIkUBQS2LTGKIg"
+```
+
+### 3.8.2 预发环境配置
+
+预发环境在`.env.crm`中配置：
+
+```json
+// 自定义 build 环境配置（预发服务器）
+NODE_ENV = "production"
+// BASE_URL = "http://crm.progzc.com/"
+// VUE_APP_PUBLIC_PATH = "https://crm.oss.com/blog"
+// VUE_APP_API = "http://crm.progzc.com/api"
+
+// ACCESS_KEY_ID = "xxxxxxxxxxxxx"
+// ACCESS_KEY_SECRET = "xxxxxxxxxxxxx"
+// REGION = "oss-cn-hangzhou"
+// BUCKET = "zcblog-crm"
+// PREFIX = "zc-blog"
+
+// 配置Valine评论系统
+// VUE_APP_Valine_APPID = "z0GnFIFva6YrfBpFL8Uy8BTP-gzGzoHsz"
+// VUE_APP_Valine_APPKEY = "wOR9EzOL58zIkUBQS2LTGKIg"
+```
+
+### 3.8.3 生产环境配置
+
+生产环境在`.env.production`中配置：
+
+```json
+// build 默认的环境配置（正式服务器）
+NODE_ENV = "production"
+// BASE_URL = "http://www.progzc.com/"
+// VUE_APP_API = "http://www.progzc.com/api"
+// VUE_APP_PUBLIC_PATH = "http://www.progzc.com/blog"
+
+// ACCESS_KEY_ID = "xxxxxxxxxxxxx"
+// ACCESS_KEY_SECRET = "xxxxxxxxxxxxx"
+// REGION = "oss-cn-hangzhou"
+// BUCKET = "zcblog-prod"
+// PREFIX = "zc-blog"
+
+// 配置Valine评论系统
+// VUE_APP_Valine_APPID = "z0GnFIFva6YrfBpFL8Uy8BTP-gzGzoHsz"
+// VUE_APP_Valine_APPKEY = "wOR9EzOL58zIkUBQS2LTGKIg"
+```
 
 # 4 项目目录
 
