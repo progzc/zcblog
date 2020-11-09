@@ -1,7 +1,6 @@
 package com.progzc.blog.common.utils;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.*;
 import org.springframework.stereotype.Component;
 
@@ -44,9 +43,13 @@ public class RedisUtils {
      * String类型设置key-vue及过期时间
      */
     public void set(String key, Object value, long expire) {
-        // Jackson2JsonRedisSerializer序列化带泛型的数据时，会以map的结构进行存储，反序列化时不能将map解析成对象；
-        // 为了确保不出现错误，统一将对象转换为Json字符串进行序列化
-        valueOperations.set(key, JsonUtils.toJson(value));
+        // 若是字符串则直接存储；若是对象先转化为json字符串再存储
+        if (value.getClass() == String.class) {
+            valueOperations.set(key, value);
+        } else {
+            valueOperations.set(key, JsonUtils.toJson(value));
+        }
+
         if (expire != NOT_EXPIRE) {
             redisTemplate.expire(key, expire, TimeUnit.SECONDS);
         }
@@ -63,13 +66,13 @@ public class RedisUtils {
      * String类型根据key获取value,同时设置过期时间
      */
     public <T> T getObj(String key, Class<T> clazz, long expire) {
-        // Jackson2JsonRedisSerializer序列化带泛型的数据时，会以map的结构进行存储，反序列化时不能将map解析成对象；
-        // 为了确保不出现错误，统一将对象转换为Json字符串进行序列化
         String value = (String) valueOperations.get(key);
-        if(expire != NOT_EXPIRE) {
+        if (expire != NOT_EXPIRE) {
             redisTemplate.expire(key, expire, TimeUnit.SECONDS);
         }
-        return value == null ? null : JsonUtils.toObj(value, clazz);
+
+        // 若获取的是字符串，直接返回即可；若获取的是对象，则将json字符串转化为对象再返回
+        return clazz == String.class ? (T) value : JsonUtils.toObj(value, clazz);
     }
 
     /**
@@ -89,7 +92,7 @@ public class RedisUtils {
     /**
      * String类型根据key更新过期时间为1天
      */
-    public  Boolean update(String key){
+    public Boolean update(String key) {
         return redisTemplate.expire(key, DEFAULT_EXPIRE, TimeUnit.SECONDS);
     }
 }

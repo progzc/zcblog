@@ -7,6 +7,7 @@ import com.progzc.blog.common.constants.RedisKeyConstants;
 import com.progzc.blog.common.enums.ErrorEnum;
 import com.progzc.blog.common.exception.MyException;
 import com.progzc.blog.common.utils.RedisUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +20,7 @@ import java.awt.image.BufferedImage;
  * @Email zcprog@foxmail.com
  * @Version V1.0
  */
+@Slf4j
 @Service
 public class SysCaptchaServiceImpl implements SysCaptchaService {
 

@@ -20,6 +20,7 @@ public class TokenGeneratorUtils {
 
     /**
      * 根据随机UUID生成token
+     *
      * @return
      */
     public static String generateValue() {
@@ -39,7 +40,7 @@ public class TokenGeneratorUtils {
     }
 
     private static String toHexString(byte[] digest) {
-        if(digest == null){
+        if (digest == null) {
             return null;
         }
         StringBuilder sb = new StringBuilder(digest.length * 2);

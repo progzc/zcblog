@@ -51,7 +51,7 @@ public class SysUser implements Serializable {
     private String salt;
 
     @ApiModelProperty(value = "创建者的user_id")
-    private String createUserId;
+    private Long createUserId;
 
     @ApiModelProperty(value = "用户状态：0-禁用，1-正常")
     private Boolean status;

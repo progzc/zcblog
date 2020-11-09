@@ -1,4 +1,4 @@
-package com.progzc.blog.auth.controller;
+package com.progzc.blog.auth;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.IOUtils;
@@ -10,6 +10,7 @@ import com.progzc.blog.common.enums.ErrorEnum;
 import com.progzc.blog.entity.sys.SysUser;
 import com.progzc.blog.entity.sys.vo.SysLoginForm;
 import com.progzc.blog.mapper.sys.SysUserMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.crypto.hash.Sha256Hash;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +28,7 @@ import java.io.IOException;
  * @Email zcprog@foxmail.com
  * @Version V1.0
  */
+@Slf4j
 @RestController
 public class SysLoginController extends AbstractController {
 
@@ -74,15 +76,15 @@ public class SysLoginController extends AbstractController {
         }
 
         SysUser sysUser = sysUserMapper.selectOne(new QueryWrapper<SysUser>()
-                .lambda()
-                .eq(SysUser::getUsername, form.getUsername()));
+                                       .lambda()
+                                       .eq(SysUser::getUsername, form.getUsername()));
         // 用户不存在或密码不正确
-        if (sysUser == null || sysUser.getPassword().equals(new Sha256Hash(form.getPassword(), sysUser.getSalt()).toString())) {
+        if (sysUser == null || !sysUser.getPassword().equals(new Sha256Hash(form.getPassword(), sysUser.getSalt()).toString())) {
             return Result.error(ErrorEnum.USERNAME_OR_PASSWORD_WRONG);
         }
 
         // 用户被禁用
-        if (!sysUser.getStatus()){
+        if (Boolean.FALSE.equals(sysUser.getStatus())) {
             return Result.error(ErrorEnum.USER_ACCOUNT_LOCKED);
         }
 

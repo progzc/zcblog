@@ -43,7 +43,7 @@ public class RedisConfig {
         RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
         redisTemplate.setConnectionFactory(redisConnectionFactory);
 
-        // 处理编码问题：使用Jackson2JsonRedisSerializer来序列化和反序列化redis的value值（默认使用JDK的序列化方式）
+        // 处理编码问题：使用StringRedisSerializer来序列化和反序列化redis的value值（默认使用JDK的序列化方式）
         Jackson2JsonRedisSerializer<Object> jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer<>(Object.class);
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
@@ -52,9 +52,11 @@ public class RedisConfig {
         StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
 
         redisTemplate.setKeySerializer(stringRedisSerializer); // key采用String的序列化方式
-        redisTemplate.setHashKeySerializer(stringRedisSerializer); // hash的key也采用String的序列化方式
-        redisTemplate.setValueSerializer(jackson2JsonRedisSerializer); // value序列化方式采用jackson
-        redisTemplate.setHashValueSerializer(jackson2JsonRedisSerializer); // hash的value序列化方式采用jackson
+        redisTemplate.setHashKeySerializer(stringRedisSerializer); // hash的key采用String的序列化方式
+        redisTemplate.setValueSerializer(jackson2JsonRedisSerializer); // value采用jackson2JsonRedisSerializer的序列化方式
+        redisTemplate.setHashValueSerializer(jackson2JsonRedisSerializer); // hash的value采用jackson2JsonRedisSerializer的序列化方式
+
+        redisTemplate.setStringSerializer(stringRedisSerializer); // hash的名称采用String的序列化方式
         redisTemplate.afterPropertiesSet(); // 初始化redisTemplate
 
         return redisTemplate;
