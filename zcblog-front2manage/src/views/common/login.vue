@@ -71,13 +71,14 @@ export default {
       this.$refs.dataForm.validate((valid) => {
         if (valid) {
           executeLogin(this.dataForm).then(data => {
-            // if (data && data.code === 200) {
-            //   this.$cookie.set('token', data.token)
-            //   // this.$router.replace({ name: 'home' })
-            // } else {
-            //   this.getCaptcha()
-            //   this.$message.error(data.msg)
-            // }
+            if (data && data.code === 200) {
+              this.$cookie.set('token', data.token)
+              // this.$router.replace({ name: 'home' })
+              this.$message.success('登录成功！')
+            } else {
+              this.getCaptcha()
+              this.$message.error(data.msg)
+            }
           })
         }
       })
@@ -85,7 +86,7 @@ export default {
     // 获取验证码
     getCaptcha () {
       this.dataForm.uuid = getUUID()
-      executeGetCaptchaPath(this.dataForm.uuid).then((data) => {
+      executeGetCaptchaPath(this.dataForm.uuid).then(data => {
         if (data && data.code === 200) {
           this.captchaPath = data.captchaPath
         } else {

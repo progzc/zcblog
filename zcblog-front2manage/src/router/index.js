@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 
-import request from 'network/request'
+// import request from 'network/request'
 
 Vue.use(VueRouter)
 
@@ -16,8 +16,11 @@ const mainRoutes = {
   path: '/',
   component: _import('main'),
   name: 'main',
-  // redirect: { name: 'home' },
-  meta: { title: '主入口整体布局' }
+  redirect: { name: 'home' },
+  meta: { title: '主入口整体布局' },
+  children: [
+    { path: '/home', component: _import('common/home'), name: 'home', meta: { title: '首页' } }
+  ]
 
 }
 

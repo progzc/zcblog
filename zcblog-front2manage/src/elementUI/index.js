@@ -156,7 +156,7 @@ Vue.use(Col)
 // Vue.use(PageHeader)
 // Vue.use(CascaderPanel)
 
-Vue.use(Loading.directive)
+Vue.use(Loading.directive) // 引入element-ui的加载指令，如v-loading指令
 
 Vue.prototype.$loading = Loading.service
 Vue.prototype.$msgbox = MessageBox
