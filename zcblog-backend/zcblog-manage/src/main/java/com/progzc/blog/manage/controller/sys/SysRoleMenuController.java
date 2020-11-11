@@ -1,5 +1,6 @@
 package com.progzc.blog.manage.controller.sys;
 
+import com.progzc.blog.common.base.AbstractController;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -12,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/sysRoleMenu")
-public class SysRoleMenuController {
+public class SysRoleMenuController extends AbstractController {
 
 }
 

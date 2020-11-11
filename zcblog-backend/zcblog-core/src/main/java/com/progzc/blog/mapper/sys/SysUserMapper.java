@@ -4,6 +4,8 @@ import com.progzc.blog.entity.sys.SysUser;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 
+import java.util.List;
+
 /**
  * @Description 用户
  * @Author zhaochao
@@ -14,4 +16,10 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface SysUserMapper extends BaseMapper<SysUser> {
 
+    /**
+     * 根据用户id查询权限
+     * @param userId
+     * @return
+     */
+    List<String> queryPermsByUserId(Long userId);
 }

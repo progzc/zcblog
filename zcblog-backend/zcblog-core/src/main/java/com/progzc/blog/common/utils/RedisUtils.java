@@ -92,7 +92,7 @@ public class RedisUtils {
     /**
      * String类型根据key更新过期时间为1天
      */
-    public Boolean update(String key) {
+    public boolean updateExpire(String key) {
         return redisTemplate.expire(key, DEFAULT_EXPIRE, TimeUnit.SECONDS);
     }
 }

@@ -11,5 +11,5 @@ public class SysConstants {
     /**
      * 超级管理员账户id
      */
-    public final static Integer SUPER_ADMIN_ID = 1;
+    public static final Long SUPER_ADMIN = 1L;
 }

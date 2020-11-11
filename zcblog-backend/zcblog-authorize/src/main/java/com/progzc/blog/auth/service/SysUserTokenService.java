@@ -1,6 +1,7 @@
 package com.progzc.blog.auth.service;
 
 import com.progzc.blog.common.Result;
+import com.progzc.blog.entity.sys.auth.SysUserToken;
 
 /**
  * @Description 用户token服务接口
@@ -17,4 +18,18 @@ public interface SysUserTokenService {
      * @return
      */
     Result createToken(Long userId);
+
+    /**
+     * 从Redis查询token
+     * @param token
+     * @return
+     */
+    SysUserToken queryByToken(String token);
+
+    /**
+     * 续期
+     * @param userId
+     * @param token
+     */
+    void refreshToken(Long userId, String token);
 }

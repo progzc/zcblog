@@ -6,6 +6,7 @@ import com.progzc.blog.common.Result;
 import com.progzc.blog.common.constants.RedisKeyConstants;
 import com.progzc.blog.common.utils.RedisUtils;
 import com.progzc.blog.common.utils.TokenGeneratorUtils;
+import com.progzc.blog.entity.sys.auth.SysUserToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -29,7 +30,6 @@ public class SysUserTokenServiceImpl implements SysUserTokenService {
 
     /**
      * 根据用户id创建token
-     *
      * @param userId
      * @return
      */
@@ -50,6 +50,34 @@ public class SysUserTokenServiceImpl implements SysUserTokenService {
         redisUtils.set(userIdKey, token, EXPIRE);
 
         return Result.ok().put("token", token).put("expire",EXPIRE);
+    }
+
+    /**
+     * 从Redis查询token
+     * @param token
+     * @return
+     */
+    @Override
+    public SysUserToken queryByToken(String token) {
+        String userId = redisUtils.getObj(RedisKeyConstants.MANAGE_SYS_USER_TOKEN + token, String.class);
+        if (StringUtils.isEmpty(userId)){
+            return null;
+        }
+        SysUserToken sysUserToken = new SysUserToken();
+        sysUserToken.setToken(token);
+        sysUserToken.setUserId(Long.parseLong(userId));
+        return sysUserToken;
+    }
+
+    /**
+     * 续期
+     * @param userId
+     * @param token
+     */
+    @Override
+    public void refreshToken(Long userId, String token) {
+        redisUtils.updateExpire(RedisKeyConstants.MANAGE_SYS_USER_TOKEN + token);
+        redisUtils.updateExpire(RedisKeyConstants.MANAGE_SYS_USER_TOKEN + userId);
     }
 
 }
