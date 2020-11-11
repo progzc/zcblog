@@ -317,11 +317,11 @@ module.exports = {
 }
 ```
 
-> **别名的使用**：
->
-> - 在`<style></style>`和`<template></template>`里使用别名时，需要在别名前面加上~，这样就会告知加载器这是一个模块，而不是绝对路径；
-> - 在css、styl文件中引入的时候，使用别名时前也需要加~；
-> - 在`<script></script>`或者js里引入的时候，不需要加 ~，直接用别名就行。
+### 3.4.1 别名是否加~
+
+- 在`<style></style>`和`<template></template>`里使用别名时，需要在别名前面加上~，这样就会告知加载器这是一个模块，而不是绝对路径；
+- 在css、styl文件中引入的时候，使用别名时前也需要加~；
+- 在`<script></script>`或者js里引入的时候，不需要加 ~，直接用别名就行。
 
 ## 3.5 配置stylus全局变量 
 
@@ -997,12 +997,10 @@ CSDN上有一篇文章写得很好，[前后台交互加密方式](https://blog.
 在`network/request.js`下进行封装：
 
 ```javascript
-import axios from 'axios'
-
-function request (config) { // 封装网络请求
-  // 1.创建axios的示例
-  const instance = axios.create({ // 创建网络请求示例
-    baseURL: process.env.OPEN_PROXY ? process.env.VUE_APP_API : process.env.BASE_URL,
+export default function request (config) { // 封装网络请求
+  // 1. 创建axios的示例
+  const instance = axios.create({ // 创建网络请求实例（若有不同配置，可以封装多个网络请求实例）
+    baseURL: process.env.VUE_APP_API,
     timeout: 1000 * 10, // 最大延时10s
     withCredentials: true, // 当前请求为跨域类型时,在请求中携带cookie
     headers: {
@@ -1012,22 +1010,46 @@ function request (config) { // 封装网络请求
 
   // 2.1 请求拦截
   instance.interceptors.request.use(config => {
+    const timestamp = { // 对每次请求生成当前时间戳
+      t: new Date().getTime()
+    }
+    if (config.params) { // get请求参数处理添加时间戳，并json化
+      config.params = merge(timestamp, config.params)
+    }
+    if (config.data) { // post请求参数添加时间戳，并json化
+      config.data = JSON.stringify(merge(timestamp, config.data))
+    }
+    config.headers.token = Vue.cookie.get('token') // 请求头带上token
     return config
   }, error => {
-    console.log(error)
+    // console.log(error)
+    return Promise.reject(error)
   })
 
   // 2.2 响应拦截
   instance.interceptors.response.use(res => {
+    if (res.data && res.data.code === 403) { // 403: token失效返回登录页面
+      clearLoginInfo()
+      router.push({ name: 'login' })
+    }
     return res.data
   }, error => {
-    console.log(error)
+    // console.log(error)
+    return Promise.reject(error)
   })
 
-  // 3.发送真正的网络请求
+  // 3. 发送真正的网络请求
   return instance(config)
 }
 ```
+
+## 8.3 请求中添加时间戳
+
+**为什么需要在请求中增加时间戳？**
+
+其作用在于：URL 的末尾追加了时间。这就确保了请求不会在它第一次被发送后即缓存，而是会在此方法每次被调用后重新创建和重发；此 URL 会由于时间戳的不同而稍微有些不同。这种技巧常被用于确保到脚本的 POST 每次都会实际生成新请求且 Web 服务器不会尝试缓存来自服务器的响应。（简而言之：**在URL中加时间戳就会保证每一次发起的请求都是一个不同于之前的请求，这样就能避免浏览器对URL的缓存**）。
+
+关键代码如下见`8.2`节。
 
 # 9 vue相关技巧
 
@@ -1455,7 +1477,7 @@ export default {
    }
   ```
 
-- 第2步：使用辅助函数
+- 第3步：使用辅助函数
 
   使用辅助函数非常简单，将...mapState里的变量当作data()里定义的变量一样使用；将...mapMutations和..mapActions里的变量当作methods里的其他方法一样使用即可。
 
@@ -1864,7 +1886,7 @@ Valine提供了几种语言的国际化，这里注意的是本项目的国际�
 lang: this.$i18n.t('homeNav.valineLang') // 配置国际化
 ```
 
-# 13 文章加密(MD5+盐+Cookie)
+# 13 文章加密(SHA256+盐+Cookie)
 
 需构思数据库的设计。
 

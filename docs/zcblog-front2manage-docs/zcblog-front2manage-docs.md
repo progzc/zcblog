@@ -679,12 +679,10 @@ import 'elementUI/theme/elementUITheme' // 引入element-ui自定义主题色
 在`network/request.js`中封装进行封装：
 
 ```javascript
-import axios from 'axios'
-
-export function request (config) { // 封装网络请求
-  // 1.创建axios的示例
+export default function request (config) { // 封装网络请求
+  // 1. 创建axios的示例
   const instance = axios.create({ // 创建网络请求实例（若有不同配置，可以封装多个网络请求实例）
-    baseURL: process.env.OPEN_PROXY ? process.env.VUE_APP_API : process.env.BASE_URL,
+    baseURL: process.env.VUE_APP_API,
     timeout: 1000 * 10, // 最大延时10s
     withCredentials: true, // 当前请求为跨域类型时,在请求中携带cookie
     headers: {
@@ -694,46 +692,353 @@ export function request (config) { // 封装网络请求
 
   // 2.1 请求拦截
   instance.interceptors.request.use(config => {
+    const timestamp = { // 对每次请求生成当前时间戳
+      t: new Date().getTime()
+    }
+    if (config.params) { // get请求参数处理添加时间戳，并json化
+      config.params = merge(timestamp, config.params)
+    }
+    if (config.data) { // post请求参数添加时间戳，并json化
+      config.data = JSON.stringify(merge(timestamp, config.data))
+    }
+    config.headers.token = Vue.cookie.get('token') // 请求头带上token
     return config
   }, error => {
-    console.log(error)
+    // console.log(error)
+    return Promise.reject(error)
   })
 
   // 2.2 响应拦截
   instance.interceptors.response.use(res => {
+    if (res.data && res.data.code === 403) { // 403: token失效返回登录页面
+      clearLoginInfo()
+      router.push({ name: 'login' })
+    }
     return res.data
   }, error => {
-    console.log(error)
+    // console.log(error)
+    return Promise.reject(error)
   })
 
-  // 3.发送真正的网络请求
+  // 3. 发送真正的网络请求
   return instance(config)
 }
 ```
 
-# 7 使用vue-cookie
+## 6.2 请求中添加时间戳
 
-本项目涉及到跨域登录问题，采取的解决方案是登录成功后生成一个token缓存到cookie中作为通行证。使用vue-cookie进行cookie的设置。
+**为什么需要在请求中增加时间戳？**
+
+其作用在于：URL 的末尾追加了时间。这就确保了请求不会在它第一次被发送后即缓存，而是会在此方法每次被调用后重新创建和重发；此 URL 会由于时间戳的不同而稍微有些不同。这种技巧常被用于确保到脚本的 POST 每次都会实际生成新请求且 Web 服务器不会尝试缓存来自服务器的响应。（简而言之：**在URL中加时间戳就会保证每一次发起的请求都是一个不同于之前的请求，这样就能避免浏览器对URL的缓存**）。
+
+关键代码如下见`6.1`节。
+
+## 6.3 axios拦截器返回response.data
+
+在读取数据的时候还需要加一层data: response.data.data，这样的编码易引起混淆，可以在拦截器中配置axios让返回值直接能获取到data，而不是response.data.data。
+
+```javascript
+axios.interceptors.response.use(res => {
+　　return res.data;
+})
+```
+
+# 7 Vue相关技巧
+
+## 7.1 严格模式
+
+strict：默认值为false，值为true则表示Vuex store进入严格模式，在严格模式下，任何 mutation 处理函数以外修改 Vuex state 都会抛出错误。
+
+**注意事项**：不要在发布环境下启用严格模式。
+
+```javascript
+const store = new Vuex.Store({
+  // ...
+  strict: process.env.NODE_ENV !== 'production'
+})
+```
+
+## 7.2 智能懒加载
+
+vue懒加载：要求在开发环境不使用懒加载，生产环境才使用懒加载，可以如下配置：
+
+```javascript
+// router/index.js
+import Vue from 'vue'
+import Router from 'vue-router'
+Vue.use(Router)
+const _import = require('./_import_' + process.env.NODE_ENV) // 开发环境不使用懒加载，生产环境不使用懒加载
+// 全局路由(无需嵌套上左右整体布局)
+const globalRoutes = [
+  { path: '/404', component: _import('common/404'), name: '404', meta: { title: '404未找到' } },
+  { path: '/login', component: _import('common/login'), name: 'login', meta: { title: '登录' } }
+]
+
+// router/_import_development.js
+module.exports = file => require('@/views/' + file + '.vue').default // vue-loader at least v13.0.0+
+
+// router/_import_production.js
+module.exports = file => () => import('@/views/' + file + '.vue')
+```
+
+## 7.3 三种导航守卫的执行时机
+
+> 举个例子：vue项目常见的3种导航守卫有全局守卫、独享守卫、组件内守卫。例如：`beforeEach：路由全局前置守卫`、`beforeEnter：路由独享守卫`、`beforeRouteEnter：组件内前置守卫`。[三种常见导航守卫](https://blog.csdn.net/weixin_44781409/article/details/106461212?utm_medium=distribute.pc_aggpage_search_result.none-task-blog-2~all~sobaiduend~default-3-106461212.nonecase&utm_term=vue%20%E5%85%A8%E5%B1%80%E5%89%8D%E7%BD%AE%E5%AE%88%E5%8D%AB%20%E6%89%A7%E8%A1%8C%E5%A4%9A%E6%AC%A1%20%E8%BF%98%E6%98%AF%E4%B8%80%E6%AC%A1&spm=1000.2123.3001.4430)
+
+完整的导航守卫的执行时机如下：
+
+1. 导航被触发。
+2. 在失活的组件里调用离开守卫（组件内后置钩子）。
+3. **调用全局的beforeEach守卫。**
+4. 在重用的组件里调用beforeRouteUpdate守卫 (2.2+)。
+5. **在路由配置里调用beforeEnter。**
+6. 解析异步路由组件。
+7. **在被激活的组件里调用beforeRouteEnter。**
+8. 调用全局的beforeResolve守卫 (2.5+)。
+9. 导航被确认。
+10. 调用全局的afterEach钩子。
+11. 触发DOM更新。
+12. 用创建好的实例调用beforeRouteEnter守卫中传给next的回调函数。
+
+## 7.4 使用mutation常量
+
+在多人协同开发时，使用Vuex时推荐采用**mutation常量**。此外，使用Vuex时我们往往还会根据功能需求划分不同的modules，当modules指定了**namespace为true**时，怎么在vue组件中调用store的mutation方法呢？直接看下面的例子：
+
+### 7.4.1 未使用mutation常量
+
+```javascript
+// store/modules/common.js
+export default {
+  namespaced: true, // 启用命名空间
+  state: {
+    documentClientHeight: 0 // 页面文档可视高度
+  },
+  mutations: {
+    updatedocumentClientHeight (state, height) {
+      state.documentClientHeight = height
+    }
+  }
+}
+
+// main.vue
+<template>
+  <div class="site-wrapper" :class="{ 'site-sidebar--fold': sidebarFold }"
+    v-loading.fullscreen.lock="loading"
+    element-loading-spinner="el-icon-loading"
+    element-loading-text="加载中...">
+  </div>
+</template>
+
+<script type="text/ecmascript-6">
+export default {
+  computed: {
+    documentClientHeight: {
+      get () { return this.$store.state.common.documentClientHeight },
+      set (val) {
+        this.$store.commit('common/updatedocumentClientHeight', val) 
+      }
+    }
+  }
+}
+</script>
+
+<style lang="scss" type="text/scss" rel="stylesheet/scss" scoped>
+</style>
+```
+
+### 7.4.2 使用mutation常量
+
+**注意事项：**
+
+1. 在组件中调用mutation方法时，需要采用占位符${}拼接字符串与变量（${}是ES2015新增语法结构）；
+2. 使用ESC键上的``（而不是单引号）表示拼接后的字符串。
+
+```javascript
+// store/constant/motation-types.js
+export const UPDATE_DOCUMENT_CLIENTHEIGHT = 'update_document_clientheight'
+
+// store/modules/common.js
+import { UPDATE_DOCUMENT_CLIENTHEIGHT } from 'store/constant/mutation-types'
+export default {
+  namespaced: true, // 启用命名空间
+  state: {
+    documentClientHeight: 0 // 页面文档可视高度
+  },
+  mutations: {
+    [UPDATE_DOCUMENT_CLIENTHEIGHT] (state, height) {
+      state.documentClientHeight = height
+    }
+  }
+}
+
+// main.vue
+<template>
+  <div class="site-wrapper" :class="{ 'site-sidebar--fold': sidebarFold }"
+    v-loading.fullscreen.lock="loading"
+    element-loading-spinner="el-icon-loading"
+    element-loading-text="加载中...">
+  </div>
+</template>
+
+<script type="text/ecmascript-6">
+import { UPDATE_DOCUMENT_CLIENTHEIGHT } from 'store/constant/mutation-types'
+export default {
+  computed: {
+    documentClientHeight: {
+      get () { return this.$store.state.common.documentClientHeight },
+      set (val) {
+        // 注意：使用占位符${}拼接字符串与变量（${}是ES2015新增语法结构）；使用ESC键上的``（而不是单引号）表示拼接后的字符串
+        this.$store.commit(`common/${UPDATE_DOCUMENT_CLIENTHEIGHT}`, val) 
+      }
+    }
+  }
+}
+</script>
+
+<style lang="scss" type="text/scss" rel="stylesheet/scss" scoped>
+</style>
+```
+
+> 参考文章博客：[${}占位符用法](https://blog.csdn.net/qq_33964336/article/details/86577963?utm_medium=distribute.pc_aggpage_search_result.none-task-blog-2~all~sobaiduend~default-1-86577963.nonecase&utm_term=javascript%E9%87%8C%E7%9A%84%E5%8D%A0%E4%BD%8D%E7%AC%A6&spm=1000.2123.3001.4430)、[Vuex官网](https://vuex.vuejs.org/zh/guide/mutations.html)
+
+## 7.5 vue中class的几种用法
+
+```vue
+// 方法一：var1、var2为变量。（可以为var1、var2在data里动态绑定类名）
+<div id="box">
+　　<strong :class="[var1,var2]">凉凉三生三世，为你四年成河水<strong> 　　
+</div>
+
+// 方法二：var1为true时，className1存在；反之不存在。var2类似。（可以为var1、var2在data里动态绑定类名）
+<div id="box">
+　　<strong :class="{'className1':var1, 'className': var2}">凉凉三生三世，为你四年成河水<strong> 　　
+</div>
+// 方法二扩展：也可直接指定变量的值
+<div id="box">
+　　<strong :class="{'className1':true, 'className2': false}">凉凉三生三世，为你四年成河水<strong> 　　
+</div>
+
+// 方法三：var1是一个类型为json字符串的变量，相当于jsonString="{'className1':var2, 'className': var3}" 。（可在data里动态绑定var1）
+<div id="box">
+　　<strong :class="var1">凉凉三生三世，为你四年成河水<strong> 　　
+</div>
+      
+// 方法四：当变量var1不为空时，类名className1存在；反之className1不存在。（可在data里动态绑定var1）
+<div :class="var1 ? 'className1' : ''"></div>
+```
+
+> 参考博客文章：[vue中class的用法](https://www.cnblogs.com/yuershuo/p/6861951.html)、[vue中class的常见用法](https://www.cnblogs.com/weichenzhiyi/p/8405571.html)
+
+## 7.6 template标签
+
+- **html5中的templa标签：**html中的template标签中的内容在页面中不会显示；但是在后台页面DOM结构存在template标签，这是因为template标签天生不可见，它设置了`display:none;`属性。
+- **template标签的属性：**
+  - **content属性：**在js中template标签对应的DOM对象存在content属性，对应的属性值是一个DOM节点，节点的nodeName是`#document-fragment`（即：`template对象.content.nodeName=#document-fragment`）。通过该属性可以获取template标签中的内容，`template对象.content`可以调用getElementById、querySelector、querySelectorAll方法来获取里面的子节点。
+  - **innerHTML属性：**可以获取template标签中的html。
+
+- **vue中的template标签：**
+
+  - **在vue实例绑定的元素内部：**可以显示template标签中的内容；但是后台的DOM结构不存在template标签。vue实例绑定的元素内部的template标签不支持v-show指令，即`v-show="false"`对template标签来说不起作用；但是此时的template标签支持`v-if、v-else-if、v-else、v-for`这些指令。
+  - **在vue实例绑定的元素外部：**不能显示template标签中的内容；但是后台的DOM结构存在template标签。
+  - **在vue实例中的template属性：**即vue组件的用法。将实例中template属性值进行编译，并将编译后的DOM替换掉vue实例绑定的元素，如果该vue实例绑定的元素中存在内容，这些内容会直接被覆盖。（**要求：**template属性中的dom结构只能有一个根元素，如果有多个根元素需要使用v-if、v-else、v-else-if设置成只显示其中一个根元素）
+
+```vue
+// vue中的template标签
+<div id="app">
+    <!--此处的template标签中的内容显示并且在dom中不存在template标签-->
+    <template>
+        <div>我是template</div>
+        <div>我是template</div>
+    </template>
+</div>
+<!--此处的template标签中的内容在页面中不显示，但是在dom结构存在该标签及内部结构-->
+<template id="tem">
+    <div id="div1">我是template</div>
+    <div>我是template</div>
+</template>
+<script src="node_modules/vue/dist/vue.js"></script>
+<script>
+    let vm = new Vue({
+        el: "#app",
+    });
+</script>
+
+// vue中的template标签与v-show/v-if
+<div id="app">
+    <template v-if="true">
+    <!--此时template标签中的内容显示在页面上，但是看dom结构没有template标签-->
+        <div>我是template</div>
+        <div>我是template</div>
+    </template>
+    <div v-if="true">
+    <!--此时页面上显示div标签中的内容，并且看dom结构存在最外面的div标签-->
+        <div>我是template</div>
+        <div>我是template</div>
+    </div>
+    <!--此处会输出6个‘我是template’并且dom结构中不存在template标签-->
+    <template v-for="a in 3">
+        <div>我是template</div>
+        <div>我是template</div>
+    </template>
+</div>
+<script src="node_modules/vue/dist/vue.js"></script>
+<script>
+    let vm = new Vue({
+        el: "#app",
+    });
+</script>
+
+// vue实例中的template属性
+<!--此处页面显示hello-->
+<div id="app"></div>
+<!--此处template标签必须在vue绑定的元素外面定义，并且在页面中不显示下面的template标签中的内容-->
+<template id="first">
+    <div v-if="flag">{{msg}}<div>
+    <div v-else>111<div>
+</template>
+<script src="./node_modules/vue/dist/vue.js"></script>
+<script>
+    let vm = new Vue({
+        el:"#app",
+        data:{
+            msg:"hello",
+            flag:true
+        },
+        template:"#first"//通过该属性可以将自定义的template属性中的内容全部替换app的内容，并且会覆盖里面原有的内容，并且在查看dom结构时没有template标签
+    });
+</script>
+```
+
+> 参考博客文章：[template标签用法总结](https://blog.csdn.net/u010510187/article/details/100356624)
+
+## 7.7 配置别名后IDEA设置路径
+
+**问题描述：**vue项目配置别名后，在项目中使用别名时，Ctrl+鼠标左键单击出现`Cannot find declaration to go to`。**此外，若IDEA能根据别名找到文件路径，也可以帮助我们很好地使用IDEA中的`Find Usages`（快捷键：Alt+F7）快速找到关联文件**。
+
+![image-20201110174038162](zcblog-front2manage-docs.assets/image-20201110174038162.png)
+
+**解决办法：**在IDEA中指定webpack的配置文件（Vue CLI封装起来了，需要手动指定）。
+
+![image-20201110174339210](zcblog-front2manage-docs.assets/image-20201110174339210.png)
+
+## 7.8 Vue的生命周期
+
+在Vue项目中，经常会搞混mounted和created的执行时机。根据Vue官网的图解：
+
+![image-20201110184558256](zcblog-front2manage-docs.assets/image-20201110184558256.png)
+
+- **created：**在模板渲染成html前调用，即通常初始化某些属性值，然后再渲染成视图。
+- **mounted：**在模板渲染成html后调用，通常是初始化页面完成后，再对html的DOM节点进行一些需要的操作。
+
+通常created使用的次数多，而mounted通常是在一些插件的使用或者组件的使用中进行操作，比如插件chart.js的使用： `var ctx = document.getElementById(ID)`；通常会有这一步，而如果你写入组件中，你会发现在created中无法对chart进行一些初始化配置，一定要等这个html渲染完后才可以进行，那么mounted就是不二之选。
+
+> 参考博客文章：[mounted和created的区别](https://blog.csdn.net/xdnloveme/article/details/78035065)
 
 
 
+# 8 js相关技巧
 
-
-
-
-# 8 使用mavon-editor
-
-
-
-
-
-
-
-> 参考博客文章：[Element UI官网](https://element.eleme.cn/#/zh-CN/)
-
-# # 常见问题
-
-## ## JS生成随机UUID（模拟）
+## 8.1 JS生成随机UUID（模拟）
 
 - 算法1：
 
@@ -804,7 +1109,7 @@ export function request (config) { // 封装网络请求
   }
   ```
 
-## ## localStorage与sessionStorage
+## 8.2 localStorage与sessionStorage
 
 - 相同点：
   1. 均只能存储字符串类型的对象。
@@ -829,7 +1134,7 @@ export function request (config) { // 封装网络请求
 
 > **注意事项**：页面及标签页仅指顶级窗口，如果一个标签页包含多个iframe标签且他们属于同源页面（同源指相同的相同的协议、主机和端口），那么他们之间可以共享sessionStorage。
 
-## ## Lodash的extend/assign/merge
+## 8.3 Lodash的extend/assign/merge
 
 相似点：
 
@@ -873,17 +1178,7 @@ _.assign      ([], ['a','b'], ['bb']) // => [ "bb", "b" ]
 _.merge       ([], ['a','b'], ['bb']) // => [ "bb", "b" ]
 ```
 
-## ## axios拦截器返回response.data
-
-在读取数据的时候还需要加一层data: response.data.data，这样的编码易引起混淆，可以在拦截器中配置axios让返回值直接能获取到data，而不是response.data.data。
-
-```javascript
-axios.interceptors.response.use(res => {
-　　return res.data;
-})
-```
-
-## ## HTTPS加密机制及登录界面的实现
+## 8.4 HTTPS加密机制及登录界面的实现
 
 > 背景：HTTP（**未加密**） --> 对称加密（**秘钥**） --> 非对称加密 （**公钥+私钥**）--> HTTPS（**证书+数字签名**）
 >
@@ -891,62 +1186,21 @@ axios.interceptors.response.use(res => {
 
 相关博客文章：[HTTPS加密机制](https://blog.csdn.net/akunshouyoudou/article/details/95184254)、[网站启用HTTPS加密传输协议](https://blog.csdn.net/weixin_30426065/article/details/97928605)
 
-# # Vue相关
 
-##  ## 严格模式
 
-strict：默认值为false，值为true则表示Vuex store进入严格模式，在严格模式下，任何 mutation 处理函数以外修改 Vuex state 都会抛出错误。
+# 7 使用vue-cookie
 
-**注意事项**：不要在发布环境下启用严格模式。
+本项目涉及到跨域登录问题，采取的解决方案是登录成功后生成一个token缓存到cookie中作为通行证。使用vue-cookie进行cookie的设置。
 
-```javascript
-const store = new Vuex.Store({
-  // ...
-  strict: process.env.NODE_ENV !== 'production'
-})
-```
 
-## ## 智能懒加载
 
-vue懒加载：要求在开发环境不使用懒加载，生产环境才使用懒加载，可以如下配置：
 
-```javascript
-// router/index.js
-import Vue from 'vue'
-import Router from 'vue-router'
-Vue.use(Router)
-const _import = require('./_import_' + process.env.NODE_ENV) // 开发环境不使用懒加载，生产环境不使用懒加载
-// 全局路由(无需嵌套上左右整体布局)
-const globalRoutes = [
-  { path: '/404', component: _import('common/404'), name: '404', meta: { title: '404未找到' } },
-  { path: '/login', component: _import('common/login'), name: 'login', meta: { title: '登录' } }
-]
 
-// router/_import_development.js
-module.exports = file => require('@/views/' + file + '.vue').default // vue-loader at least v13.0.0+
 
-// router/_import_production.js
-module.exports = file => () => import('@/views/' + file + '.vue')
-```
 
-## ## 三种导航守卫的执行时机
+# 8 使用mavon-editor
 
-> 举个例子：vue项目常见的3种导航守卫有全局守卫、独享守卫、组件内守卫。例如：`beforeEach：路由全局前置守卫`、`beforeEnter：路由独享守卫`、`beforeRouteEnter：组件内前置守卫`。[三种常见导航守卫](https://blog.csdn.net/weixin_44781409/article/details/106461212?utm_medium=distribute.pc_aggpage_search_result.none-task-blog-2~all~sobaiduend~default-3-106461212.nonecase&utm_term=vue%20%E5%85%A8%E5%B1%80%E5%89%8D%E7%BD%AE%E5%AE%88%E5%8D%AB%20%E6%89%A7%E8%A1%8C%E5%A4%9A%E6%AC%A1%20%E8%BF%98%E6%98%AF%E4%B8%80%E6%AC%A1&spm=1000.2123.3001.4430)
-
-完整的导航守卫的执行时机如下：
-
-1. 导航被触发。
-2. 在失活的组件里调用离开守卫（组件内后置钩子）。
-3. **调用全局的beforeEach守卫。**
-4. 在重用的组件里调用beforeRouteUpdate守卫 (2.2+)。
-5. **在路由配置里调用beforeEnter。**
-6. 解析异步路由组件。
-7. **在被激活的组件里调用beforeRouteEnter。**
-8. 调用全局的beforeResolve守卫 (2.5+)。
-9. 导航被确认。
-10. 调用全局的afterEach钩子。
-11. 触发DOM更新。
-12. 用创建好的实例调用beforeRouteEnter守卫中传给next的回调函数。
+> 参考博客文章：
 
 
 

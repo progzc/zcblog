@@ -1696,7 +1696,7 @@ public enum ErrorEnum {
 }
 ```
 
-### 7.1.5 处理异常
+### 7.1.5 全局异常处理
 
 为了使参数校验后返回给前端的结果更加优雅，需要自定义全局异常处理器（**这个全局处理异常不仅仅处理参数校验返回的异常，还可以对项目中出现的其他异常进行处理**）。
 
@@ -3285,7 +3285,7 @@ GET /索引名/~类型名~/_search
 
 # 17 测试与改进
 
-## 17.1 并发测试
+## 17.1 并发压力测试
 
 
 
@@ -3343,6 +3343,9 @@ GET /索引名/~类型名~/_search
 - **Step Out：**步出调试。作用：**从方法内退出到方法调用处**；常用于调试时跳入到自己不想查看的方法体内后，可以使用步出。
 - **Drop Frame：**回退断点。作用：**回退到当前方法的调用处**；当想重新查看该方法体的执行过程时，不用重新启动Debug，可以使用回退断点方式。
 - **Run to Cursor：**运行到光标处。作用：**使程序运行到光标处，而无需设置断点**。
+- **Evaluate Expression...：**计算表达式。作用：设置变量，在计算表达式里，可以**改变变量的值**，这样有时候就能很方便我们去调试各种值的情况。
+- **条件断点：**右键单击断点处，可以**设置进入断点的条件**。
+- **View Breakpoints：**可以对断点进行管理。作用：可以用来**一键清除所有断点**。
 
 ## 18.7 字符串与json字符串Bug
 
@@ -3383,35 +3386,7 @@ public <T> T getObj(String key, Class<T> clazz, long expire) {
 }
 ```
 
-## 18.8 请求中增加时间戳
-
-**为什么需要在请求中增加时间戳？**
-
-其作用在于：URL 的末尾追加了时间。这就确保了请求不会在它第一次被发送后即缓存，而是会在此方法每次被调用后重新创建和重发；此 URL 会由于时间戳的不同而稍微有些不同。这种技巧常被用于确保到脚本的 POST 每次都会实际生成新请求且 Web 服务器不会尝试缓存来自服务器的响应。（简而言之：**在URL中加时间戳就会保证每一次发起的请求都是一个不同于之前的请求，这样就能避免浏览器对URL的缓存**）。
-
-统一在拦截器中（`request.js`）为请求增加时间戳：
-
-```javascript
-// 2.1 请求拦截
-  instance.interceptors.request.use(config => {
-    const timestamp = { // 对每次请求生成当前时间戳
-      t: new Date().getTime()
-    }
-    if (config.params) { // get请求参数处理添加时间戳，并json化
-      config.params = merge(timestamp, config.params)
-    }
-    if (config.data) { // post请求参数添加时间戳，并json化
-      config.data = JSON.stringify(merge(timestamp, config.data))
-    }
-    config.headers.token = Vue.cookie.get('token') // 请求头带上token
-    return config
-  }, error => {
-    // console.log(error)
-    return Promise.reject(error)
-  })
-```
-
-## 18.9 Redis中的缓存策略
+## 18.8 Redis中的缓存策略
 
 - 验证码
   1. 写入验证码时设置**5分钟**过期。（写入时若未设置过期时间，则默认设置过期时间为1天）
@@ -3422,7 +3397,7 @@ public <T> T getObj(String key, Class<T> clazz, long expire) {
   1. 写入用户token与用户id时设置**12h**过期。（写入时若未设置过期时间，则默认设置过期时间为1天）
   2. 
 
-## 18.10 json字符串转化为集合
+## 18.9 json字符串转化为集合
 
 本项目采用jackson（由谷歌开发）实现json字符串与Object的相互转换（**阿里巴巴的fastjson速度更快**），其中一个难点是如何实现json字符串转化为集合，本人采用以下方案：
 
@@ -3514,9 +3489,335 @@ public class RedisUtilsTest {
 }
 ```
 
+## 18.10 自定义HTML属性
 
+**问题描述：**一些vue元素的属性添加到HTML中，IDEA不识别，频繁警告。
 
+![image-20201110111931209](zcblog-backend-docs.assets/image-20201110111931209.png)
 
+**解决办法：**可以在IDEA中自定义HTML属性，消除警告。
+
+![image-20201110112122022](zcblog-backend-docs.assets/image-20201110112122022.png)
+
+## 18.11 流式计算与链式编程
+
+**Stream流式计算的特点：**
+
+- Stream不会改变源对象，会返回一个新的Stream。
+- Stream中的操作是延时执行。
+
+**Stream流式计算的使用步骤：**
+
+1. **创建流**
+
+   - 通过Collection对象的stream()或parallelStream()方法。
+
+   - 通过Arrays的stream()方法。
+
+   - 通过Stream接口的of()、iterate()、generate()方法。
+
+   - 通过IntStream、LongStream、DoubleStream接口中of()、range()、rangeClosed()等方法。
+
+     ```java
+     public class StreamTest {
+         public static void main(String[] args) {
+             ArrayList<String> arrayList = new ArrayList<>();
+             arrayList.add("北京");
+             arrayList.add("上海");
+             arrayList.add("北京");
+             
+             // 1 通过Collection对象的stream()或parallelStream()方法
+             Stream<String> stream1 = arrayList.stream();
+     
+             // 2 通过Arrays的stream()方法
+             IntStream stream2 = Arrays.stream(new int[]{5, 2, 0, 1, 3, 1, 4});
+     
+             // 3 通过Stream接口的of()、iterate()、generate()方法
+             // 3.1 of()
+             Stream<String> stream3 = Stream.of("北京", "上海");        
+             // 3.2 iterate() 无限迭代流
+             Stream<Integer> iterate = Stream.iterate(1, x -> x + 1);
+             // 3.3 generate() 无限生成流
+             Stream<Integer> generate = Stream.generate(() -> new Random().nextInt(100));
+             
+             // 4 通过IntStream、LongStream、DoubleStream接口中of()、range()、rangeClosed()等方法
+             // 4.1 InStream.of(): 生成数组
+             IntStream intStream = IntStream.of(5, 2, 0, 1, 3, 1, 4);       
+             // 4.2 InStream.range(): (0,100)
+             IntStream range = IntStream.range(0, 100);        
+             // 4.3 InStream.rangeClosed(): (0,100]
+             IntStream rangeClosed = IntStream.rangeClosed(0, 100);
+     }
+     ```
+
+2. **中间操作**
+
+   - 如：sorted、filter、distinct、limit、skip、map、flatMap...（注意：forEach是终止操作）
+
+   - **map和flatMap的区别**：map是一对一映射；flatMap是多对一映射
+
+     ```java
+     public class StreamTest {
+         public static void main(String[] args) {
+             ArrayList<String> arrayList = new ArrayList<>();
+             arrayList.add("北京");
+             arrayList.add("上海");
+             arrayList.add("北京");
+             arrayList.stream()
+                     .sorted(String::compareTo) // 排序
+                     .filter(s -> s.equals("北京")) // 过滤
+                     .forEach(System.out::println); // 打印
+         }
+     }
+     
+     public class StreamTest2 {
+         public static void main(String[] args) {      
+             IntStream stream2 = Arrays.stream(new int[]{5, 2, 0, 1, 3, 1, 4});      
+             stream2.sorted() // 排序: 可以自定义排序规则
+                     .distinct() // 去重: 如果使用自定义对象，则需要重写hashCode与equals
+                     .limit(5) // 限制生成个数
+                     .skip(2) // 跳过
+                     .forEach(System.out::println); // 打印
+         }
+     }
+     
+     public class StreamTest3 {
+         public static void main(String[] args) {
+             ArrayList<Student> arrayList = new ArrayList<>();
+             arrayList.add(new Student("张", 21));
+             arrayList.add(new Student("李", 20));
+             arrayList.add(new Student("王", 25));
+     
+             arrayList.stream()
+                     .map(Student::getName) // 映射: 获取所有人的名字
+                     .forEach(System.out::println); // 打印
+     
+             // 并行流: 当操作多的时候，会开启多个流并行执行，提高效率
+             arrayList.parallelStream();
+             arrayList.stream().parallel();
+         }
+     }
+     ```
+
+3. **终止操作：**只有调用了终止操作，中间操作才会执行。
+
+   - 如：forEach、min、max、count、reduce、collect、allMatch、anyMatch、noneMatch、findFirst、findAny...
+
+     ```java
+     public class StreamTest2 {
+         public static void main(String[] args) {
+             ArrayList<Student> arrayList = new ArrayList<>();
+             arrayList.add(new Student("张", 21));
+             arrayList.add(new Student("李", 20));
+             arrayList.add(new Student("王", 25));
+     
+             // 遍历打印
+             arrayList.stream().forEach(System.out::println);        
+             // 求最小值
+             // Optional: 保存对象的容器，防止空指针异常
+             Optional<Student> min = arrayList.stream().min(Comparator.comparingInt(Student::getAge));
+             System.out.println(min);
+             // 求最大值
+             Optional<Student> max = arrayList.stream().max(Comparator.comparingInt(Student::getAge));
+             System.out.println(max);
+             // 计算数量
+             long count = arrayList.stream().count();
+             System.out.println(count);
+             // 规约
+             Optional<Integer> reduce = arrayList.stream().map(Student::getAge).reduce(Integer::sum);// 统计所有年龄和
+             System.out.println(reduce);
+             // 收集
+             List<String> collect = arrayList.stream().map(Student::getName)
+                 .collect(Collectors.toList()); // 收集所有人的姓名
+             System.out.println(collect);
+         }
+     }
+     ```
+
+> 参考博客文章：[Java8新特性之流式计算](https://blog.csdn.net/weixin_42193813/article/details/108087715?utm_medium=distribute.pc_relevant.none-task-blog-baidulandingword-2&spm=1001.2101.3001.4242)、**[JDK8新特性流式数据处理](https://blog.csdn.net/canot/article/details/52957262?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-2.add_param_isCf&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-2.add_param_isCf)**、[map和flatMap的区别](https://blog.csdn.net/weixin_39723544/article/details/97976604)
+
+## 18.12 Lambda方法引用
+
+**Lambda表达式的特点：**
+
+1. 可选类型声明：不需要声明参数类型，编译器可以统一识别参数值。（也可以声明类型）
+2. 可选的参数圆括号：一个参数无需定义圆括号，但多个参数需要定义圆括号。（无参数必须使用圆括号）
+3. 可选的大括号：如果主体包含了一个语句，就不需要使用大括号。
+4. 可选的返回关键字：如果主体只有一个表达式返回值则编译器会自动返回值，大括号需要指定明表达式返回了一个数值。
+
+**Lambda表达式的使用形式：**
+
+1. **省略花括号的代码块。**
+
+2. **引用类方法：**函数式接口中被实现方法的全部参数传给该类方法作为参数。（例如：Arrays::stream）
+
+   - 示例：类名::类方法。
+
+   - 对应的Lambda表达式：(a,b,...)->类名.类方法(a,b,...)。
+
+     ```java
+     // 1. TestLambda添加一个静态方法
+     public static boolean testHero(Hero h) {
+        return h.hp>100 && h.damage<50;
+     }
+     
+     // 2 filter是一个自定义方法，方法的第二个参数是一个函数式接口的实例
+     // 2.1 Lambda表达式
+     filter(heros, h->h.hp>100 && h.damage<50);
+     // 2.2 在Lambda表达式中调用类方法
+     filter(heros, h -> TestLambda.testHero(h) );
+     // 2.3 进一步简化
+     filter(heros, TestLambda::testHero);
+     ```
+
+3. **引用特定对象的实例方法：**函数式接口中被实现方法的全部参数传给该方法作为参数。（例如：Collection::stream）
+
+   - 示例：特定对象::实例方法。
+
+   - 对应的Lambda表达式：(a,b,...)->特定对象.实例方法(a,b,...)。
+
+     ```java
+     // 与引用类方法很类似，只是传递方法的时候，需要一个对象的存在
+     TestLambda testLambda = new TestLambda();
+     filter(heros, testLambda::testHero);
+     ```
+
+4. **引用某类对象的实例方法：**函数式接口中被实现方法的第一个参数作为调用者，后面的参数全部传给该方法作为参数。（例如：System.out::println）
+
+   - 示例：类名::实例方法。
+
+   - 对应的Lambda表达式：(a,b,...)->a.实例方法(b,...)。
+
+     ```java
+     // 与引用类方法很类似，引用类对象的实例方法
+     filter(heros, Hero::matched);
+     ```
+
+5. **引用构造器：**函数式接口中被实现方法的全部参数传给该构造器作为参数。（例如：Student::New）
+
+   - 示例：类名::new。
+
+   - 对应的Lambda表达式：(a,b,...)->new 类名(a,b,...)。
+
+     ```java
+     // 引用构造器
+     List list3 = getList(ArrayList::new);
+     ```
+
+**总结：**Lambda表达式一般与流式计算一起使用来实现链式编程的简化。
+
+> 参考博客文章：[Lambda中的方法引用](https://blog.csdn.net/jeddzd/article/details/91973049)
+
+## 18.13 LEFT JOIN...ON...
+
+### 18.13.1 LEFT JOIN...ON...的使用
+
+**LEFT JOIN...ON...：**把LEFT JOIN左边的表的记录全部找出来。系统会先用表A和表B做个笛卡儿积，然后以表A为基表，去掉笛卡儿积中表A部分为NULL的记录，最后形成你的结果。**进行左连接时，就有涉及到主表、辅表，这时主表条件写在WHERE之后，辅表条件写在ON后面**。
+
+```SQL
+#############################以下是数据源####################################
+# 表a
+table a(id, type):
+id     type 
+----------------------------------
+1      1
+2      1
+3      2
+
+# 表b
+table b(id, class):
+id    class 
+----------------------------------
+1      1
+2      2
+
+#############################执行SQL语句1###################################
+SELECT a.*, b.* FROM a LEFT JOIN b ON a.id = b.id;1
+#查询结果：
+a.id    a.type    b.id    b.class
+-----------------------------------
+1        1         1        1
+2        1         2        2
+3        2
+#############################执行SQL语句2###################################
+# 这是比较常见的用法(主表条件写在WHERE之后，辅表条件写在ON后面)
+select a.*, b.* from a left join b on a.id = b.id where a.type = 1; 
+# 查询结果：
+a.id    a.type    b.id    b.class
+-----------------------------------
+1        1         1        1
+2        1         2        2
+#############################执行SQL语句3###################################
+# 后面的and未起作用，与SQL语句1执行结果相同(主表条件写在WHERE之后，辅表条件写在ON后面)
+select a.*, b.* from a left join b on a.id = b.id and a.type = 1;
+# 查询结果：
+a.id    a.type    b.id    b.class
+-----------------------------------
+1        1         1        1
+2        1         2        2
+3        2
+#############################执行SQL语句4###################################
+# 后面的and起作用了，与SQL语句1执行结果不同(主表条件写在WHERE之后，辅表条件写在ON后面)
+select a.*, b.* from a left join b on a.id = b.id and b.class = 1;
+# 查询结果：
+a.id    a.type    b.id    b.class
+-----------------------------------
+1        1         1        1
+2        1
+3        2
+```
+
+### 18.13.2 本项目中的使用
+
+根据用户id查询权限：
+
+```sql
+# 思路：sys_user >>> sys_user_role >>> sys_role_menu >>> sys_menu
+# 第一种方法：一次性查出
+SELECT sm.perms FROM sys_user_role sur
+LEFT JOIN sys_role_menu srm ON sur.role_id=srm.role_id
+LEFT JOIN sys_menu sm ON srm.menu_id = sm.menu_id
+WHERE sur.user_id = #{userId}
+
+# 第二种方法：拆分多步查出
+# 第一步：
+SELECT sur.`role_id` FROM sys_user_role sur WHERE sur.user_id = 2
+# 第二步：
+SELECT srm.`menu_id` FROM sys_role_menu srm 
+WHERE srm.`role_id` IN (SELECT sur.`role_id` FROM sys_user_role sur WHERE sur.user_id = 2)
+# 第三步：最终结果
+SELECT sm.`perms` FROM sys_menu sm 
+WHERE sm.`menu_id` IN 
+(SELECT srm.`menu_id` FROM sys_role_menu srm 
+WHERE srm.`role_id` IN 
+(SELECT sur.`role_id` FROM sys_user_role sur WHERE sur.user_id = 2))
+```
+
+**总结：**显然，使用LEFT...JOIN...ON...不仅更加容易理解和维护，而且运行效率也更高。
+
+## 18.14 关于HTTP请求
+
+### 18.14.1 Filter与Interceptor的区别
+
+**Filter（过滤器）和Interceptor（拦截器）的区别：**
+
+1. Filter是基于函数回调的，而Interceptor则是基于Java反射的。
+2. Filter依赖于Servlet容器，而Interceptor不依赖于Servlet容器。
+3. Filter对几乎所有的请求起作用，而Interceptor只能对action请求起作用。
+4. Interceptor可以访问Action的上下文，值栈里的对象，而Filter不能。
+5. 在action的生命周期里，Interceptor可以被多次调用，而Filter只能在容器初始化时调用一次。
+6.  Filter和Interceptor的执行顺序：过滤前-->拦截前-->action执行-->拦截后-->过滤后。
+
+### 18.14.2 关于OPTIONS请求
+
+POST请求属于HTTP请求中的复杂请求，HTTP协议在浏览器中对复杂请求会先发起一次OPTIONS的预请求，发起OPTIONS请求常会报403错误。针对这种情况，通常是在DispacerServlet中没有找都到执行OPTIONS请求的方法。
+在做跨域处理时，通常配置好跨域请求头信息后，常常忽略在Spring MVC中添加对OPTIONS请求的处理。 解决办法有三种：
+
+1. 方法一：在Filter中添加对OPTIONS请求的支持处理；（需要搞清楚Filter过滤器和Interceptor拦截器的区别）。
+2. 方法二：在Interceptor中添加对OPTIONS请求的支持处理。
+3. 方法三：添加一个支持OPTIONS的ReqeuestMapping（即在控制器中对OPTIONS请求做处理）。
+
+本项目采用的是第一种解决方案：在`Oauth2Filter.java`中放行OPTIONS请求。
 
 
 
@@ -3544,7 +3845,7 @@ public class RedisUtilsTest {
 |   Ctrl+Alt+V    |          快速生成方法返回值，生成变量名          |    Ctrl+Shift+V     |          从历史记录中粘贴          |
 |   Ctrl+Alt+T    | 选中代码块或者光标所在行，快速添加try...catch... |  Ctrl+Shift+Enter   |               新建行               |
 | ALT+SHIFT+ENTER |                     抛出异常                     |  Ctrl+Alter+Enter   |         在当前行前面新建行         |
-|  Ctrl+shift+F9  |                     重新编译                     |                     |                                    |
+|  Ctrl+shift+F9  |                     重新编译                     |    Ctrl+Shift+U     |             大小写转换             |
 
 ## 19.2 实时代码模板
 
