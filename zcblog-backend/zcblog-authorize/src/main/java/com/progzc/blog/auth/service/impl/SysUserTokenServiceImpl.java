@@ -49,7 +49,7 @@ public class SysUserTokenServiceImpl implements SysUserTokenService {
         redisUtils.set(tokenKey, userId, EXPIRE);
         redisUtils.set(userIdKey, token, EXPIRE);
 
-        return Result.ok().put("token", token).put("expire",EXPIRE);
+        return Result.ok().put("token", token).put("expire", EXPIRE);
     }
 
     /**
@@ -60,7 +60,7 @@ public class SysUserTokenServiceImpl implements SysUserTokenService {
     @Override
     public SysUserToken queryByToken(String token) {
         String userId = redisUtils.getObj(RedisKeyConstants.MANAGE_SYS_USER_TOKEN + token, String.class);
-        if (StringUtils.isEmpty(userId)){
+        if (StringUtils.isEmpty(userId)) {
             return null;
         }
         SysUserToken sysUserToken = new SysUserToken();

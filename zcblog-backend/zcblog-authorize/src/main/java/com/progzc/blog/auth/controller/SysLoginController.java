@@ -47,7 +47,6 @@ public class SysLoginController extends AbstractController {
 
     /**
      * 获取验证码
-     *
      * @param uuid
      * @return
      * @throws IOException
@@ -67,7 +66,6 @@ public class SysLoginController extends AbstractController {
 
     /**
      * 提交表单，进行登录
-     *
      * @param form
      * @return
      */
@@ -79,8 +77,8 @@ public class SysLoginController extends AbstractController {
         }
 
         SysUser sysUser = sysUserMapper.selectOne(new QueryWrapper<SysUser>()
-                                       .lambda()
-                                       .eq(SysUser::getUsername, form.getUsername()));
+                .lambda()
+                .eq(SysUser::getUsername, form.getUsername()));
         // 用户不存在或密码不正确
         if (sysUser == null || !sysUser.getPassword().equals(new Sha256Hash(form.getPassword(), sysUser.getSalt()).toString())) {
             return Result.error(ErrorEnum.USERNAME_OR_PASSWORD_WRONG);

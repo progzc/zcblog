@@ -29,7 +29,7 @@ public class Oauth2Realm extends AuthorizingRealm {
     private ShiroService shiroService;
 
     /**
-     * 使用自定义认证令牌作为数据源
+     * 识别登录数据类型
      * @param authenticationToken
      * @return
      */
@@ -66,7 +66,7 @@ public class Oauth2Realm extends AuthorizingRealm {
         SysUserToken sysUserToken = shiroService.queryByToken(token);
 
         // 若token失效
-        if (sysUserToken == null){
+        if (sysUserToken == null) {
             log.debug("token已失效，请重新登录");
             throw new IncorrectCredentialsException("token已失效，请重新登录");
         }
@@ -74,7 +74,7 @@ public class Oauth2Realm extends AuthorizingRealm {
         // 根据用户id从数据库查询用户信息
         SysUser sysUser = shiroService.queryByUserId(sysUserToken.getUserId());
         // 若用户账号被锁定
-        if(Boolean.FALSE.equals(sysUser.getStatus())){
+        if (Boolean.FALSE.equals(sysUser.getStatus())) {
             log.debug("账号已被锁定，请联系管理员");
             throw new LockedAccountException("账号已被锁定，请联系管理员");
         }

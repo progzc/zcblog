@@ -58,7 +58,7 @@ public class SysCaptchaServiceImpl implements SysCaptchaService {
      */
     @Override
     public boolean validate(String uuid, String captcha) {
-        if (StringUtils.isEmpty(uuid) || StringUtils.isEmpty(captcha)){
+        if (StringUtils.isEmpty(uuid) || StringUtils.isEmpty(captcha)) {
             return false;
         }
         String captchaCache = redisUtils.getObj(RedisKeyConstants.MANAGE_SYS_CAPTCHA + uuid, String.class);

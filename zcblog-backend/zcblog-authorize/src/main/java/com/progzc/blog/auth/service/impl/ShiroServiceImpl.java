@@ -76,11 +76,11 @@ public class ShiroServiceImpl implements ShiroService {
     public Set<String> getUserPerms(Long userId) {
         List<String> userPerms;
         // 若用户是超级管理员
-        if (SysConstants.SUPER_ADMIN.equals(userId)){
+        if (SysConstants.SUPER_ADMIN.equals(userId)) {
             List<SysMenu> sysMenus = sysMenuMapper.selectList(null);
             userPerms = new ArrayList<>(sysMenus.size());
             sysMenus.forEach(sysMenu -> userPerms.add(sysMenu.getPerms()));
-        }else {
+        } else {
             userPerms = sysUserMapper.queryPermsByUserId(userId);
         }
 
