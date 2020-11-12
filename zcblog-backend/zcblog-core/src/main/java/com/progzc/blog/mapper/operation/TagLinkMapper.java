@@ -1,7 +1,7 @@
 package com.progzc.blog.mapper.operation;
 
-import com.progzc.blog.entity.operation.TagLink;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.progzc.blog.entity.operation.TagLink;
 import org.apache.ibatis.annotations.Mapper;
 
 /**

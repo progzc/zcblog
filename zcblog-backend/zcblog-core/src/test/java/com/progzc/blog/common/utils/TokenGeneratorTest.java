@@ -12,7 +12,7 @@ import org.junit.Test;
 public class TokenGeneratorTest {
 
     @Test
-    public void test(){
+    public void test() {
         String token = TokenGeneratorUtils.generateValue();
         System.out.println(token.length());
         System.out.println(token);

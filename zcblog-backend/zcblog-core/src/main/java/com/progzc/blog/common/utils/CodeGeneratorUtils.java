@@ -29,13 +29,14 @@ import java.util.List;
 public class CodeGeneratorUtils {
 
     public static String projectPath = System.getProperty("user.dir");
+
     /**
      * 根据表名自动生成代码
      * @param tableName
      * @param moduleName
      * @param category
      */
-    public static void codeGenerator(String tableName, String moduleName, String category){
+    public static void codeGenerator(String tableName, String moduleName, String category) {
         // 代码生成器
         AutoGenerator mpg = new AutoGenerator();
         // 全局配置
@@ -100,10 +101,10 @@ public class CodeGeneratorUtils {
             public String outputFile(TableInfo tableInfo) {
                 StringBuilder xmlfilePath = new StringBuilder();
                 xmlfilePath.append(projectPath)
-                           .append("\\zcblog-backend\\zcblog-core\\src\\main\\resources/mapper\\")
-                           .append(category);
+                        .append("\\zcblog-backend\\zcblog-core\\src\\main\\resources/mapper\\")
+                        .append(category);
                 File file = new File(xmlfilePath.toString());
-                if(!file.exists() || !file.isDirectory()){
+                if (!file.exists() || !file.isDirectory()) {
                     file.mkdirs();
                 }
                 String xmlfileName = tableInfo.getEntityName() + "Mapper" + StringPool.DOT_XML;
@@ -145,18 +146,18 @@ public class CodeGeneratorUtils {
     }
 
     // 自定义TableModule封装tableName、moduleName、category参数
-    static class TableModule{
+    static class TableModule {
         private String tableName;
         private String moduleName;
         private String category;
 
         /**
          * 生成的文件：${outputDir}/${parent}/${moduleName}/${fileType}/${category}/文件名
-         * @param tableName 表名
+         * @param tableName  表名
          * @param moduleName 模块名
-         * @param category 分类
+         * @param category   分类
          */
-        public TableModule(String tableName, String moduleName, String category){
+        public TableModule(String tableName, String moduleName, String category) {
             this.tableName = tableName;
             this.moduleName = moduleName;
             this.category = category;
@@ -166,18 +167,18 @@ public class CodeGeneratorUtils {
     public static void main(String[] args) {
         List<TableModule> list = new ArrayList<TableModule>();
         list.add(new TableModule("article", null, "article"));
-        list.add(new TableModule("gallery", null,  "gallery"));
+        list.add(new TableModule("gallery", null, "gallery"));
         list.add(new TableModule("encrypt", null, "operation"));
         list.add(new TableModule("tag", null, "operation"));
-        list.add(new TableModule("tag_link", null,  "operation"));
-        list.add(new TableModule("log_like", null,  "log"));
-        list.add(new TableModule("log_view", null,  "log"));
-        list.add(new TableModule("oss_resource", null,  "oss"));
-        list.add(new TableModule("sys_menu", null,  "sys"));
-        list.add(new TableModule("sys_role", null,  "sys"));
-        list.add(new TableModule("sys_role_menu", null,  "sys"));
-        list.add(new TableModule("sys_user", null,  "sys"));
-        list.add(new TableModule("sys_user_role", null,  "sys"));
-        list.forEach( e -> codeGenerator(e.tableName, e.moduleName, e.category));
+        list.add(new TableModule("tag_link", null, "operation"));
+        list.add(new TableModule("log_like", null, "log"));
+        list.add(new TableModule("log_view", null, "log"));
+        list.add(new TableModule("oss_resource", null, "oss"));
+        list.add(new TableModule("sys_menu", null, "sys"));
+        list.add(new TableModule("sys_role", null, "sys"));
+        list.add(new TableModule("sys_role_menu", null, "sys"));
+        list.add(new TableModule("sys_user", null, "sys"));
+        list.add(new TableModule("sys_user_role", null, "sys"));
+        list.forEach(e -> codeGenerator(e.tableName, e.moduleName, e.category));
     }
 }

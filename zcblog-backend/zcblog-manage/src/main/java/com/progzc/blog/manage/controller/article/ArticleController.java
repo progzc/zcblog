@@ -16,27 +16,27 @@ import org.springframework.web.bind.annotation.RestController;
 public class ArticleController {
 
     @GetMapping("/test")
-    public void test(){
+    public void test() {
         System.out.println("66666正在进行热部署...");
     }
 
     @GetMapping("/test2")
-    public void test2(){
+    public void test2() {
         System.out.println("2222正在进行热部署...");
     }
 
     @GetMapping("/test3")
-    public void test3(){
+    public void test3() {
         System.out.println("44444444正在进行热部署...");
     }
 
     @GetMapping("/test5")
-    public void test5(){
+    public void test5() {
         System.out.println("bbbb正在进行热部署...");
     }
 
     @GetMapping("/test4")
-    public void test4(){
+    public void test4() {
         System.out.println("333");
     }
 }

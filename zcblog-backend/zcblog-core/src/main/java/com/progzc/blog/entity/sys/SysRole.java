@@ -1,11 +1,9 @@
 package com.progzc.blog.entity.sys;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import java.util.Date;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
-import java.io.Serializable;
+import com.baomidou.mybatisplus.annotation.TableId;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -13,6 +11,8 @@ import lombok.EqualsAndHashCode;
 import org.springframework.data.annotation.Id;
 
 import javax.validation.constraints.NotBlank;
+import java.io.Serializable;
+import java.util.Date;
 
 /**
  * @Description 角色
@@ -23,10 +23,10 @@ import javax.validation.constraints.NotBlank;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@ApiModel(value="SysRole对象", description="角色")
+@ApiModel(value = "SysRole对象", description = "角色")
 public class SysRole implements Serializable {
 
-    private  static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     @ApiModelProperty(value = "主键")
     @TableId(value = "role_id", type = IdType.AUTO)

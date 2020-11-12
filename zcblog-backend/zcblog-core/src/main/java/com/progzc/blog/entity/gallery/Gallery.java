@@ -1,13 +1,6 @@
 package com.progzc.blog.entity.gallery;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import java.util.Date;
-import com.baomidou.mybatisplus.annotation.Version;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.TableLogic;
-import com.baomidou.mybatisplus.annotation.TableField;
-import java.io.Serializable;
+import com.baomidou.mybatisplus.annotation.*;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -16,6 +9,9 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
+
+import java.io.Serializable;
+import java.util.Date;
 
 /**
  * @Description 相册
@@ -26,10 +22,10 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@ApiModel(value="Gallery对象", description="相册")
+@ApiModel(value = "Gallery对象", description = "相册")
 public class Gallery implements Serializable {
 
-    private  static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     @ApiModelProperty(value = "主键")
     @TableId(value = "id", type = IdType.AUTO)

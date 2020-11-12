@@ -1,7 +1,7 @@
 package com.progzc.blog.mapper.oss;
 
-import com.progzc.blog.entity.oss.OssResource;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.progzc.blog.entity.oss.OssResource;
 import org.apache.ibatis.annotations.Mapper;
 
 /**

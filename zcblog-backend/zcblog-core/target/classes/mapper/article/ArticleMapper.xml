@@ -4,22 +4,22 @@
 
     <!-- 通用查询映射结果 -->
     <resultMap id="BaseResultMap" type="com.progzc.blog.entity.article.Article">
-        <id column="id" property="id" />
-        <result column="title" property="title" />
-        <result column="description" property="description" />
-        <result column="author" property="author" />
-        <result column="content" property="content" />
-        <result column="content_format" property="contentFormat" />
-        <result column="read_num" property="readNum" />
-        <result column="like_num" property="likeNum" />
-        <result column="recommend" property="recommend" />
-        <result column="publish" property="publish" />
-        <result column="top" property="top" />
-        <result column="need_encrypt" property="needEncrypt" />
-        <result column="create_time" property="createTime" />
-        <result column="update_time" property="updateTime" />
-        <result column="version" property="version" />
-        <result column="deleted" property="deleted" />
+        <id column="id" property="id"/>
+        <result column="title" property="title"/>
+        <result column="description" property="description"/>
+        <result column="author" property="author"/>
+        <result column="content" property="content"/>
+        <result column="content_format" property="contentFormat"/>
+        <result column="read_num" property="readNum"/>
+        <result column="like_num" property="likeNum"/>
+        <result column="recommend" property="recommend"/>
+        <result column="publish" property="publish"/>
+        <result column="top" property="top"/>
+        <result column="need_encrypt" property="needEncrypt"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="version" property="version"/>
+        <result column="deleted" property="deleted"/>
     </resultMap>
 
     <!-- 通用查询结果列 -->

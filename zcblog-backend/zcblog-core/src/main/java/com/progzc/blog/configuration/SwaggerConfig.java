@@ -44,7 +44,7 @@ public class SwaggerConfig implements WebMvcConfigurer {
 
     // 配置Swagger的Docket的Bean实例（每一个Docket的Bean实例对应于一个分组，这样可以方便协同开发）
     @Bean
-    public Docket createRestApiGroup1(Environment environment){
+    public Docket createRestApiGroup1(Environment environment) {
         // 设置要显示的Swagger环境
         Profiles profiles = Profiles.of("dev", "test");
         // 获取项目的环境

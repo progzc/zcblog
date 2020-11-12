@@ -4,12 +4,12 @@
 
     <!-- 通用查询映射结果 -->
     <resultMap id="BaseResultMap" type="com.progzc.blog.entity.log.LogLike">
-        <id column="id" property="id" />
-        <result column="type" property="type" />
-        <result column="params" property="params" />
-        <result column="time" property="time" />
-        <result column="ip" property="ip" />
-        <result column="create_time" property="createTime" />
+        <id column="id" property="id"/>
+        <result column="type" property="type"/>
+        <result column="params" property="params"/>
+        <result column="time" property="time"/>
+        <result column="ip" property="ip"/>
+        <result column="create_time" property="createTime"/>
     </resultMap>
 
     <!-- 通用查询结果列 -->

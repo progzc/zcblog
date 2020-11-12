@@ -20,7 +20,6 @@ public class TokenGeneratorUtils {
 
     /**
      * 根据随机UUID生成token
-     *
      * @return
      */
     public static String generateValue() {

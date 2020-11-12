@@ -4,14 +4,14 @@
 
     <!-- 通用查询映射结果 -->
     <resultMap id="BaseResultMap" type="com.progzc.blog.entity.sys.SysMenu">
-        <id column="menu_id" property="menuId" />
-        <result column="parent_id" property="parentId" />
-        <result column="name" property="name" />
-        <result column="url" property="url" />
-        <result column="perms" property="perms" />
-        <result column="type" property="type" />
-        <result column="icon" property="icon" />
-        <result column="order_num" property="orderNum" />
+        <id column="menu_id" property="menuId"/>
+        <result column="parent_id" property="parentId"/>
+        <result column="name" property="name"/>
+        <result column="url" property="url"/>
+        <result column="perms" property="perms"/>
+        <result column="type" property="type"/>
+        <result column="icon" property="icon"/>
+        <result column="order_num" property="orderNum"/>
     </resultMap>
 
     <!-- 通用查询结果列 -->

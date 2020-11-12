@@ -26,7 +26,7 @@ public class HttpContextUtils {
      * 获取域名
      * @return
      */
-    public static String getDomain(){
+    public static String getDomain() {
         HttpServletRequest request = getHttpServletRequest();
         StringBuffer url = request.getRequestURL();
         return url.delete(url.length() - request.getRequestURI().length(), url.length()).toString();
@@ -36,7 +36,7 @@ public class HttpContextUtils {
      * 获取源请求地址
      * @return
      */
-    public static String getOrigin(){
+    public static String getOrigin() {
         HttpServletRequest httpServletRequest = getHttpServletRequest();
         return httpServletRequest.getHeader("Origin");
     }

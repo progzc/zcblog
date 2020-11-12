@@ -13,6 +13,7 @@ import lombok.Data;
 @Data
 public class MyException extends RuntimeException {
 
+    private static final long serialVersionUID = -8502128347608362068L;
     private String msg;
     /**
      * 默认异常是服务器内部错误

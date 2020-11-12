@@ -14,7 +14,7 @@ public class DateUtils {
 
     /**
      * 格式化日期
-     * @param date 需要格式化的日期
+     * @param date    需要格式化的日期
      * @param pattern 格式化形式，如
      * @return
      */

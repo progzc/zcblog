@@ -23,7 +23,6 @@ public class JsonUtils {
 
     /**
      * Json字符串转换为Object（不包含集合）
-     *
      * @param jsonString 转换前的字符串
      * @param clazz      转换后的Class对象
      * @param <T>        转换后的对象类型
@@ -41,7 +40,6 @@ public class JsonUtils {
 
     /**
      * Object（包含集合）转换为Json字符串
-     *
      * @param obj 转换前的对象
      * @return 转换后的Json字符串
      */
@@ -60,14 +58,14 @@ public class JsonUtils {
 
     /**
      * json字符串转化为Collection<JavaBean>
-     * @param jsonString json字符串
+     * @param jsonString      json字符串
      * @param collectionClass Collection的类型
-     * @param elementClasses JavaBean的类型
+     * @param elementClasses  JavaBean的类型
      * @param <T>
      * @param <E>
      * @return
      */
-    public static <T,E> T toObjArray(String jsonString, Class<T> collectionClass, Class<E>... elementClasses){
+    public static <T, E> T toObjArray(String jsonString, Class<T> collectionClass, Class<E>... elementClasses) {
         try {
             JavaType javaType = objMapper.getTypeFactory().constructParametricType(collectionClass, elementClasses);
             return objMapper.readValue(jsonString, javaType);

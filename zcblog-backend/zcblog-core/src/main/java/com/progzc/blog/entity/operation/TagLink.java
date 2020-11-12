@@ -1,19 +1,15 @@
 package com.progzc.blog.entity.operation;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import java.util.Date;
-import com.baomidou.mybatisplus.annotation.Version;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.TableLogic;
-import com.baomidou.mybatisplus.annotation.TableField;
-import java.io.Serializable;
+import com.baomidou.mybatisplus.annotation.*;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import org.springframework.data.annotation.Id;
+
+import java.io.Serializable;
+import java.util.Date;
 
 /**
  * @Description 标签多对多维护表
@@ -24,10 +20,10 @@ import org.springframework.data.annotation.Id;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@ApiModel(value="TagLink对象", description="标签多对多维护表")
+@ApiModel(value = "TagLink对象", description = "标签多对多维护表")
 public class TagLink implements Serializable {
 
-    private  static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     @ApiModelProperty(value = "主键")
     @TableId(value = "id", type = IdType.AUTO)

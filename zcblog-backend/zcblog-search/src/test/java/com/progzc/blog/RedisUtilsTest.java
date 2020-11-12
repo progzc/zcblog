@@ -35,8 +35,8 @@ public class RedisUtilsTest {
      * 测试普通字符串
      */
     @Test
-    public void test1(){
-        redisUtils.set("abc", "abc11111", 60*5L);
+    public void test1() {
+        redisUtils.set("abc", "abc11111", 60 * 5L);
         String str = redisUtils.getObj("abc", String.class);
         System.out.println(str); // 输出abc11111
     }
@@ -45,14 +45,14 @@ public class RedisUtilsTest {
      * 测试对象
      */
     @Test
-    public void test2(){
+    public void test2() {
         SysLoginForm sysLoginForm = new SysLoginForm();
         sysLoginForm.setCaptcha("abcde");
         sysLoginForm.setUsername("admin123");
         sysLoginForm.setPassword("admin123");
         sysLoginForm.setUuid("uuid");
 
-        redisUtils.set("abc2", sysLoginForm, 60*5L);
+        redisUtils.set("abc2", sysLoginForm, 60 * 5L);
         SysLoginForm str2 = redisUtils.getObj("abc2", SysLoginForm.class);
         System.out.println(str2);
     }
@@ -61,7 +61,7 @@ public class RedisUtilsTest {
      * 测试集合
      */
     @Test
-    public void test3(){
+    public void test3() {
         List<SysLoginForm> list = new ArrayList<>();
         for (int i = 0; i < 4; i++) {
             SysLoginForm sysLoginForm = new SysLoginForm();
@@ -71,7 +71,7 @@ public class RedisUtilsTest {
             sysLoginForm.setUuid("uuid" + i);
             list.add(sysLoginForm);
         }
-        redisUtils.set("abc3", list, 60*5L);
+        redisUtils.set("abc3", list, 60 * 5L);
         redisUtils.getObj("abc3", SysLoginForm.class); // 报异常
     }
 
@@ -89,7 +89,7 @@ public class RedisUtilsTest {
             sysLoginForm.setUuid("uuid" + i);
             list.add(sysLoginForm);
         }
-        redisUtils.set("abc3", list, 60*5L);
+        redisUtils.set("abc3", list, 60 * 5L);
         String str4 = redisUtils.getObj("abc3", String.class);
         JavaType javaType = getCollectionType(ArrayList.class, SysLoginForm.class);
         List<SysLoginForm> queryList = objMapper.readValue(str4, javaType);
@@ -104,7 +104,7 @@ public class RedisUtilsTest {
      * 测试集合
      */
     @Test
-    public void test5(){
+    public void test5() {
         List<SysLoginForm> list = new ArrayList<>();
         for (int i = 0; i < 4; i++) {
             SysLoginForm sysLoginForm = new SysLoginForm();
@@ -114,7 +114,7 @@ public class RedisUtilsTest {
             sysLoginForm.setUuid("uuid" + i);
             list.add(sysLoginForm);
         }
-        redisUtils.set("abc3", list, 60*5L);
+        redisUtils.set("abc3", list, 60 * 5L);
         String str5 = redisUtils.getObj("abc3", String.class);
         ArrayList<SysLoginForm> queryList = JsonUtils.toObjArray(str5, ArrayList.class, SysLoginForm.class);
         queryList.forEach(System.out::println);

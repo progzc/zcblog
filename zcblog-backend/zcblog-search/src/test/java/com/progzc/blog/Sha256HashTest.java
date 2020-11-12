@@ -25,7 +25,7 @@ public class Sha256HashTest {
     private SysUserMapper sysUserMapper;
 
     @Test
-    public void test(){
+    public void test() {
 
         String username = "admin123";
         String password = "admin123";

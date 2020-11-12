@@ -1,7 +1,7 @@
 package com.progzc.blog.mapper.gallery;
 
-import com.progzc.blog.entity.gallery.Gallery;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.progzc.blog.entity.gallery.Gallery;
 import org.apache.ibatis.annotations.Mapper;
 
 /**

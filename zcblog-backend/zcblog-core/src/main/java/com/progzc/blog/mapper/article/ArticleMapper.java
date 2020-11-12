@@ -1,7 +1,7 @@
 package com.progzc.blog.mapper.article;
 
-import com.progzc.blog.entity.article.Article;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.progzc.blog.entity.article.Article;
 import org.apache.ibatis.annotations.Mapper;
 
 /**

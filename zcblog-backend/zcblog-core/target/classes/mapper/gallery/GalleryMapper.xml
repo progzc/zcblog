@@ -4,14 +4,14 @@
 
     <!-- 通用查询映射结果 -->
     <resultMap id="BaseResultMap" type="com.progzc.blog.entity.gallery.Gallery">
-        <id column="id" property="id" />
-        <result column="srl_url" property="srlUrl" />
-        <result column="thumb_url" property="thumbUrl" />
-        <result column="description" property="description" />
-        <result column="create_time" property="createTime" />
-        <result column="update_time" property="updateTime" />
-        <result column="version" property="version" />
-        <result column="deleted" property="deleted" />
+        <id column="id" property="id"/>
+        <result column="srl_url" property="srlUrl"/>
+        <result column="thumb_url" property="thumbUrl"/>
+        <result column="description" property="description"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="version" property="version"/>
+        <result column="deleted" property="deleted"/>
     </resultMap>
 
     <!-- 通用查询结果列 -->

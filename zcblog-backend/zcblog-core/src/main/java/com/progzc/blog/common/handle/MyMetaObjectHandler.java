@@ -25,11 +25,11 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
     @Override
     public void insertFill(MetaObject metaObject) {
         log.info("start insert fill...");
-        if(metaObject.hasGetter("createTime")){
+        if (metaObject.hasGetter("createTime")) {
             setFieldValByName("createTime", new Date(), metaObject);
         }
 
-        if(metaObject.hasGetter("updateTime")){
+        if (metaObject.hasGetter("updateTime")) {
             setFieldValByName("updateTime", new Date(), metaObject);
         }
 
@@ -42,7 +42,7 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
     @Override
     public void updateFill(MetaObject metaObject) {
         log.info("start update fill...");
-        if(metaObject.hasGetter("updateTime")){
+        if (metaObject.hasGetter("updateTime")) {
             setFieldValByName("updateTime", new Date(), metaObject);
         }
     }

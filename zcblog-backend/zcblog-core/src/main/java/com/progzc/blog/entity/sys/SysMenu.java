@@ -4,12 +4,13 @@ import com.baomidou.mybatisplus.annotation.FieldStrategy;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
-import java.io.Serializable;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.data.annotation.Id;
+
+import java.io.Serializable;
 
 /**
  * @Description 菜单管理
@@ -20,10 +21,10 @@ import org.springframework.data.annotation.Id;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@ApiModel(value="SysMenu对象", description="菜单管理")
+@ApiModel(value = "SysMenu对象", description = "菜单管理")
 public class SysMenu implements Serializable {
 
-    private  static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     @ApiModelProperty(value = "主键,菜单id")
     @TableId(value = "menu_id", type = IdType.AUTO)

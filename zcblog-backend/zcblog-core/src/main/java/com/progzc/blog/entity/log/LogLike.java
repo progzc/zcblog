@@ -1,17 +1,17 @@
 package com.progzc.blog.entity.log;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import java.util.Date;
-import com.baomidou.mybatisplus.annotation.Version;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
-import java.io.Serializable;
+import com.baomidou.mybatisplus.annotation.TableId;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.data.annotation.Id;
+
+import java.io.Serializable;
+import java.util.Date;
 
 /**
  * @Description 点赞日志
@@ -22,10 +22,10 @@ import org.springframework.data.annotation.Id;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@ApiModel(value="LogLike对象", description="点赞日志")
+@ApiModel(value = "LogLike对象", description = "点赞日志")
 public class LogLike implements Serializable {
 
-    private  static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     @ApiModelProperty(value = "主键")
     @TableId(value = "id", type = IdType.AUTO)

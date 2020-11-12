@@ -15,10 +15,9 @@ public class JsonUtilsTest {
      * 需要区分普通字符串与json字符串之间的区别；
      * JsonUtils只能实现json字符串与对象之间的转化；
      * JsonUtils对于普通字符串与对象之间的转化可能会报异常（这个我在Redis工具类中进行了过滤操作）
-     *
      */
     @Test
-    public void test1(){
+    public void test1() {
         // 以下三种情况都是普通字符串与对象之间的转化，不要使用JsonUtils进行转换
         Integer s1 = JsonUtils.toObj("34", Integer.class);
         String s2 = JsonUtils.toObj("345", String.class); // 这个不会报错

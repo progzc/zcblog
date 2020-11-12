@@ -38,7 +38,7 @@ public class RedisConfig {
      * @return redisTemplate Bean
      */
     @Bean
-    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory){
+    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
         // 为了开发方便，一般直接使用<String, Object>
         RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
         redisTemplate.setConnectionFactory(redisConnectionFactory);
@@ -64,7 +64,7 @@ public class RedisConfig {
 
     @Bean
     public ValueOperations<String, Object> valueOperations(RedisTemplate<String, Object> redisTemplate) {
-        return  redisTemplate.opsForValue(); // 简化原生String类型的API调用
+        return redisTemplate.opsForValue(); // 简化原生String类型的API调用
     }
 
     @Bean

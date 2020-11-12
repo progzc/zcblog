@@ -51,10 +51,10 @@ spring:
         max-idle: 10  # 连接池中的最大空闲连接数
         min-idle: 5  # 连接池中的最小空闲连接数
   # 配置Elasticsearch
-#  data:
-#    elasticsearch:
-#      cluster-name: zcblog-cluster  # 配置集群名称
-#      cluster-nodes: 127.0.0.1:9301  # 配置集群中某一节点的地址
+  #  data:
+  #    elasticsearch:
+  #      cluster-name: zcblog-cluster  # 配置集群名称
+  #      cluster-nodes: 127.0.0.1:9301  # 配置集群中某一节点的地址
   # 配置RabbitMQ
   rabbitmq:
     host: 192.168.175.135  # 配置主机（本项目RabbitMQ运行在虚拟机上）

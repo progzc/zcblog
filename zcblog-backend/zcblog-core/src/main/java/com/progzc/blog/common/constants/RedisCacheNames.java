@@ -27,6 +27,6 @@ public class RedisCacheNames {
     /**
      * 标签空间名称
      */
-    public  final static String TAG = PREFIX + "TAG";
+    public final static String TAG = PREFIX + "TAG";
 
 }

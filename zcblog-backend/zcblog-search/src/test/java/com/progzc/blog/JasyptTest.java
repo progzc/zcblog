@@ -33,7 +33,7 @@ public class JasyptTest {
      * 解密测试
      */
     @Test
-    public void testJasypt(){
+    public void testJasypt() {
         System.out.println("accessKey:" + accessKey);
         System.out.println("secretKey:" + secretKey);
     }

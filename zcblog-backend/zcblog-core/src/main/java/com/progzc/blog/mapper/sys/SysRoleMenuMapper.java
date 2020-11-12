@@ -1,7 +1,7 @@
 package com.progzc.blog.mapper.sys;
 
-import com.progzc.blog.entity.sys.SysRoleMenu;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.progzc.blog.entity.sys.SysRoleMenu;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
