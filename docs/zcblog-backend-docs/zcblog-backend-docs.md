@@ -1064,11 +1064,61 @@ GET /articles?published=true  # 查询已发布的文章；URL采用一级URL+�
 
 ![image-20201103210639390](zcblog-backend-docs.assets/image-20201103210639390.png)
 
-## 2.7 添加实时翻译插件
+## 2.7 添加Translation插件
 
 在IDEA中添加`Translation插件`，插件安装后，选中对象，按下`Ctrl + Shift +Y`快捷键即可实时翻译。
 
 ![image-20201109213238604](zcblog-backend-docs.assets/image-20201109213238604.png)
+
+## 2.8 使用代码格式化插件
+
+为了使代码风格统一，增加观赏感，使用`google-java-format`插件格式化代码。使用步骤如下：
+
+- 第1步： 安装`google-java-foemat`插件。
+
+![image-20201112102413139](zcblog-backend-docs.assets/image-20201112102413139.png)
+
+- 第2步：在Github上的[google-java-format](https://github.com/google/google-java-format)仓库下载`intellij-java-google-style.xml`文件。
+
+![image-20201112105742256](zcblog-backend-docs.assets/image-20201112105742256.png)
+
+- 第3步：在Code Style中导入`intellij-java-google-style.xml`样式，Scheme命名为`GoogleStyle`，选择`GoogleStyle`作为默认的Code Style。重启IDEA，该样式即生效。使用时采用快捷键`Ctrl+Alt+L`即可；停用`google-java-format`插件并且删除`GoogleStyle` Scheme即可使该Code Style失效（**需要指出的是，本项目最终并未采用`google-java-format`来格式化代码。仍然使用的是IDEA内置的默认格式化工具**）。
+
+![image-20201112104627906](zcblog-backend-docs.assets/image-20201112104627906.png)
+
+> 参考文章博客：[强推16款IDEA插件](https://blog.csdn.net/likun557/article/details/106913248/)、[IDEA代码风格为Google风格](https://blog.csdn.net/chenhao_c_h/article/details/81475896)、[google-java-format插件的使用](https://blog.csdn.net/weter_drop/article/details/109508543)
+
+## 2.9 使用Save Action插件
+
+在多人协作开发过程中，需要多人维护同一个项目，因此保持良好的代码规范与风格很重要。IntelliJ默认是自动保存的，因此很多时候修改后就出现：代码没有格式化、存在无用的import。`Save Action`就是这样一款可以帮助我们在保存时进行代码自动化优化的插件。使用步骤如下：
+
+- 第1步：安装`Save Action`插件。
+- 第2步：配置`Save Action`插件。
+
+![image-20201112112352470](zcblog-backend-docs.assets/image-20201112112352470.png)
+
+- 第3步：配置启用`Save Action`。
+
+![image-20201112112825839](zcblog-backend-docs.assets/image-20201112112825839.png)
+
+**注意事项：**格式化代码时，IDEA会默认将方法上的文字注释进行换行，显得代码不够紧凑，可以取消勾选`After description`保证在格式化代码时方法注释上不会自动换行。
+
+![image-20201112122458552](zcblog-backend-docs.assets/image-20201112122458552.png)
+
+> 参考博客文章：[IntelliJ Save Action的使用](https://blog.csdn.net/hustzw07/article/details/82824713)、[IDEA格式化代码时方法上的文字注释换行的问题](https://www.cnblogs.com/cmmplb/p/11770504.html)
+
+## 2.10 其他插件
+
+优秀的插件可以提高工作效率，下面这些插件可以按需取用：
+
+- **FindBugs：**帮助查找代码中隐藏的Bug。
+- **PMD：**静态源代码分析器。PMD包含内置规则集，并支持编写自定义规则的功能。PMD不报告编译错误，因为它只能处理格式正确的源文件。PMD报告的问题是效率很低的代码或不良的编程习惯，如果累积这些问题，它们可能会降低程序的性能和可维护性。
+- **Grep Console：**用于在输出中查找一些信息。
+- **GsonFormat：**对一些json对象格式化。
+- **Free mybatis plugin：**类似于MyBatisX插件（由MyBatisPlus团队开发），使Mapper文件可以直接跳转到对应的XML SQL语句。
+- **Code Glance：**代码缩放图，类似于Sublime Text。
+- **Mybatis Log plugin：**打印Mybatis 执行的sql语句（MyBatisPlus已集成了此功能）。
+- **VisualVM Launcher：**系统调优工具。
 
 # 3 代码生成器
 
@@ -1937,6 +1987,485 @@ public class CorsConfig implements WebMvcConfigurer {
 > 参考博客文章：[WebMvcConfigurer详解](https://blog.csdn.net/zhangpower1993/article/details/89016503)、[Spring官网doc](https://docs.spring.io/spring-framework/docs/5.2.9.RELEASE/spring-framework-reference/web.html#mvc-cors)、[@CrossOrigin解决跨域问题](https://blog.csdn.net/testcs_dn/article/details/86537605)
 
 # 10 Shiro完成登录与鉴权
+
+本项目使用Shiro完成登录与鉴权。
+
+## 10.1 Shiro一览
+
+### 10.1.1 Shiro框架架构
+
+Shiro框架的组织架构如下：
+
+![image-20201112173421276](zcblog-backend-docs.assets/image-20201112173421276.png)
+
+**核心概念：**
+
+- **Subject：**与SecurityManager进行交互的主体。
+- **SecurityManager：**Shiro的核心，主要进行认证/鉴权的管理、会话管理。SecurityManager是一个继承了Authenticator, Authorizer, SessionManager三个接口的接口。
+- **Authenticator：**认证器，主要进行身份证。
+- **Authorizer：**鉴权器，主要进行鉴权。
+- **Realm：**安全实体数据源，主要用于获取**AuthenticationInfo（认证信息）**和**AuthorizationInfo（授权信息）**。
+- **SessionManager：**会话管理器。
+- **SessionDAO：**会话的接口，可以将session通过jdbc将会话存储到数据库。
+- **CacheManager：**缓存管理。
+- **Cryptography：**密码管理，提高了一套加密/解密的组件。
+
+**其他概念：**
+
+- **Principal：**主体进行认证的**身份信息（具有唯一性）**，例如用户名、手机号、邮箱地址等。
+- **Primary Principal：**身份信息的其中一个，**主身份只能有一个**。
+- **Credential：凭证信息**，例如密码、证书。
+
+## 10.2 配置类ShiroConfig
+
+`ShiroConfig.java`中进行Shiro的相关配置。
+
+### 10.2.1 配置会话管理器
+
+在`ShiroConfig.java`中配置会话管理器（SessionManager Bean）。SessionManager用于管理Shiro中的Session信息。Session也就是我们通常说的会话，会话是用户在使用应用程序一段时间内携带的数据。传统的会话一般是基于Web容器(如：Tomcat)，**Shiro提供的Session可以在任何环境中使用，不再依赖于其他容器**。相关代码如下：
+
+```java
+/**
+ * 配置会话管理器
+ * @return
+ */
+@Bean
+public SessionManager sessionManager() {
+    DefaultWebSessionManager sessionManager = new DefaultWebSessionManager();
+    // 是否定时检查session
+    sessionManager.setSessionValidationSchedulerEnabled(false);
+    return sessionManager;
+}
+```
+
+DefaultWebSessionManager的继承关系如下：
+
+![image-20201112172400079](zcblog-backend-docs.assets/image-20201112172400079.png)
+
+### 10.2.2 配置安全管理器
+
+在`ShiroConfig.java`中配置安全管理器（SecurityManager Bean）。SecurityManager用于进行认证/授权管理、会话管理。
+
+```java
+/**
+ * 配置安全管理器
+ * @param oauth2Realm
+ * @param sessionManager
+ * @return
+ */
+@Bean
+public SecurityManager securityManager(Oauth2Realm oauth2Realm, SessionManager sessionManager) {
+    DefaultWebSecurityManager securityManager = new DefaultWebSecurityManager();
+    securityManager.setRealm(oauth2Realm); // 设置认证与鉴权逻辑
+    securityManager.setSessionManager(sessionManager); // 设置会话管理器
+    return securityManager;
+}
+```
+
+DefaultWebSecurityManager的继承关系如下：
+
+![image-20201112174336328](zcblog-backend-docs.assets/image-20201112174336328.png)
+
+### 10.2.3 配置Shiro过滤器
+
+在`ShiroConfig.java`中配置Shiro过滤器，作用有两个：一是配置过滤器（包括自定义过滤器和Shiro默认的过滤器）；二是设置SecurityManager安全管理器（当过滤器将URL拦截到后会交由SecurityManager处理）。相关代码如下：
+
+```java
+/**
+ * 配置Shiro过滤器
+ * @param securityManager
+ * @return
+ */
+@Bean
+public ShiroFilterFactoryBean shiroFilter(SecurityManager securityManager) {
+    ShiroFilterFactoryBean shiroFilter = new ShiroFilterFactoryBean();
+    shiroFilter.setSecurityManager(securityManager); // 设置安全管理器
+
+    Map<String, Filter> filters = new HashMap<>();
+    filters.put("oauth2", new Oauth2Filter());
+    shiroFilter.setFilters(filters); // 对拦截到的页面请求进行捕获进行认证与鉴权
+
+    Map<String, String> filterMap = new LinkedHashMap<>();
+    // 两个url规则都可以同时匹配同一个url，且只执行第一个
+    filterMap.put("/admin/sys/login", "anon"); // 放行zcblog-front2manage的登录页面
+    filterMap.put("/admin/**", "oauth2"); // zcblog-front2manage的其他页面需要认证和授权
+    filterMap.put("/**", "anon"); // 放行zcblog-front2client项目页面
+    shiroFilter.setFilterChainDefinitionMap(filterMap); // 设置页面请求拦截
+
+    return shiroFilter;
+}
+```
+
+- 关于Shiro默认的过滤器：
+
+|     配置缩写      |          对应的过滤器          | 功能                                                         |
+| :---------------: | :----------------------------: | ------------------------------------------------------------ |
+|     **anon**      |        AnonymousFilter         | 指定url可以匿名访问                                          |
+|     **authc**     |    FormAuthenticationFilter    | 指定url需要form表单登录，默认会从请求中获取`username`、`password`,`rememberMe`等参数并尝试登录，如果登录不了就会跳转到loginUrl配置的路径。我们也可以用这个过滤器做默认的登录逻辑，但是一般都是我们自己在控制器写登录逻辑的，自己写的话出错返回的信息都可以定制嘛。 |
+|    authcBasic     | BasicHttpAuthenticationFilter  | 指定url需要basic登录                                         |
+|      logout       |          LogoutFilter          | 登出过滤器，配置指定url就可以实现退出功能，非常方便          |
+| noSessionCreation |    NoSessionCreationFilter     | 禁止创建会话                                                 |
+|       perms       | PermissionsAuthorizationFilter | 需要指定权限才能访问                                         |
+|       port        |           PortFilter           | 需要指定端口才能访问                                         |
+|       rest        |   HttpMethodPermissionFilter   | 将http请求方法转化成相应的动词来构造一个权限字符串，这个感觉意义不大，有兴趣自己看源码的注释 |
+|       roles       |    RolesAuthorizationFilter    | 需要指定角色才能访问                                         |
+|        ssl        |           SslFilter            | 需要https请求才能访问                                        |
+|       user        |           UserFilter           | 需要已登录或“记住我”的用户才能访问                           |
+**注意事项**：
+
+1. 多个过滤器匹配URL，则第一个过滤器生效（**利用此功能，可以实现放行zcblog-front2client项目页面和zcblog-front2manage的登录页面，而zcblog-front2manage的其他页面需要认证和授权**）。
+2. 自定义过滤器可以将URL拦截下来，获取其中的token，然后交由SecurityManager处理。
+
+> 参考博客文章：[Shiro过滤器](https://www.w3cschool.cn/shiro/oibf1ifh.html)
+
+### 10.2.4 管理Shiro Bean的生命周期
+
+在`ShiroConfig.java`中配置LifecycleBeanPostProcessor Bean，作用是管理Shiro Bean的生命周期。相关代码如下：
+
+```java
+/**
+ * 管理Shiro Bean的生命周期：其实在ShiroBeanConfiguration中已经配置好了，多次一举了
+ * @return
+ */
+@Bean
+public LifecycleBeanPostProcessor lifecycleBeanPostProcessor() {
+    return new LifecycleBeanPostProcessor();
+}
+```
+
+查看源码可知，LifecycleBeanPostProcessor将Initializable和Destroyable的实现类统一在其内部自动分别调用了Initializable.init()和Destroyable.destroy()方法，从而达到管理shiro bean生命周期的目的。
+
+![image-20201112160859566](zcblog-backend-docs.assets/image-20201112160859566.png)
+**那是不是一定要在`ShiroConfig.java`中配置LifecycleBeanPostProcessor Bean呢？**
+
+其实不需要，因为其实Shiro已经在ShiroBeanConfiguration中帮我们配置好了LifecycleBeanPostProcessor Bean。
+
+![image-20201112161800831](zcblog-backend-docs.assets/image-20201112161800831.png)
+
+> 参考博客文章：[Shiro笔记之LifecycleBeanPostProcessor的作用](https://blog.csdn.net/qq_36850813/article/details/93750520)
+
+### 10.2.5 使用AOP代理
+
+在`ShiroConfig.java`中配置DefaultAdvisorAutoProxyCreator Bean，作用是启用AOP代理，寻找所有的Advisor。相关代码如下：
+
+```java
+/**
+ * DefaultAdvisorAutoProxyCreator实现了BeanProcessor接口,
+ * 当ApplicationContext读如所有的Bean配置信息后，这个类将扫描上下文，寻找所有的Advisor
+ * @return
+ */
+@Bean
+@DependsOn({"lifecycleBeanPostProcessor"})
+public DefaultAdvisorAutoProxyCreator defaultAdvisorAutoProxyCreator() {
+    DefaultAdvisorAutoProxyCreator proxyCreator = new DefaultAdvisorAutoProxyCreator();
+    proxyCreator.setProxyTargetClass(true);
+    return proxyCreator;
+}
+```
+
+从继承关系知，**DefaultAdvisorAutoProxyCreator本质是Spring AOP的一个核心类（与Shiro无关）**。DefaultAdvisorAutoProxyCreator实现了BeanProcessor接口，作用是当ApplicationContext读取所有Bean配置信息后，将扫描上下文，寻找所有的Advisor，将这些Advisor应用到所有符合切入点的Bean中（因此必须在lifecycleBeanPostProcessor创建之后创建）。**DefaultAdvisorAutoProxyCreator和AuthorizationAttributeSourceAdvisor共同作用实现了Shiro注解的启用**。
+
+![image-20201112154033811](zcblog-backend-docs.assets/image-20201112154033811.png)
+
+> 参考博客文章：[使用DefaultAdvisorAutoProxyCreator实现spring的自动代理](https://blog.csdn.net/daryl715/article/details/1621610)
+
+### 10.2.6 启用Shiro注解
+
+在`ShiroConfig.java`中配置AuthorizationAttributeSourceAdvisor Bean，作用是启用Shiro注解。相关代码如下：
+
+```java
+/**
+ * 通知，启用Shiro注解
+ * @param securityManager
+ * @return
+ */
+@Bean
+public AuthorizationAttributeSourceAdvisor authorizationAttributeSourceAdvisor(SecurityManager securityManager) {
+    AuthorizationAttributeSourceAdvisor advisor = new AuthorizationAttributeSourceAdvisor();
+    advisor.setSecurityManager(securityManager); // // 设置安全管理器
+    return advisor;
+}
+```
+
+**为什么配置AuthorizationAttributeSourceAdvisor Bean可以启用Shiro注解？**
+
+从下面的继承关系可知：AuthorizationAttributeSourceAdvisor实现了Pointcut和Advisor接口，说明AuthorizationAttributeSourceAdvisor是一个通知器，可以依靠AOP来识别Shiro注解。StaticMethodMatcherPointcut类的类属性classFilter的值是`ClassFilter.TRUE`，表示匹配所有类；getMethodMatcher方法匹配所有加了认证注解的方法。
+
+![image-20201112151745173](zcblog-backend-docs.assets/image-20201112151745173.png)
+
+> 参考博客文章：[使用AuthorizationAttributeSourceAdvisor启用Shiro注解](https://blog.csdn.net/wangjun5159/article/details/51889628)
+
+## 10.3 封装认证令牌Oauth2Token
+
+登录成功后，生成一个token存储在Redis中，并返回给前端用户，vue将token加入到cookie中，后续的每次请求都将携带token的cookie加入到请求头中，ShiroFilter将请求拦截到后，去除请求头中的cookie，交由SecurityManager进行认证与鉴权，认证与鉴权成功后进入到控制器中执行业务代码，最后将响应回写到前端客户。
+
+登录成功后，后续的认证与鉴权都是验证请求头的cookie与Redis中的token是否相对。封装认证令牌如下：
+
+```java
+// 封装认证令牌
+public class Oauth2Token implements AuthenticationToken {
+    private static final long serialVersionUID = 1L;
+    private String token;
+    public Oauth2Token(String token) {
+        this.token = token;
+    }
+
+    // 获取身份信息
+    @Override
+    public Object getPrincipal() {
+        return token;
+    }
+
+    // 获取身份凭证
+    @Override
+    public Object getCredentials() {
+        return token;
+    }
+}
+```
+
+AuthenticationToken的继承关系如下（**比较常用的是用户名和密码组成的登录令牌`UsernamePasswordToken`**）：
+
+![image-20201112213101973](zcblog-backend-docs.assets/image-20201112213101973.png)
+
+## 10.4 自定义过滤器ShiroFilter
+
+AuthenticatingFilter的继承关系如下：
+
+![image-20201112224304348](zcblog-backend-docs.assets/image-20201112224304348.png)
+
+### 10.4.1 判断是否登录
+
+在`ShiroFilter.java`中的**isAccessAllowed方法用来判断是否登录**。
+
+- 若isAccessAllowed方法返回true，则不会再调用onAccessDenied方法，会直接访问控制器。
+- 若isisAccessAllowed方法返回false，则会继续调用onAccessDenied方法。
+
+除了OPTIONS请求（**POST请求的预请求**）直接返回true；其他请求（GET/POST/PUT/PATCH/DELETE）返回false，表示需要登录，进入到onAccessDenied中执行操作。
+
+具体代码如下：
+
+```java
+// 放行OPTIONS请求，其他请求（GET/POST/PUT/PATCH/DELETE）需要登录
+@Override
+protected boolean isAccessAllowed(ServletRequest servletRequest, ServletResponse servletResponse, Object mappedValue) {
+    // POST请求属于HTTP请求中的复杂请求，HTTP协议在浏览器中对复杂请求会先发起一次OPTIONS的预请求，发起OPTIONS请求常会报403错误
+    // 针对这种情况，通常是在DispacerServlet中没有找都到执行OPTIONS请求的方法。
+    // 在做跨域处理时，通常配置好跨域请求头信息后，常常忽略在Spring MVC中添加对OPTIONS请求的处理。
+    // 解决办法有三种：
+    // （1）在Filter中添加对OPTIONS请求的支持处理；（需要搞清楚Filter过滤器和Interceptor拦截器的区别）
+    // （2）在Interceptor中添加对OPTIONS请求的支持处理；
+    // （3）添加一个支持OPTIONS的ReqeuestMapping（即在控制器中对OPTIONS请求做处理）
+    // 本项目采用的是第一种解决方案
+    if (((HttpServletRequest) servletRequest).getMethod().equals(RequestMethod.OPTIONS.name())) {
+        return true;
+    }
+    return false;
+}
+```
+
+> 参考博客文章：[isAccessAllowed和onAccessDenied执行流程](https://blog.csdn.net/qq_40202111/article/details/106397360)
+
+### 10.4.2 判断是否提交登录
+
+在`ShiroFilter.java`中的**onAccessDenied方法用来判断是否提交登录**。
+
+- 若请求头中的token不存在，直接返回false，表示登录失败，并回写错误信息到页面（前台页面跳转到登录页面重新登录）。
+- 若请求头中token存在，则提交登录（**会转到Realm中执行认证和鉴权逻辑**）。
+
+具体代码如下：
+
+```java
+// 提交登录操作
+@Override
+protected boolean onAccessDenied(ServletRequest servletRequest, ServletResponse servletResponse) throws Exception {
+    String token = getRequestToken((HttpServletRequest) servletRequest);
+    // 若token不存在，直接返回401
+    if (StringUtils.isEmpty(token)) {
+        HttpServletResponse httpResponse = (HttpServletResponse) servletResponse;
+        httpResponse.setHeader("Access-Control-Allow-Credentials", "true"); // 允许在跨域响应中携带cookie
+        httpResponse.setHeader("Access-Control-Allow-Origin", HttpContextUtils.getOrigin()); // 允许跨域响应
+        log.debug(ErrorEnum.INVALID_TOKEN.getMsg());
+        String resultJson = JsonUtils.toJson(Result.error(ErrorEnum.INVALID_TOKEN));
+        httpResponse.getWriter().print(resultJson); // 错误信息输出到页面
+        return false;
+    }
+    return executeLogin(servletRequest, servletResponse); // 若token存在，则执行登录
+}
+```
+
+查看源码可知：executeLogin(servletRequest, servletResponse)方法将会从请求头中或取出token与Realm中的new SimpleAuthenticationInfo(sysUser, token, getName())认证信息中的token进行比较，判断是否登录成功。
+
+![image-20201112232144577](zcblog-backend-docs.assets/image-20201112232144577.png)
+
+### 10.4.3 从请求头中获取token
+
+在`ShiroFilter.java`中获取token的代码如下：
+
+```java
+// 获取认证令牌
+@Override
+protected AuthenticationToken createToken(ServletRequest servletRequest, ServletResponse servletResponse) throws Exception {
+    String token = getRequestToken((HttpServletRequest) servletRequest);
+    if (StringUtils.isEmpty(token)) {
+        return null;
+    }
+    return new Oauth2Token(token);
+}
+
+// 从请求头中获取token
+private String getRequestToken(HttpServletRequest httpRequest) {
+    String token = httpRequest.getHeader("token");
+    // 若请求头中token不存在，则从请求参数中获取token
+    if (StringUtils.isEmpty(token)) {
+        token = httpRequest.getParameter("token");
+    }
+    return token;
+}
+```
+
+### 10.4.4 登录失败后的操作
+
+在`ShiroFilter.java`中的**onLoginFailure方法用来执行登录后的操作**。
+
+当Realm中的认证操作执行失败后，onLoginFailure方法中会回写错误到前台页面。
+
+```java
+// 登录失败后的操作
+@Override
+protected boolean onLoginFailure(AuthenticationToken authenticationToken, AuthenticationException e, ServletRequest servletRequest, ServletResponse servletResponse) {
+    HttpServletResponse httpResponnse = (HttpServletResponse) servletResponse;
+    httpResponnse.setContentType("application/json;charset=utf-8");
+    httpResponnse.setHeader("Access-Control-Allow-Credentials", "true"); // 允许在跨域响应中携带cookie
+    httpResponnse.setHeader("Access-Control-Allow-Origin", HttpContextUtils.getOrigin());
+    Throwable throwable = e.getCause() == null ? e : e.getCause();
+    String resultJson = JsonUtils.toJson(Result.error(ErrorEnum.NO_AUTH.getCode(), throwable.getMessage()));
+    try {
+        httpResponnse.getWriter().print(resultJson);
+    } catch (IOException ioException) {
+        log.debug("登录失败", ioException);
+    }
+    return false;
+}
+```
+
+## 10.5 认证/鉴权逻辑
+
+自定义Oauth2Realm**从Redis判断此token是否有效**或**从数据库中判断用户是否被禁用**。
+
+Oauth2Realm继承自Realm，Realm的继承关系如下：
+
+![image-20201112182254214](file://E:/BlogProjects/zcblog/docs/zcblog-backend-docs/zcblog-backend-docs.assets/image-20201112182254214.png?lastModify=1605194542)
+
+### 10.5.1 识别token
+
+由`10.4.2`可以知道：在executeLogin(servletRequest, servletResponse)方法中会执行subject.login(token)，接下来就会执行Oauth2Realm中的supports方法判断该token的类型是否正确，若不正确则直接返回false，返回true则进入到doGetAuthenticationInfo方法中执行认证操作。
+
+```java
+// 识别登录数据类型
+@Override
+public boolean supports(AuthenticationToken authenticationToken) {
+    return authenticationToken instanceof Oauth2Token;
+}
+```
+
+### 10.5.2 认证逻辑
+
+认证逻辑主要包含三个部分：
+
+- 从Redis中查询此token是否有效，如无效则抛出**IncorrectCredentialsException异常**。
+- 从数据库中查询判断用户是否被禁用，若被禁用则抛出**LockedAccountException异常**。
+- 若token有效且用户未被禁用，则**对token进行续期**。
+- 最后返回认证信息，将SimpleAuthenticationInfo(sysUser, token, getName())与subject.login(token)中的token进行比较（从程序代码来看，显然这两个token一定相等）
+
+```java
+// 认证逻辑
+@Override
+protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authenticationToken) throws AuthenticationException {
+    // 根据用户token从Redis获取用户token+用户id信息
+    String token = (String) authenticationToken.getPrincipal();
+    SysUserToken sysUserToken = shiroService.queryByToken(token);
+
+    // 若token失效
+    if (sysUserToken == null) {
+        log.debug("token已失效，请重新登录");
+        throw new IncorrectCredentialsException("token已失效，请重新登录");
+    }
+
+    // 根据用户id从数据库查询用户信息
+    SysUser sysUser = shiroService.queryByUserId(sysUserToken.getUserId());
+    // 若用户账号被锁定
+    if (Boolean.FALSE.equals(sysUser.getStatus())) {
+        log.debug("账号已被锁定，请联系管理员");
+        throw new LockedAccountException("账号已被锁定，请联系管理员");
+    }
+    // 续期
+    shiroService.refreshToken(sysUserToken.getUserId(), token);
+
+    return new SimpleAuthenticationInfo(sysUser, token, getName());
+}
+```
+
+### 10.5.3 鉴权逻辑
+
+鉴权逻辑比较简单，直接根据用户id查询菜单权限即可。
+
+```java
+// 鉴权逻辑
+@Override
+protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
+    SysUser sysUser = (SysUser) principals.getPrimaryPrincipal();
+    Long userId = sysUser.getUserId();
+    Set<String> userPerms = shiroService.getUserPerms(userId);
+    SimpleAuthorizationInfo authorizationInfo = new SimpleAuthorizationInfo();
+    authorizationInfo.setStringPermissions(userPerms);
+    return authorizationInfo;
+}
+```
+
+## 10.6 处理认证/鉴权异常
+
+### 10.6.1 异常类型
+
+可能抛出的异常有：
+
+- 执行executeLogin(servletRequest, servletResponse)可能会抛出**java.lang.IllegalStateException异常**。
+- 执行doGetAuthenticationInfo(AuthenticationToken authenticationToken)可能会抛出**org.apache.shiro.authc.IncorrectCredentialsException异常**和**org.apache.shiro.authc.LockedAccountException**异常。
+
+### 10.6.2 Shiro异常组织结构
+
+shiro中的异常组织结构见下图：
+
+![image-20201113003020946](zcblog-backend-docs.assets/image-20201113003020946.png)
+
+### 10.6.3 异常处理
+
+根据`10.6.2`可知，只需要在全局异常处理类`MyExceptionHandler`中处理Shiro认证与鉴权中的AuthorizationException异常或ShiroException即可。
+
+```java
+// 处理登录与鉴权中出现的异常
+@ExceptionHandler(AuthorizationException.class)
+public Result handleAuthorizationException(AuthorizationException e){
+    log.error(e.getMessage(),e);
+    return Result.exception(ErrorEnum.NO_AUTH);
+}
+```
+
+
+
+## 10.7 源码总结
+
+到此为止，Shiro已经折腾的比较清楚了，这里根据整个登录过程回顾归纳一下认证与鉴权的方法链。
+
+
+
+
+
+
+
+
+
+**总结学习Shiro的方式：**[Shiro官方文档](https://shiro.apache.org/reference.html)、[跟我学Shiro](https://www.w3cschool.cn/shiro/)、[B站Shiro视频](https://www.bilibili.com/video/BV1uz4y197Zm?from=search&seid=12299467433778243095)
 
 
 
@@ -3303,7 +3832,7 @@ GET /索引名/~类型名~/_search
 
 @AutoWried按by type自动注入，而@Resource默认按byName自动注入。
 
-> [@AutoWired和@Resource的区别](https://blog.csdn.net/weixin_40423597/article/details/80643990)
+> 参考博客文章：[@AutoWired和@Resource的区别](https://blog.csdn.net/weixin_40423597/article/details/80643990)
 
 ## 18.2 Test测试下@Autowired失效
 
@@ -3389,7 +3918,7 @@ public <T> T getObj(String key, Class<T> clazz, long expire) {
 ## 18.8 Redis中的缓存策略
 
 - 验证码
-  1. 写入验证码时设置**5分钟**过期。（写入时若未设置过期时间，则默认设置过期时间为1天）
+  1. 写入验证码时设置**5分钟**过期。（写入时若未设置过期时间，则默认设置过期时间为1天，不过程序已经明确写过）
   2. 验证码校验之后（无论校验成功与否），都要从缓存中删掉。
   3. 读取验证码时不设置过期时间。
 
