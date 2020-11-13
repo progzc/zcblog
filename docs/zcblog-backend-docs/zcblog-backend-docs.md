@@ -2451,23 +2451,29 @@ public Result handleAuthorizationException(AuthorizationException e){
 }
 ```
 
-
-
 ## 10.7 源码总结
 
 到此为止，Shiro已经折腾的比较清楚了，这里根据整个登录过程回顾归纳一下认证与鉴权的方法链。
 
+### 10.7.1 Bean初始化顺序
 
+ShiroConfig中的Bean初始化顺序：
 
+lifecycleBeanPostProcessor（**注入Shiro生命管理器**）== 》defaultAdvisorAutoProxyCreator （**注入AOP代理：寻找所有的通知器**） == 》sessionManager（**注入会话管理器**） ==》securityManager（**注入安全管理器**） ==》shirFilter（**注入Shiro过滤器**） ==》authorizationAttributeSourceAdvisor （**注入Shiro通知器**）
 
+### 10.7.2 跨域请求执行过程
 
+跨域请求执行顺序（【】表示可无这一步）：
 
+【OAuth2Filter.isAccessAllowed（**POST预请求OPTIONS**）】 ==》OAuth2Filter.isAccessAllowed（**正常GET/DELETE...请求**） == 》OAuth2Filter.onAccessDenied（**提交登录操作**） ==》OAuth2Filter.createToken（**获取token，封装成Oauth2Token**） ==》OAuth2Filter.getRequestToken（**从请求头获取token**） ==》 OAuth2Realm.supports（**判断Realm中Oauth2Token的类型**） ==》OAuth2Realm.doGetAuthenticationInfo（**获取数据源进行认证**） ==》【OAuth2Filter.onLoginFailure（**认证失败**）】 ==》OAuth2Realm.doGetAuthorizationInfo（**进行鉴权**）==》【OAuth2Filter.onLoginSuccess（**认证成功**）】
 
+### 10.7.3 图解跨域请求过程
 
+![zcblog-登录认证鉴权逻辑](zcblog-backend-docs.assets/zcblog-登录认证鉴权逻辑.png)
 
-**总结学习Shiro的方式：**[Shiro官方文档](https://shiro.apache.org/reference.html)、[跟我学Shiro](https://www.w3cschool.cn/shiro/)、[B站Shiro视频](https://www.bilibili.com/video/BV1uz4y197Zm?from=search&seid=12299467433778243095)
-
-
+> **总结学习源码的方法**：分析类的继承关系 + 打印log + Debug断点步入
+>
+> **总结学习Shiro的方式：**[Shiro官方文档](https://shiro.apache.org/reference.html)、[跟我学Shiro](https://www.w3cschool.cn/shiro/)、[B站Shiro视频](https://www.bilibili.com/video/BV1uz4y197Zm?from=search&seid=12299467433778243095)
 
 # 11 Spring 缓存
 
@@ -3875,6 +3881,10 @@ GET /索引名/~类型名~/_search
 - **Evaluate Expression...：**计算表达式。作用：设置变量，在计算表达式里，可以**改变变量的值**，这样有时候就能很方便我们去调试各种值的情况。
 - **条件断点：**右键单击断点处，可以**设置进入断点的条件**。
 - **View Breakpoints：**可以对断点进行管理。作用：可以用来**一键清除所有断点**。
+
+在IDEA中可以设置Step时忽略哪些包：
+
+![image-20201113121935966](zcblog-backend-docs.assets/image-20201113121935966.png)
 
 ## 18.7 字符串与json字符串Bug
 
