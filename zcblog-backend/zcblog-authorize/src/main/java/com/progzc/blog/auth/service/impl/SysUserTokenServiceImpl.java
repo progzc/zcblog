@@ -23,7 +23,7 @@ public class SysUserTokenServiceImpl implements SysUserTokenService {
     /**
      * token有效期是12h
      */
-    private static final long EXPIRE = 3600 * 12L;
+    private static final long EXPIRE = 60 * 60 * 12L;
 
     @Autowired
     private RedisUtils redisUtils;
@@ -78,6 +78,17 @@ public class SysUserTokenServiceImpl implements SysUserTokenService {
     public void refreshToken(Long userId, String token) {
         redisUtils.updateExpire(RedisKeyConstants.MANAGE_SYS_USER_TOKEN + token);
         redisUtils.updateExpire(RedisKeyConstants.MANAGE_SYS_USER_TOKEN + userId);
+    }
+
+    /**
+     * 退出登录
+     * @param userId
+     */
+    @Override
+    public void logout(Long userId) {
+        String token = redisUtils.getObj(RedisKeyConstants.MANAGE_SYS_USER_TOKEN + userId, String.class);
+        redisUtils.delete(RedisKeyConstants.MANAGE_SYS_USER_TOKEN + userId);
+        redisUtils.delete(RedisKeyConstants.MANAGE_SYS_USER_TOKEN + token);
     }
 
 }

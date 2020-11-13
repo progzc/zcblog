@@ -18,7 +18,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 /**
- * @Description 自定义Shiro过滤器
+ * @Description 自定义Shiro过滤器：方法的顺序也是执行的顺序
  * @Author zhaochao
  * @Date 2020/11/11 22:57
  * @Email zcprog@foxmail.com
@@ -26,36 +26,6 @@ import java.io.IOException;
  */
 @Slf4j
 public class Oauth2Filter extends AuthenticatingFilter {
-
-    /**
-     * 获取认证令牌
-     * @param servletRequest
-     * @param servletResponse
-     * @return
-     * @throws Exception
-     */
-    @Override
-    protected AuthenticationToken createToken(ServletRequest servletRequest, ServletResponse servletResponse) throws Exception {
-        String token = getRequestToken((HttpServletRequest) servletRequest);
-        if (StringUtils.isEmpty(token)) {
-            return null;
-        }
-        return new Oauth2Token(token);
-    }
-
-    /**
-     * 从请求头中获取token
-     * @param httpRequest
-     * @return
-     */
-    private String getRequestToken(HttpServletRequest httpRequest) {
-        String token = httpRequest.getHeader("token");
-        // 若请求头中token不存在，则从请求参数中获取token
-        if (StringUtils.isEmpty(token)) {
-            token = httpRequest.getParameter("token");
-        }
-        return token;
-    }
 
     /**
      * 放行OPTIONS请求
@@ -95,12 +65,44 @@ public class Oauth2Filter extends AuthenticatingFilter {
             HttpServletResponse httpResponse = (HttpServletResponse) servletResponse;
             httpResponse.setHeader("Access-Control-Allow-Credentials", "true"); // 允许在跨域响应中携带cookie
             httpResponse.setHeader("Access-Control-Allow-Origin", HttpContextUtils.getOrigin()); // 允许跨域响应
-            log.debug(ErrorEnum.INVALID_TOKEN.getMsg());
-            String resultJson = JsonUtils.toJson(Result.error(ErrorEnum.INVALID_TOKEN));
+            httpResponse.setContentType("application/json;charset=utf-8");
+            httpResponse.setCharacterEncoding("utf-8");
+            log.error(ErrorEnum.TOKEN_NOT_EXIST.getMsg());
+            String resultJson = JsonUtils.toJson(Result.error(ErrorEnum.TOKEN_NOT_EXIST));
             httpResponse.getWriter().print(resultJson); // 错误信息输出到页面
             return false;
         }
         return executeLogin(servletRequest, servletResponse); // 若token存在，则执行登录
+    }
+
+    /**
+     * 获取认证令牌
+     * @param servletRequest
+     * @param servletResponse
+     * @return
+     * @throws Exception
+     */
+    @Override
+    protected AuthenticationToken createToken(ServletRequest servletRequest, ServletResponse servletResponse) throws Exception {
+        String token = getRequestToken((HttpServletRequest) servletRequest);
+        if (StringUtils.isEmpty(token)) {
+            return null;
+        }
+        return new Oauth2Token(token);
+    }
+
+    /**
+     * 从请求头中获取token
+     * @param httpRequest
+     * @return
+     */
+    private String getRequestToken(HttpServletRequest httpRequest) {
+        String token = httpRequest.getHeader("token");
+        // 若请求头中token不存在，则从请求参数中获取token
+        if (StringUtils.isEmpty(token)) {
+            token = httpRequest.getParameter("token");
+        }
+        return token;
     }
 
     /**
@@ -113,14 +115,16 @@ public class Oauth2Filter extends AuthenticatingFilter {
      */
     @Override
     protected boolean onLoginFailure(AuthenticationToken authenticationToken, AuthenticationException e, ServletRequest servletRequest, ServletResponse servletResponse) {
-        HttpServletResponse httpResponnse = (HttpServletResponse) servletResponse;
-        httpResponnse.setContentType("application/json;charset=utf-8");
-        httpResponnse.setHeader("Access-Control-Allow-Credentials", "true"); // 允许在跨域响应中携带cookie
-        httpResponnse.setHeader("Access-Control-Allow-Origin", HttpContextUtils.getOrigin());
+        HttpServletResponse httpResponse = (HttpServletResponse) servletResponse;
+        httpResponse.setContentType("application/json;charset=utf-8");
+        httpResponse.setHeader("Access-Control-Allow-Credentials", "true"); // 允许在跨域响应中携带cookie
+        httpResponse.setHeader("Access-Control-Allow-Origin", HttpContextUtils.getOrigin());
+        httpResponse.setContentType("application/json;charset=utf-8");
+        httpResponse.setCharacterEncoding("utf-8");
         Throwable throwable = e.getCause() == null ? e : e.getCause();
         String resultJson = JsonUtils.toJson(Result.error(ErrorEnum.NO_AUTH.getCode(), throwable.getMessage()));
         try {
-            httpResponnse.getWriter().print(resultJson);
+            httpResponse.getWriter().print(resultJson);
             log.debug("登录失败");
         } catch (IOException ioException) {
             ioException.printStackTrace();

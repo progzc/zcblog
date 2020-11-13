@@ -32,4 +32,10 @@ public interface SysUserTokenService {
      * @param token
      */
     void refreshToken(Long userId, String token);
+
+    /**
+     * 退出登录
+     * @param userId
+     */
+    void logout(Long userId);
 }

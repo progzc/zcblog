@@ -92,4 +92,13 @@ public class SysLoginController extends AbstractController {
         // 校验成功，生成token
         return sysUserTokenService.createToken(sysUser.getUserId());
     }
+
+    /**
+     * 退出登录
+     * @return
+     */
+    public Result logout() {
+        sysUserTokenService.logout(getUserId());
+        return Result.ok();
+    }
 }

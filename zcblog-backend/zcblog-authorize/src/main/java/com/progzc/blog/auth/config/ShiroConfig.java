@@ -20,7 +20,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * @Description Shiro配置类
+ * @Description Shiro配置类：方法的顺序也是Bean执行的顺序
  * @Author zhaochao
  * @Date 2020/11/10 23:55
  * @Email zcprog@foxmail.com
@@ -28,6 +28,28 @@ import java.util.Map;
  */
 @Configuration
 public class ShiroConfig {
+
+    /**
+     * 管理Shiro Bean的生命周期：其实在ShiroBeanConfiguration中已经配置好了，多次一举了
+     * @return
+     */
+    @Bean
+    public LifecycleBeanPostProcessor lifecycleBeanPostProcessor() {
+        return new LifecycleBeanPostProcessor();
+    }
+
+    /**
+     * DefaultAdvisorAutoProxyCreator实现了BeanProcessor接口,
+     * 当ApplicationContext读如所有的Bean配置信息后，这个类将扫描上下文，寻找所有的Advisor
+     * @return
+     */
+    @Bean
+    @DependsOn({"lifecycleBeanPostProcessor"})
+    public DefaultAdvisorAutoProxyCreator defaultAdvisorAutoProxyCreator() {
+        DefaultAdvisorAutoProxyCreator proxyCreator = new DefaultAdvisorAutoProxyCreator();
+        proxyCreator.setProxyTargetClass(true);
+        return proxyCreator;
+    }
 
     /**
      * 配置会话管理器
@@ -77,28 +99,6 @@ public class ShiroConfig {
         shiroFilter.setFilterChainDefinitionMap(filterMap); // 设置页面请求拦截
 
         return shiroFilter;
-    }
-
-    /**
-     * 管理Shiro Bean的生命周期：其实在ShiroBeanConfiguration中已经配置好了，多次一举了
-     * @return
-     */
-    @Bean
-    public LifecycleBeanPostProcessor lifecycleBeanPostProcessor() {
-        return new LifecycleBeanPostProcessor();
-    }
-
-    /**
-     * DefaultAdvisorAutoProxyCreator实现了BeanProcessor接口,
-     * 当ApplicationContext读如所有的Bean配置信息后，这个类将扫描上下文，寻找所有的Advisor
-     * @return
-     */
-    @Bean
-    @DependsOn({"lifecycleBeanPostProcessor"})
-    public DefaultAdvisorAutoProxyCreator defaultAdvisorAutoProxyCreator() {
-        DefaultAdvisorAutoProxyCreator proxyCreator = new DefaultAdvisorAutoProxyCreator();
-        proxyCreator.setProxyTargetClass(true);
-        return proxyCreator;
     }
 
     /**
