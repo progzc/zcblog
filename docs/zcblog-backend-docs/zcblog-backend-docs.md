@@ -1753,11 +1753,11 @@ public enum ErrorEnum {
 在`MyExceptionHandler.java`中对全局异常进行处理：
 
 ```java
-// @ControllerAdvice有三种功能：处理全局异常、绑定全局数据、预处理全局数据。（本项目用到的是第一种功能）
+// @RestControllerAdvice有三种功能：处理全局异常、绑定全局数据、预处理全局数据。（本项目用到的是第一种功能）
 @RestControllerAdvice // 相当于@ResponseBody+@ControllerAdvice表示处理全局异常,且返回字符串
 @Slf4j
 public class MyExceptionHandler { // MyExceptionHandler用于处理全局异常
-    // 处理自定义异常（包含校验异常）
+    // 处理自定义异常：包含校验异常、自定义认证异常
     @ExceptionHandler(MyException.class)
     public Result handleMyException(MyException e){
         Result result=new Result();
@@ -1783,10 +1783,10 @@ public class MyExceptionHandler { // MyExceptionHandler用于处理全局异常
         return Result.exception(ErrorEnum.DUPLICATE_KEY);
     }
 
-    // 处理登录与鉴权中出现的异常
-    @ExceptionHandler(AuthorizationException.class)
-    public Result handleAuthorizationException(AuthorizationException e){
-        log.error(e.getMessage(),e);
+    // 处理鉴权异常以及认证中的除自定义外的异常
+    @ExceptionHandler(ShiroException.class)
+    public Result hanldeAuthorizationException(ShiroException e) {
+        log.error(e.getMessage(), e);
         return Result.exception(ErrorEnum.NO_AUTH);
     }
 
@@ -1858,6 +1858,9 @@ public class MyException extends RuntimeException{
     }
 }
 ```
+本项目处理的全局异常的继承关系如下：
+
+![image-20201113204818852](zcblog-backend-docs.assets/image-20201113204818852.png)
 
 > 参考博客文章：[关于NoHandlerFoundException异常](https://blog.csdn.net/qq_36666651/article/details/81135139)
 
@@ -2373,31 +2376,31 @@ public boolean supports(AuthenticationToken authenticationToken) {
 
 认证逻辑主要包含三个部分：
 
-- 从Redis中查询此token是否有效，如无效则抛出**IncorrectCredentialsException异常**。
-- 从数据库中查询判断用户是否被禁用，若被禁用则抛出**LockedAccountException异常**。
+- 从Redis中查询此token是否有效，如无效则抛出**MyException(ErrorEnum.TOKEN_EXPIRED)异常**。
+- 从数据库中查询判断用户是否被禁用，若被禁用则抛出**MyException(ErrorEnum.USER_ACCOUNT_LOCKED)异常**。
 - 若token有效且用户未被禁用，则**对token进行续期**。
 - 最后返回认证信息，将SimpleAuthenticationInfo(sysUser, token, getName())与subject.login(token)中的token进行比较（从程序代码来看，显然这两个token一定相等）
 
 ```java
 // 认证逻辑
 @Override
-protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authenticationToken) throws AuthenticationException {
+protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authenticationToken) {
     // 根据用户token从Redis获取用户token+用户id信息
     String token = (String) authenticationToken.getPrincipal();
     SysUserToken sysUserToken = shiroService.queryByToken(token);
 
     // 若token失效
     if (sysUserToken == null) {
-        log.debug("token已失效，请重新登录");
-        throw new IncorrectCredentialsException("token已失效，请重新登录");
+        log.error(ErrorEnum.TOKEN_EXPIRED.getMsg());
+        throw new MyException(ErrorEnum.TOKEN_EXPIRED);
     }
 
     // 根据用户id从数据库查询用户信息
     SysUser sysUser = shiroService.queryByUserId(sysUserToken.getUserId());
     // 若用户账号被锁定
     if (Boolean.FALSE.equals(sysUser.getStatus())) {
-        log.debug("账号已被锁定，请联系管理员");
-        throw new LockedAccountException("账号已被锁定，请联系管理员");
+        log.error(ErrorEnum.USER_ACCOUNT_LOCKED.getMsg());
+        throw new MyException(ErrorEnum.USER_ACCOUNT_LOCKED);
     }
     // 续期
     shiroService.refreshToken(sysUserToken.getUserId(), token);
@@ -2430,7 +2433,7 @@ protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principal
 可能抛出的异常有：
 
 - 执行executeLogin(servletRequest, servletResponse)可能会抛出**java.lang.IllegalStateException异常**。
-- 执行doGetAuthenticationInfo(AuthenticationToken authenticationToken)可能会抛出**org.apache.shiro.authc.IncorrectCredentialsException异常**和**org.apache.shiro.authc.LockedAccountException**异常。
+- 执行doGetAuthenticationInfo(AuthenticationToken authenticationToken)可能会抛出**MyException异常**。
 
 ### 10.6.2 Shiro异常组织结构
 
@@ -2440,16 +2443,37 @@ shiro中的异常组织结构见下图：
 
 ### 10.6.3 异常处理
 
-根据`10.6.2`可知，只需要在全局异常处理类`MyExceptionHandler`中处理Shiro认证与鉴权中的AuthorizationException异常或ShiroException即可。
+根据`10.6.2`可知，只需要在全局异常处理类`MyExceptionHandler`中处理自定义异常及ShiroException即可。
 
 ```java
-// 处理登录与鉴权中出现的异常
-@ExceptionHandler(AuthorizationException.class)
-public Result handleAuthorizationException(AuthorizationException e){
-    log.error(e.getMessage(),e);
+// 处理自定义异常：包含校验异常、认证异常
+@ExceptionHandler(MyException.class)
+public Result handleMyException(MyException e) {
+    Result result = new Result();
+    result.put("code", e.getCode());
+    result.put("msg", e.getMsg());
+    return result;
+}
+
+// 处理鉴权异常以及认证中的除自定义外的异常
+@ExceptionHandler(ShiroException.class)
+public Result hanldeAuthorizationException(ShiroException e) {
+    log.error(e.getMessage(), e);
     return Result.exception(ErrorEnum.NO_AUTH);
 }
+
+// 处理其他异常
+@ExceptionHandler(Exception.class)
+public Result handleException(Exception e) {
+    log.error(e.getMessage(), e);
+    return Result.exception();
+
+}
 ```
+
+本项目的异常处理结构如下：
+
+![image-20201113204818852](zcblog-backend-docs.assets/image-20201113204818852.png)
 
 ## 10.7 源码总结
 
