@@ -1421,18 +1421,26 @@ lombok中的常见注解：
 
 **Swagger的应用场景**：主要应用于前后端分离的项目，作为前后端开发工程师进行协同工作；实现类似postman的网络请求测试。
 
-> 参考博客文章：**[B站Swagger视频](https://www.bilibili.com/video/BV1Y441197Lw)**、[Swagger](https://mp.weixin.qq.com/s/0-c0MAgtyOeKx6qzmdUG0w)、[Swagger yml完全注释](https://blog.csdn.net/u010466329/article/details/78522992)、[Swagger的介绍](https://blog.csdn.net/weixin_37509652/article/details/80094370)、[Swagger注解](https://blog.csdn.net/chinassj/article/details/81875038)、[添加Header全局配置](https://www.jianshu.com/p/6e5ee9dd5a61)
-
 ## 5.2 Swagger的配置
+
+### 5.2.1 Swagger的配置说明
 
 Swagger的配置在`SwaggerConfig.java`中设置：
 
 ```java
+/**
+ * @Description Swagger相关配置（也可在YML中进行配置），本项目选择在配置类中进行配置。
+ * @Author zhaochao
+ * @Date 2020/10/26 10:42
+ * @Email zcprog@foxmail.com
+ * @Version V1.0
+ */
+@Slf4j
 @Configuration
 @EnableSwagger2 // 启用Swagger
 public class SwaggerConfig implements WebMvcConfigurer {
 
-    // 加载Swagger的默认U界面
+    // 加载Swagger的默认UI界面
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("swagger-ui.html")
@@ -1441,15 +1449,15 @@ public class SwaggerConfig implements WebMvcConfigurer {
                 .addResourceLocations("classpath:/META-INF/resources/webjars/");
     }
 
-    // 配置Swagger的Docket的Bean实例（每一个Docket的Bean实例对应于一个分组，这样可以方便协同开发）
+
+    // 配置Swagger的Docket的Bean实例：
+    // 每一个Docket的Bean实例对应于一个分组，这样可以方便协同开发
     @Bean
-    public Docket createRestApiGroup1(Environment environment){
+    public Docket createRestApiGroup1(Environment environment) {
         // 设置要显示的Swagger环境
         Profiles profiles = Profiles.of("dev", "test");
         // 获取项目的环境
         boolean isDevAndTest = environment.acceptsProfiles(profiles);
-
-        System.out.println("isDevAndTest："+isDevAndTest);
 
         return new Docket(DocumentationType.SWAGGER_2)
                 .apiInfo(apiInfo())
@@ -1467,10 +1475,12 @@ public class SwaggerConfig implements WebMvcConfigurer {
                 .paths(PathSelectors.any()) // 过滤映射路径
                 .build()
                 .groupName("Clouds")
-                // 可以由使用者设置全局token（一般登录成功后都会设置一个token作为通行证）放置到HTTP请求头中，在跨域访问时作为通行证
-                .securitySchemes(security());
+                // 可以由使用者设置全局token（一般登录成功后都会设置一个token作为同行证）放置到HTTP请求头中，在跨域访问时作为通行证
+                .securitySchemes(Arrays.asList(securitySchemes()))
+                .securityContexts(Arrays.asList(securityContexts()));
     }
 
+    // 配置网站相关信息
     private ApiInfo apiInfo() {
         // 作者信息
         Contact contact = new Contact("Clouds", "http://blog.progzc.com", "zcprog@foxmail.com");
@@ -1485,11 +1495,24 @@ public class SwaggerConfig implements WebMvcConfigurer {
                 .build();
     }
 
-    private List<ApiKey> security() {
-        // 设置登录的用户名为token，登录的密码为token
-        return newArrayList(new ApiKey("token", "token", "header"));
+    // 设置全局token
+    private SecurityScheme securitySchemes() {
+        return new ApiKey("token", "token", "header");
     }
 
+    // 设置需要携带token的请求：这里设置所有请求都需要携带token
+    private SecurityContext securityContexts() {
+        return SecurityContext.builder().securityReferences(securityReferences())
+                .forPaths(PathSelectors.any()).build();
+    }
+
+    private List<SecurityReference> securityReferences() {
+        AuthorizationScope[] authorizationScopes = new AuthorizationScope[1];
+        authorizationScopes[0] = new AuthorizationScope("global", "accessEverything");
+        List<SecurityReference> securityReferences = new ArrayList<>();
+        securityReferences.add(new SecurityReference("token", authorizationScopes));
+        return securityReferences;
+    }
 }
 ```
 
@@ -1500,6 +1523,133 @@ public class SwaggerConfig implements WebMvcConfigurer {
 3. **若application.yml中的spring.resources.add-mappings设置为false，则需要在addResourceHandlers方法中添加指定的静态资源文件这样才能访问`swagger-ui.html`；若为false，则可以不要指定静态资源文件**。
 4. 可以在请求头中设置全局token作为登录成功后的通行证，可以解决由于登录权限问题，每次进行API测试都要输入token才能访问接口API的问题。
 5. **多人协同开发不同模块，可以采用分组功能。这样每个人的业务API都会在一个分组中，便于查询或与前端人员沟通。**
+6. 注意Swagger的默认访问地址为：http://主机名:端口号/swagger-ui.html，**但是项目若添加了contextPath（即项目映射路径），则Swagger的访问路径是：http://主机名:端口号/${contextPath}/swagger-ui.html**。
+
+### 5.2.2 在请求头中手动添加token
+
+`5.2.1`节的配置中不仅设置了全局token；而且还设置了针对所有请求均需携带token。这样只需一次手动设置token值即可在全局范围内对所有请求头添加token值。
+
+![image-20201114005300387](zcblog-backend-docs.assets/image-20201114005300387.png)
+
+### 5.2.3 自动登录获取token值
+
+`5.2.2`节有二个弊端：
+
+1. 每次需要手动输入token值（登录成功后，从Redis中查询拷贝出token值），不方便。
+2. 由于本项目采用`devtools工具`实现热部署，每次都该代码后都会自动重启项目，使得每次设置token值之前均需要手动进行一次登录操作（**若不登录成功，则Shiro的Subject获取不到我们的身份信息**）。
+
+在`AutoLogin.java`中进行模拟自动登录并获取token值：
+
+```java
+@SuppressWarnings("AlibabaAvoidManuallyCreateThread")
+@Service
+@Slf4j
+public class AutoLogin implements ApplicationListener<ContextRefreshedEvent> {
+
+    private static final String protocol = "http";
+    private static String host = "localhost";
+
+    @Value("${server.port}")
+    private String port;
+
+    @Value("${server.servlet.context-path}")
+    private String contextPath;
+
+    @Autowired
+    private RestTemplate restTemplate;
+
+    @Autowired
+    ApplicationContext applicationContext;
+
+    @Override
+    public void onApplicationEvent(ContextRefreshedEvent event) {
+        if(event.getApplicationContext().getParent() == null){
+            Thread thread = new Thread(() ->{
+                // 请求路径
+                String baseUrl = protocol + "://" + host + ":" + port + contextPath;
+                // 设置请求头
+                HttpHeaders httpHeaders = new HttpHeaders();
+                httpHeaders.setContentType(MediaType.parseMediaType("application/json; charset=UTF-8"));
+                HttpEntity<String> entity = new HttpEntity<>(httpHeaders);
+
+                // 生成uuid
+                String uuid = UUID.randomUUID().toString();
+                HashMap<String, String> hashMap = new HashMap<>(16);
+                hashMap.put("uuid", uuid);
+
+                // 获取验证码
+                ResponseEntity<Result> captchaResponse = restTemplate.exchange(baseUrl + "/captcha.jpg?uuid={uuid}", HttpMethod.GET, entity, Result.class, hashMap);
+
+                // 进行登录
+                if(captchaResponse.getBody().get("captchaPath") != null){
+                    HashMap<String, String> formMap = new HashMap<>();
+                    formMap.put("username", "admin123");
+                    formMap.put("password", "admin123");
+                    formMap.put("uuid", uuid);
+                    formMap.put("captcha", KaptchaConstants.captcha);
+                    HttpEntity<HashMap<String, String>> dataEntity = new HttpEntity<>(formMap, httpHeaders);
+                    ResponseEntity<Result> loginResponse = restTemplate.postForEntity(baseUrl + "/admin/sys/login", dataEntity, Result.class);
+                    String token = (String) loginResponse.getBody().get("token");
+                    log.debug("-----自动登录的token-----:"+token);
+                    // 利用反射设置swagger的全局token
+                    ParameterBuilder tokenParam = new ParameterBuilder();
+                    Parameter parameter = tokenParam.name("token").description("登录令牌").defaultValue(token)
+                            .modelRef(new ModelRef("string")).parameterType("header").required(false).build();
+                    Class<?> restApiGroup1 = applicationContext.getType("restApiGroup1");
+                    if(Docket.class.equals(restApiGroup1)){
+                        Field[] declaredFields = restApiGroup1.getDeclaredFields();
+                        Object docket = applicationContext.getBean("restApiGroup1");
+                        for (Field declaredField : declaredFields) {
+                            if(declaredField.getName() == "globalOperationParameters"){
+                                declaredField.setAccessible(true);
+                                try {
+                                    declaredField.set(docket, Arrays.asList(parameter));
+                                } catch (IllegalAccessException e) {
+                                    log.error("-----restApiGroup1属性修改失败-----");
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            ScheduledExecutorService executorService = new ScheduledThreadPoolExecutor(2);
+            Future<?> future = executorService.submit(thread);
+            executorService.schedule(()->{
+                log.debug("-----关闭自动登录线程-----");
+                future.cancel(true);
+            }, 6, TimeUnit.SECONDS);
+            executorService.shutdown();
+        }
+    }
+}
+```
+
+**几点说明：**
+
+1. 使用多线程（单独打开一条线程）模拟登录的操作（**若不使用多线程发送请求，会报请求被拒绝的错误**）。
+
+2. 使用RestTemplate在java程序中发送GET/POST请求，有如下两个出错点：
+
+   - 发送请求时，属性名必须全部小写（若大写Controller会显示获取到的值为null）。
+
+   - 若采用postForEntity发送POST请求，必须采用HashMap来封装请求体；若采用exchange发送POST请求，必须采用LinkedMultiValueMap来封装请求体。
+
+     ```java
+     // 若采用postForEntity发送POST请求，必须采用HashMap来封装请求体；若采用exchange发送POST请求，必须采用LinkedMultiValueMap来封装请求体。
+     HashMap<String, String> formMap = new HashMap<>(); 
+     formMap.put("username", "admin123"); // username必须为小写
+     formMap.put("password", "admin123"); // password必须为小写
+     formMap.put("uuid", uuid); // uuid必须为小写
+     formMap.put("captcha", KaptchaConstants.captcha); // captcha必须为小写
+     HttpEntity<HashMap<String, String>> dataEntity = new HttpEntity<>(formMap, httpHeaders);
+     ResponseEntity<Result> loginResponse = restTemplate.postForEntity(baseUrl + "/admin/sys/login", dataEntity, Result.class);
+     ```
+
+**效果如下：**
+
+![image-20201114225346963](zcblog-backend-docs.assets/image-20201114225346963.png)
+
+> 参考博客文章：[RestTemplate详解](https://www.cnblogs.com/javazhiyin/p/9851775.html)、[RestTemplate发送远程请求](https://www.cnblogs.com/fantongxue/p/12443677.html)、[RestTemplate 发送post请求](https://www.cnblogs.com/leigepython/p/11319771.html)、[如何让java程序执行一段时间后停止](https://blog.csdn.net/kerongao/article/details/109576521)、[RestTemplate发送json请求@RequestBody实体类无法映射](https://blog.csdn.net/weixin_38626799/article/details/90213400)、[使用HashMap还是LinkedMultiValueMap](https://www.cnblogs.com/LX51/p/12214220.html)、[Spring使用反射动态修改bean](https://www.cnblogs.com/frankltf/p/11451917.html)、[spring 容器加载完成后执行某个方法](https://blog.csdn.net/weixin_34293911/article/details/86275569)
 
 ## 5.3 基本使用
 
@@ -1564,6 +1714,8 @@ public class SwaggerConfig implements WebMvcConfigurer {
    <version>1.0.6</version>
 </dependency>
 ```
+
+> 参考博客文章：**[B站Swagger视频](https://www.bilibili.com/video/BV1Y441197Lw)**、[Swagger](https://mp.weixin.qq.com/s/0-c0MAgtyOeKx6qzmdUG0w)、[Swagger yml完全注释](https://blog.csdn.net/u010466329/article/details/78522992)、[Swagger的介绍](https://blog.csdn.net/weixin_37509652/article/details/80094370)、[Swagger注解](https://blog.csdn.net/chinassj/article/details/81875038)、[添加Header全局配置](https://www.jianshu.com/p/6e5ee9dd5a61)、**[Swagger在请求头中携带Token](https://blog.csdn.net/u012702547/article/details/106633386/)**
 
 # 6 项目热部署
 
@@ -3861,6 +4013,14 @@ GET /索引名/~类型名~/_search
 ## 18.1 @Resource与@Autowired
 
 @AutoWried按by type自动注入，而@Resource默认按byName自动注入。
+
+**问题描述：**IDEA的纠错机制在解析Spring通过类型约定的方式进行配置时，支持的并不是太好，而用Autowired注入时IDEA会报错（虽然运行时不会报错，但是观感不好）。
+
+![image-20201114085712399](zcblog-backend-docs.assets/image-20201114085712399.png)
+
+**解决办法：**使用@Resource注解注入IDEA即不会报错。
+
+![image-20201114085921679](zcblog-backend-docs.assets/image-20201114085921679.png)
 
 > 参考博客文章：[@AutoWired和@Resource的区别](https://blog.csdn.net/weixin_40423597/article/details/80643990)
 
