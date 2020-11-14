@@ -10,6 +10,7 @@ import com.progzc.blog.common.enums.ErrorEnum;
 import com.progzc.blog.entity.sys.SysUser;
 import com.progzc.blog.entity.sys.vo.SysLoginForm;
 import com.progzc.blog.mapper.sys.SysUserMapper;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.crypto.hash.Sha256Hash;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import sun.misc.BASE64Encoder;
 
+import javax.annotation.Resource;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
@@ -38,7 +40,7 @@ public class SysLoginController extends AbstractController {
     @Autowired
     private SysCaptchaService sysCaptchaService;
 
-    @Autowired
+    @Resource
     private SysUserMapper sysUserMapper;
 
     @Autowired
@@ -51,7 +53,8 @@ public class SysLoginController extends AbstractController {
      * @return
      * @throws IOException
      */
-    @GetMapping("captcha.jpg")
+    @GetMapping("/captcha.jpg")
+    @ApiOperation(value = "获取验证码")
     public Result captcha(String uuid) throws IOException {
         BufferedImage image = sysCaptchaService.getCaptcha(uuid);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -70,6 +73,7 @@ public class SysLoginController extends AbstractController {
      * @return
      */
     @PostMapping("/admin/sys/login")
+    @ApiOperation(value = "提交表单，进行登录")
     public Result login(@RequestBody SysLoginForm form) {
         boolean flag = sysCaptchaService.validate(form.getUuid(), form.getCaptcha());
         if (!flag) {
@@ -97,6 +101,8 @@ public class SysLoginController extends AbstractController {
      * 退出登录
      * @return
      */
+    @PostMapping("/admin/sys/logout")
+    @ApiOperation(value = "退出登录")
     public Result logout() {
         sysUserTokenService.logout(getUserId());
         return Result.ok();

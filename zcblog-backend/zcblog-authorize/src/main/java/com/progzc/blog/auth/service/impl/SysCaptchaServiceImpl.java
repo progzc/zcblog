@@ -3,6 +3,7 @@ package com.progzc.blog.auth.service.impl;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.google.code.kaptcha.Producer;
 import com.progzc.blog.auth.service.SysCaptchaService;
+import com.progzc.blog.common.constants.KaptchaConstants;
 import com.progzc.blog.common.constants.RedisKeyConstants;
 import com.progzc.blog.common.enums.ErrorEnum;
 import com.progzc.blog.common.exception.MyException;
@@ -46,6 +47,7 @@ public class SysCaptchaServiceImpl implements SysCaptchaService {
             throw new MyException(ErrorEnum.NO_UUID);
         }
         String captcha = producer.createText();
+        KaptchaConstants.captcha = captcha; // 使用类变量记录谷歌验证码，用于程序自动登录
         redisUtils.set(RedisKeyConstants.MANAGE_SYS_CAPTCHA + uuid, captcha, CAPTCHA_EXPIRE);
         return producer.createImage(captcha);
     }
@@ -63,6 +65,7 @@ public class SysCaptchaServiceImpl implements SysCaptchaService {
         }
         String captchaCache = redisUtils.getObj(RedisKeyConstants.MANAGE_SYS_CAPTCHA + uuid, String.class);
         redisUtils.delete(RedisKeyConstants.MANAGE_SYS_CAPTCHA + uuid);
+        KaptchaConstants.captcha = ""; // 重置类变量
         return captcha.equalsIgnoreCase(captchaCache);
     }
 }
