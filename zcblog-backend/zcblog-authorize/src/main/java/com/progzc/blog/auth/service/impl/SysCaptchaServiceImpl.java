@@ -44,6 +44,7 @@ public class SysCaptchaServiceImpl implements SysCaptchaService {
     @Override
     public BufferedImage getCaptcha(String uuid) {
         if (StringUtils.isEmpty(uuid)) {
+            log.error(ErrorEnum.NO_UUID.getMsg());
             throw new MyException(ErrorEnum.NO_UUID);
         }
         String captcha = producer.createText();

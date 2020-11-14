@@ -125,7 +125,7 @@ public class Oauth2Filter extends AuthenticatingFilter {
         String resultJson = JsonUtils.toJson(Result.error(ErrorEnum.NO_AUTH.getCode(), throwable.getMessage()));
         try {
             httpResponse.getWriter().print(resultJson);
-            log.debug("登录失败");
+            log.error(ErrorEnum.NO_AUTH.getMsg());
         } catch (IOException ioException) {
             ioException.printStackTrace();
             log.error(ErrorEnum.UNKNOWN.getMsg());

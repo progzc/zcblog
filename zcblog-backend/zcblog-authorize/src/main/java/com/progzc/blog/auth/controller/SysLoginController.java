@@ -77,6 +77,7 @@ public class SysLoginController extends AbstractController {
     public Result login(@RequestBody SysLoginForm form) {
         boolean flag = sysCaptchaService.validate(form.getUuid(), form.getCaptcha());
         if (!flag) {
+            log.error(ErrorEnum.CAPTCHA_WRONG.getMsg());
             return Result.error(ErrorEnum.CAPTCHA_WRONG);
         }
 
@@ -85,11 +86,13 @@ public class SysLoginController extends AbstractController {
                 .eq(SysUser::getUsername, form.getUsername()));
         // 用户不存在或密码不正确
         if (sysUser == null || !sysUser.getPassword().equals(new Sha256Hash(form.getPassword(), sysUser.getSalt()).toString())) {
+            log.error(ErrorEnum.USERNAME_OR_PASSWORD_WRONG.getMsg());
             return Result.error(ErrorEnum.USERNAME_OR_PASSWORD_WRONG);
         }
 
         // 用户被禁用
         if (Boolean.FALSE.equals(sysUser.getStatus())) {
+            log.error(ErrorEnum.USER_ACCOUNT_LOCKED.getMsg());
             return Result.error(ErrorEnum.USER_ACCOUNT_LOCKED);
         }
 
