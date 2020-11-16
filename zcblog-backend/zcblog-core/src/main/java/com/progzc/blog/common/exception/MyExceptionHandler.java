@@ -27,7 +27,6 @@ public class MyExceptionHandler {
      */
     @ExceptionHandler(MyException.class)
     public Result handleMyException(MyException e) {
-        log.error(e.getMessage(), e);
         Result result = new Result();
         result.put("code", e.getCode());
         result.put("msg", e.getMsg());
@@ -77,6 +76,5 @@ public class MyExceptionHandler {
     public Result handleException(Exception e) {
         log.error(e.getMessage(), e);
         return Result.exception();
-
     }
 }

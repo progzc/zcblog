@@ -1,5 +1,7 @@
 package com.progzc.blog.entity.sys.vo;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -10,9 +12,18 @@ import lombok.Data;
  * @Version V1.0
  */
 @Data
+@ApiModel(value = "登录表单提交数据")
 public class SysLoginForm {
+
+    @ApiModelProperty(value = "登录用户名")
     private String username;
+
+    @ApiModelProperty(value = "登录密码")
     private String password;
+
+    @ApiModelProperty(value = "随机uuid")
     private String uuid;
+
+    @ApiModelProperty(value = "验证码")
     private String captcha;
 }

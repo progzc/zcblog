@@ -1,6 +1,7 @@
 package com.progzc.blog.common.base;
 
 import com.progzc.blog.entity.sys.SysUser;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.SecurityUtils;
 
 /**
@@ -10,6 +11,7 @@ import org.apache.shiro.SecurityUtils;
  * @Email zcprog@foxmail.com
  * @Version V1.0
  */
+@Slf4j
 public class AbstractController {
     protected SysUser getUser() {
         return (SysUser) SecurityUtils.getSubject().getPrincipal();

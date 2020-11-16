@@ -23,15 +23,16 @@ public enum ErrorEnum {
     TOKEN_GENERATOR_ERROR(502, "token生成失败"),
     NO_UUID(503, "uuid为空，验证码生成错误"),
     SQL_ILLEGAL(504, "sql非法"),
+    ENCRYPT_FAILED(505, "加密错误"),
+    DENCRYPT_FAILED(506, "解密错误"),
 
-    //用户权限错误
-    INVALID_TOKEN(1001, "token不合法"),
-
-    //登录模块错误
+    //登录(包含认证)模块错误
     LOGIN_FAIL(10001, "登录失败"),
     CAPTCHA_WRONG(10002, "验证码错误"),
     USERNAME_OR_PASSWORD_WRONG(10003, "用户名或密码错误"),
     USER_ACCOUNT_LOCKED(10004, "账号已被锁定，请联系管理员"),
+    TOKEN_EXPIRED(10005, "闲置时间过久，请重新登录"),
+    TOKEN_NOT_EXIST(10006, "token不存在"),
 
     //七牛云OSS错误
     OSS_CONFIG_ERROR(10050, "七牛云配置信息错误"),

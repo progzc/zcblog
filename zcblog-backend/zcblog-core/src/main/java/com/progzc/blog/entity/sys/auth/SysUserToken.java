@@ -1,6 +1,7 @@
 package com.progzc.blog.entity.sys.auth;
 
 import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -16,6 +17,10 @@ import java.io.Serializable;
 @ApiModel(value = "SysUserToken对象", description = "系统用户Token")
 public class SysUserToken implements Serializable {
     public static final long serialVersionUID = 1L;
+
+    @ApiModelProperty(value = "用户id")
     private Long userId;
+
+    @ApiModelProperty(value = "用户token")
     private String token;
 }
