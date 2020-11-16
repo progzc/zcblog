@@ -8,9 +8,10 @@
         </div>
         <div class="login-main">
           <h3 class="login-title">管理员登录</h3>
-          <el-form :model="dataForm" :rules="dataRule" ref="dataForm" @keyup.enter.native="dataFormSubmit()" status-icon>
-            <el-form-item prop="userName">
-              <el-input v-model="dataForm.userName" placeholder="帐号"></el-input>
+          <el-form :model="dataForm" :rules="dataRule" ref="dataForm" @keyup.enter.native="dataFormSubmit()"
+                   status-icon>
+            <el-form-item prop="username">
+              <el-input v-model="dataForm.username" placeholder="帐号"></el-input>
             </el-form-item>
             <el-form-item prop="password">
               <el-input v-model="dataForm.password" type="password" placeholder="密码"></el-input>
@@ -37,19 +38,20 @@
 
 <script type="text/ecmascript-6">
 import { getUUID } from 'common/js/utils/login'
-import { executeLogin, executeGetCaptchaPath } from 'network/api/login'
+import { executeGetCaptchaPath, executeLogin } from 'network/api/login'
+
 export default {
   name: 'login',
   data () {
     return {
       dataForm: {
-        userName: '',
+        username: '',
         password: '',
         uuid: '',
         captcha: ''
       },
       dataRule: {
-        userName: [
+        username: [
           { required: true, message: '帐号不能为空', trigger: 'blur' }
         ],
         password: [

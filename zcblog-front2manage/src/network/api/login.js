@@ -1,4 +1,5 @@
 import request from 'network/request'
+import { encryptAES } from 'common/js/utils/encrypt'
 
 /**
  * 提交表单
@@ -9,8 +10,8 @@ export function executeLogin (dataForm) {
     url: '/admin/sys/login',
     method: 'post',
     data: {
-      username: dataForm.userName,
-      password: dataForm.password,
+      username: encryptAES(dataForm.username),
+      password: encryptAES(dataForm.password),
       uuid: dataForm.uuid,
       captcha: dataForm.captcha
     }

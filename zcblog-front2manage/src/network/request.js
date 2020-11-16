@@ -18,14 +18,17 @@ export default function request (config) { // 封装网络请求
 
   // 2.1 请求拦截
   instance.interceptors.request.use(config => {
-    const timestamp = { // 对每次请求生成当前时间戳
+    const timestamp = { // 对每次请求生成当前时间戳（作用是清楚缓存）
       t: new Date().getTime()
     }
-    if (config.params) { // get请求参数处理添加时间戳，并json化
+    if (config.params) { // 若存在请求参数，请求参数处理添加时间戳，并json化
       config.params = merge(timestamp, config.params)
     }
-    if (config.data) { // post请求参数添加时间戳，并json化
+    if (config.data) { // 若存在请求体，请求体添加时间戳，并json化
       config.data = JSON.stringify(merge(timestamp, config.data))
+    }
+    if (!config.params && !config.data) { // 若请求参数和请求体均不存在，则给请求参数添加时间戳
+      config.params = merge(timestamp, config.params)
     }
     config.headers.token = Vue.cookie.get('token') // 请求头带上token
     return config
