@@ -49,6 +49,7 @@ public class SysCaptchaServiceImpl implements SysCaptchaService {
         }
         String captcha = producer.createText();
         KaptchaConstants.captcha = captcha; // 使用类变量记录谷歌验证码，用于程序自动登录
+        log.debug("生成验证码：" + captcha);
         redisUtils.set(RedisKeyConstants.MANAGE_SYS_CAPTCHA + uuid, captcha, CAPTCHA_EXPIRE);
         return producer.createImage(captcha);
     }

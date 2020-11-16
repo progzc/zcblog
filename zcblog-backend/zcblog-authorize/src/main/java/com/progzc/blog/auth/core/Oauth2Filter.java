@@ -127,7 +127,6 @@ public class Oauth2Filter extends AuthenticatingFilter {
             httpResponse.getWriter().print(resultJson);
             log.error(ErrorEnum.NO_AUTH.getMsg());
         } catch (IOException ioException) {
-            ioException.printStackTrace();
             log.error(ErrorEnum.UNKNOWN.getMsg());
         }
         return false;

@@ -2,6 +2,7 @@ package com.progzc.blog.auth.auto;
 
 import com.progzc.blog.common.Result;
 import com.progzc.blog.common.constants.KaptchaConstants;
+import com.progzc.blog.common.utils.EncryptUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -72,16 +73,18 @@ public class AutoLogin implements ApplicationListener<ContextRefreshedEvent> {
                 ResponseEntity<Result> captchaResponse = restTemplate.exchange(baseUrl + "/captcha.jpg?uuid={uuid}", HttpMethod.GET, entity, Result.class, hashMap);
 
                 // 进行登录
-                if(captchaResponse.getBody().get("captchaPath") != null){
+                if (captchaResponse.getBody().get("captchaPath") != null) {
                     HashMap<String, String> formMap = new HashMap<>();
-                    formMap.put("username", "admin123");
-                    formMap.put("password", "admin123");
+                    String encryptUsername = EncryptUtils.encrypt("admin123");
+                    String encryptPassword = EncryptUtils.encrypt("admin123");
+                    formMap.put("username", encryptUsername);
+                    formMap.put("password", encryptPassword);
                     formMap.put("uuid", uuid);
                     formMap.put("captcha", KaptchaConstants.captcha);
                     HttpEntity<HashMap<String, String>> dataEntity = new HttpEntity<>(formMap, httpHeaders);
                     ResponseEntity<Result> loginResponse = restTemplate.postForEntity(baseUrl + "/admin/sys/login", dataEntity, Result.class);
                     String token = (String) loginResponse.getBody().get("token");
-                    log.debug("-----自动登录的token-----:"+token);
+                    log.debug("-----自动登录的token-----:" + token);
                     // 利用反射设置swagger的全局token
                     ParameterBuilder tokenParam = new ParameterBuilder();
                     Parameter parameter = tokenParam.name("token").description("登录令牌").defaultValue(token)

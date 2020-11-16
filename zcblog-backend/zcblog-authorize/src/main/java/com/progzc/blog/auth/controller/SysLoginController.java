@@ -7,6 +7,7 @@ import com.progzc.blog.auth.service.SysUserTokenService;
 import com.progzc.blog.common.Result;
 import com.progzc.blog.common.base.AbstractController;
 import com.progzc.blog.common.enums.ErrorEnum;
+import com.progzc.blog.common.utils.EncryptUtils;
 import com.progzc.blog.entity.sys.SysUser;
 import com.progzc.blog.entity.sys.vo.SysLoginForm;
 import com.progzc.blog.mapper.sys.SysUserMapper;
@@ -81,11 +82,15 @@ public class SysLoginController extends AbstractController {
             return Result.error(ErrorEnum.CAPTCHA_WRONG);
         }
 
+        // 进行AES解密
+        String username = EncryptUtils.decrypt(form.getUsername());
+        String password = EncryptUtils.decrypt(form.getPassword());
+        
         SysUser sysUser = sysUserMapper.selectOne(new QueryWrapper<SysUser>()
                 .lambda()
-                .eq(SysUser::getUsername, form.getUsername()));
+                .eq(SysUser::getUsername, username));
         // 用户不存在或密码不正确
-        if (sysUser == null || !sysUser.getPassword().equals(new Sha256Hash(form.getPassword(), sysUser.getSalt()).toString())) {
+        if (sysUser == null || !sysUser.getPassword().equals(new Sha256Hash(password, sysUser.getSalt()).toString())) {
             log.error(ErrorEnum.USERNAME_OR_PASSWORD_WRONG.getMsg());
             return Result.error(ErrorEnum.USERNAME_OR_PASSWORD_WRONG);
         }
