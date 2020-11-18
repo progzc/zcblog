@@ -11,6 +11,7 @@ import lombok.EqualsAndHashCode;
 import org.springframework.data.annotation.Id;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * @Description 菜单管理
@@ -40,6 +41,9 @@ public class SysMenu implements Serializable {
     @ApiModelProperty(value = "路由地址")
     private String url;
 
+    @ApiModelProperty(value = "组件路径")
+    private String component;
+
     @ApiModelProperty(value = "权限")
     @TableField(strategy = FieldStrategy.IGNORED)
     private String perms;
@@ -52,5 +56,23 @@ public class SysMenu implements Serializable {
 
     @ApiModelProperty(value = "同级菜单排序")
     private Integer orderNum;
+
+    /**
+     * 父级菜单名称
+     */
+    @TableField(exist = false)
+    private String parentName;
+
+    /**
+     * z-tree属性
+     */
+    @TableField(exist = false)
+    private Boolean open;
+
+    /**
+     * 子菜单
+     */
+    @TableField(exist = false)
+    private List<?> list;
 
 }
