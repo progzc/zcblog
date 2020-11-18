@@ -31,3 +31,14 @@ export function executeGetCaptchaPath (uuid) {
     }
   })
 }
+
+/**
+ * 退出登录
+ * @returns {*}
+ */
+export function executeLogout () {
+  return request({
+    url: '/admin/sys/logout',
+    method: 'post'
+  })
+}

@@ -75,7 +75,8 @@ export default {
           executeLogin(this.dataForm).then(data => {
             if (data && data.code === 200) {
               this.$cookie.set('token', data.token)
-              // this.$router.replace({ name: 'home' })
+              this.$router.replace({ name: 'home' }).catch(() => {
+              })
               this.$message.success('登录成功！')
             } else {
               this.getCaptcha()

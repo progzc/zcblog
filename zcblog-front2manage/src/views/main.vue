@@ -19,12 +19,13 @@ import MainSidebar from 'views/layout/MainSidebar'
 import MainContent from 'views/layout/MainContent'
 
 import {
-  UPDATE_DOCUMENT_CLIENTHEIGHT,
-  UPDATE_ID,
-  UPDATE_NAME
+  UPDATE_DOCUMENT_CLIENT_HEIGHT,
+  UPDATE_USER_ID,
+  UPDATE_USER_NAME
 } from 'store/constant/mutation-types'
+import { executeGetUserInfo } from 'network/api/user'
+import { decryptAES } from 'common/js/utils/encrypt'
 
-import { executeGetUserInfo, executeGetSysParam } from 'network/api/user'
 export default {
   components: {
     'main-navbar': MainNavbar,
@@ -33,7 +34,7 @@ export default {
   },
   data () {
     return {
-      loading: true// v-loading属于element-ui中Loading的指令
+      loading: true // v-loading属于element-ui中Loading的指令
     }
   },
   computed: {
@@ -42,20 +43,19 @@ export default {
     },
     documentClientHeight: {
       get () { return this.$store.state.common.documentClientHeight },
-      set (val) { this.$store.commit(`common/${UPDATE_DOCUMENT_CLIENTHEIGHT}`, val) }
+      set (val) { this.$store.commit(UPDATE_DOCUMENT_CLIENT_HEIGHT, val) }
     },
     userId: {
       get () { return this.$store.state.user.id },
-      set (val) { this.$store.commit(`user/${UPDATE_ID}`, val) }
+      set (val) { this.$store.commit(UPDATE_USER_ID, val) }
     },
-    userName: {
+    username: {
       get () { return this.$store.state.user.name },
-      set (val) { this.$store.commit(`user/${UPDATE_NAME}`, val) }
+      set (val) { this.$store.commit(UPDATE_USER_NAME, val) }
     }
   },
   created () {
     this.getUserInfo()
-    this.getSysParam()
   },
   mounted: function () {
     this.resetDocumentClientHeight()
@@ -67,15 +67,7 @@ export default {
         if (data && data.code === 200) {
           this.loading = false
           this.userId = data.user.userId
-          this.userName = data.user.userName
-        }
-      })
-    },
-    // 获取参数
-    getSysParam () {
-      executeGetSysParam().then(data => {
-        if (data && data.code === 200) {
-          localStorage.setItem('sysParamList', JSON.stringify(data.sysParamList))
+          this.username = decryptAES(data.user.username)
         }
       })
     },

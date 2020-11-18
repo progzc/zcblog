@@ -58,6 +58,10 @@ router.beforeEach((to, from, next) => {
         // ...是es6中的扩展运算符，可以将数组转换为函数的参数，...to确保addRoutes已完成
         // 若replace设置为true，那么导航不会留下history记录，点击浏览器回退按钮不会再回到这个路由
         next({ ...to, replace: false })
+      } else {
+        sessionStorage.setItem('menuList', '[]')
+        sessionStorage.setItem('perms', '[]')
+        next()
       }
     })
   }
@@ -91,9 +95,9 @@ function addDynamicMenuRoutes (menuList = [], routes = []) {
       // 替换url开头的"/"替换为""
       menuList[i].url = menuList[i].url.replace(/^\//, '')
       const route = {
-        path: menuList[i].url.replace(/\//g, '-'),
+        path: menuList[i].url,
         component: null,
-        name: menuList[i].url.replace(/\//g, '-'),
+        name: menuList[i].url,
         meta: {
           menuId: menuList[i].menuId,
           title: menuList[i].name,
@@ -104,12 +108,12 @@ function addDynamicMenuRoutes (menuList = [], routes = []) {
       }
       // url以http[s]://开头，通过iframe展示
       if (isURL(menuList[i].url)) {
-        route.path = `i-${menuList[i].menuId}`
-        route.name = `i-${menuList[i].menuId}`
+        route.path = `iframe/${menuList[i].menuId}`
+        route.name = `iframe/${menuList[i].menuId}`
         route.meta.iframeUrl = menuList[i].url
       } else {
         try {
-          route.component = _import(`content/${menuList[i].url}`) || null
+          route.component = _import(`content/${menuList[i].component}`) || null
         } catch (e) {
         }
       }
