@@ -14,12 +14,12 @@ public class RegExpTest {
      * 测试密码校验方式：8-16个字符,不包含空格,必须包含数字,字母或字符至少两种，不允许有空格、中文
      */
     @Test
-    public void test(){
+    public void test() {
         String[] strs = {"!@~#$^%&^%#@", "12345678}{|", "A12345678", "12345678:;;",
-                         "444412345678", "1234)5678", "、、、、、、、、", "11111111",
-                         "bbbbbbbbb", "无1bbbbbbb","无bbbbbbbbbbb", "12345678900", "a1234567",
-                         ",12345678", "ijhfsshahahah", ".,.,.,,.,.,.", "chaojiwudi22ah",
-                         ".,.,.,,.,55", "123456781234654687321343513213", "!!!!AAAAA", "a.a.a.a.a.a.a", "11 1"};
+                "444412345678", "1234)5678", "、、、、、、、、", "11111111",
+                "bbbbbbbbb", "无1bbbbbbb", "无bbbbbbbbbbb", "12345678900", "a1234567",
+                ",12345678", "ijhfsshahahah", ".,.,.,,.,.,.", "chaojiwudi22ah",
+                ".,.,.,,.,55", "123456781234654687321343513213", "!!!!AAAAA", "a.a.a.a.a.a.a", "11 1"};
         for (String str : strs) {
             StringBuilder sb = new StringBuilder();
             sb.append(str).append("   ");
