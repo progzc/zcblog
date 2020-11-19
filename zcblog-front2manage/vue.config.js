@@ -64,19 +64,16 @@ module.exports = {
       .set('store', resolve('src/store'))
       .set('views', resolve('src/views'))
     // 配置svg组件
-    const svgRule = config.module.rule('svg')
-    svgRule.uses.clear()
-    svgRule.exclude.add(/node_modules/)
-    svgRule
-      .test(/\.svg$/)
-      .use('svg-sprite-loader')
-      .loader('svg-sprite-loader')
+    // 1. 让其他的svg loader不要对src/icons/svg进行操作
+    config.module.rule('svg').exclude.add(resolve('src/icons/svg')).end()
+    // 2. 使用svg-sprite-loader对src/icons/svg下的.svg进行操作
+    config.module.rule('icons').test(/\.svg$/)
+      .include.add(resolve('src/icons/svg')).end()
+      .use('svg-sprite-loader').loader('svg-sprite-loader')
+      // 3.定义规则，使用时<svg class="icon"> <use xlink:href="#icon-svg文件名"></use></svg>
       .options({
-        symbolId: 'icon-[name]'
-      })
-    const imagesRule = config.module.rule('images')
-    imagesRule.exclude.add(resolve('src/icons'))
-    config.module.rule('images').test(/\.(png|jpe?g|gif|svg)(\?.*)?$/)
+        symbolId: '[name]'
+      }).end()
   },
 
   // 配置SCSS全局变量
