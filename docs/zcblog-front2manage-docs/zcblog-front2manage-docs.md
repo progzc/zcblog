@@ -323,6 +323,8 @@ module.exports = {
 
 ## 3.6 使用SVG组件
 
+### 3.6.1 使用方法
+
 由于本项目采用动态路由，需要创建SVG组件实现菜单图标的动态加载。
 
 - 第1步：安装`svg-sprite-loader`。
@@ -335,9 +337,8 @@ npm i -D svg-sprite-loader
 
 ```vue
 <template>
-  <svg class="svg-icon"
-       aria-hidden="true">
-    <use :xlink:href="iconName" />
+  <svg :class="getClassName" :width="width" :height="height" aria-hidden="true">
+    <use :xlink:href="getName" />
   </svg>
 </template>
 
@@ -345,14 +346,19 @@ npm i -D svg-sprite-loader
 export default {
   name: 'SvgIcon',
   props: {
-    name: {
-      type: String,
-      required: true
-    }
+    name: { type: String, required: true },
+    className: { type: String },
+    width: { type: String },
+    height: { type: String }
   },
   computed: {
-    iconName () {
-      return `#icon-${this.name}`
+    getName () { return `#icon-${this.name}` },
+    getClassName () {
+      return [
+        'svg-icon',
+        `svg-icon__${this.name}`,
+        this.className && /\S/.test(this.className) ? `${this.className}` : ''
+      ]
     }
   }
 }
@@ -365,6 +371,7 @@ export default {
     vertical-align: -0.15em;
     fill: currentColor;
     overflow: hidden;
+    color: blue;
   }
 </style>
 ```
@@ -400,25 +407,58 @@ const resolve = dir => path.join(__dirname, dir)
 
 module.exports = {
   chainWebpack: config => {
-    const svgRule = config.module.rule("svg")
-    svgRule.uses.clear();
-    svgRule.exclude.add(/node_modules/)
-    svgRule
+   // 配置svg组件
+    // 1. 让其他的svg loader不要对src/icons/svg进行操作
+    config.module
+      .rule('svg')
+      .exclude
+      .add(resolve('src/icons/svg'))
+      .end()
+    // 2. 使用svg-sprite-loader对src/icons/svg下的.svg进行操作
+    config.module
+      .rule('icons')
       .test(/\.svg$/)
-      .use("svg-sprite-loader")
-      .loader("svg-sprite-loader")
+      .include
+      .add(resolve('src/icons/svg'))
+      .end()
+      .use('svg-sprite-loader')
+      .loader('svg-sprite-loader')
+      // 3.定义规则，使用时<svg class="icon"> <use xlink:href="#icon-svg文件名"></use></svg>
       .options({
-        symbolId: "icon-[name]"
-      })
-
-    const imagesRule = config.module.rule("images")
-    imagesRule.exclude.add(resolve("src/icons"))
-    config.module.rule("images").test(/\.(png|jpe?g|gif|svg)(\?.*)?$/)
+        symbolId: '[name]' // 注意这里容易出错
+      }).end()
   }
 }
 ```
 
 - 第7步：在组件模板中使用`<icon-svg :name="icon的名称"></icon-svg>`。
+
+### 3.6.2 遇到的大坑
+
+**问题描述：**在使用`svg-sprite-loader`的时候遇到一个大坑，按照网上的设置配好之后，svg的图标一直出不来（这个问题折腾了半天才搞定）。
+
+![image-20201119155754591](zcblog-front2manage-docs.assets/image-20201119155754591.png)
+
+
+
+**解决办法：**
+
+1. 查看html body引入的svg空间约束，发现svg图片的id是`icon-icon-xxx`形式。
+
+![image-20201119160127449](zcblog-front2manage-docs.assets/image-20201119160127449.png)
+
+2. 在使用id选择器选择svg图标时却是`href="icon-shouye"`。
+
+![image-20201119160407870](zcblog-front2manage-docs.assets/image-20201119160407870.png)
+
+3. 解决办法是在`vue.config.js`中修改`svg-sprite-loader`的配置，让svg的id名称与xlink:href对上（**也可以选择修改.svg文件的名称，例如将icon-shouye.svg文件的名称改为shouye.svg也可以，二者选其一即可**）。
+
+```javascript
+// 修改前
+symbolId: 'icon-[name]'
+// 修改后
+symbolId: '[name]'
+```
 
 ## 3.7 package.json
 
@@ -850,7 +890,7 @@ export default {
 
 **注意事项：**
 
-1. 在组件中调用mutation方法时，需要采用占位符${}拼接字符串与变量（${}是ES2015新增语法结构）；
+1. 在组件中调用mutation方法时，直接引用方法名即可（不需要增加模块名，即时设置了 namespaced为true），但引用store里的常量需要加模块名；
 2. 使用ESC键上的``（而不是单引号）表示拼接后的字符串。
 
 ```javascript
@@ -885,10 +925,11 @@ import { UPDATE_DOCUMENT_CLIENTHEIGHT } from 'store/constant/mutation-types'
 export default {
   computed: {
     documentClientHeight: {
+      // 注意：在组件中调用store变量时，需要增加模块名（前提是设置了namespaced为true）
       get () { return this.$store.state.common.documentClientHeight },
       set (val) {
-        // 注意：使用占位符${}拼接字符串与变量（${}是ES2015新增语法结构）；使用ESC键上的``（而不是单引号）表示拼接后的字符串
-        this.$store.commit(`common/${UPDATE_DOCUMENT_CLIENTHEIGHT}`, val) 
+        // 注意：在组件中调用mutation方法时，直接引用方法名即可（不需要增加模块名，即使设置了namespaced为true）
+        this.$store.commit(UPDATE_DOCUMENT_CLIENTHEIGHT, val) 
       }
     }
   }
@@ -1034,7 +1075,272 @@ export default {
 
 > 参考博客文章：[mounted和created的区别](https://blog.csdn.net/xdnloveme/article/details/78035065)
 
+## 7.9 添加动态路由
 
+利用vue中的addRoutes方法来添加动态路由。
+
+`sys_menu`表的设计：
+
+![image-20201117202228150](zcblog-front2manage-docs.assets/image-20201117202228150.png)
+
+在`router/index.js`中设置动态路由：
+
+```javascript
+import Vue from 'vue'
+import VueRouter from 'vue-router'
+import { clearLoginInfo } from 'common/js/utils/login'
+import { executeGetSysMenuNav } from 'network/api/route'
+import { isURL } from 'common/js/utils/validate'
+
+Vue.use(VueRouter)
+
+const _import = require('./_import_' + process.env.NODE_ENV) // 智能懒加载：开发环境不采用懒加载，生产环境采用懒加载
+// 配置全局路由
+const globalRoutes = [
+  { path: '/404', component: _import('common/404'), name: '404', meta: { title: '404未找到' } },
+  { path: '/login', component: _import('common/login'), name: 'login', meta: { title: '登录' } }
+]
+// 配置主路由
+const mainRoutes = {
+  path: '/',
+  component: _import('main'),
+  name: 'main',
+  redirect: { name: 'home' },
+  meta: { title: '主入口整体布局' },
+  children: [
+    { path: 'home', component: _import('common/home'), name: 'home', meta: { title: '首页' } }
+  ],
+  // 设置路由前置守卫
+  beforeEnter (to, from, next) {
+    // 若token不存在，则跳转到登录界面
+    const token = Vue.cookie.get('token')
+    if (!token || !/\S/.test(token)) {
+      clearLoginInfo()
+      next({ name: 'login' })
+    }
+    // 若token存在，则放行
+    next()
+  }
+}
+
+const router = new VueRouter({
+  mode: 'history',
+  base: process.env.BASE_URL, // 路由跳转时的基路径
+  routes: globalRoutes.concat(mainRoutes), // 合并全局路由和主路由
+  scrollBehavior: () => ({ y: 0 }), // 每次访问滚动条都置零
+  isAddDynamicMenuRoutes: false // 是否已添加动态菜单路由
+})
+
+// 设置全局前置守卫
+router.beforeEach((to, from, next) => {
+  // 如果动态路由已加载或当前访问路由是全局路由，则直接加载
+  if (router.options.isAddDynamicMenuRoutes || isGlobalRoute(to)) {
+    next()
+  } else {
+    executeGetSysMenuNav().then(data => {
+      if (data && data.code === 200) {
+        addDynamicMenuRoutes(data.menuList)
+        router.options.isAddDynamicMenuRoutes = true
+        sessionStorage.setItem('menuList', JSON.stringify(data.menuList || []))
+        sessionStorage.setItem('perms', JSON.stringify(data.perms || []))
+        // ...是es6中的扩展运算符，可以将数组转换为函数的参数，...to确保addRoutes已完成
+        // 若replace设置为true，那么导航不会留下history记录，点击浏览器回退按钮不会再回到这个路由
+        next({ ...to, replace: false })
+      } else {
+        sessionStorage.setItem('menuList', '[]')
+        sessionStorage.setItem('perms', '[]')
+        next()
+      }
+    })
+  }
+})
+
+/**
+ * 判断当前路由是否是全局路由
+ * @param route
+ * @returns {boolean}
+ */
+function isGlobalRoute (route) {
+  for (let i = 0; i < globalRoutes.length; i++) {
+    if (route.path === globalRoutes[i].path) {
+      return true
+    }
+  }
+  return false
+}
+
+/**
+ * 添加动态路由
+ * @param menuList
+ * @param routes
+ */
+function addDynamicMenuRoutes (menuList = [], routes = []) {
+  let temp = []
+  for (let i = 0; i < menuList.length; i++) {
+    if (menuList[i].list && menuList[i].list.length >= 1) {
+      temp = temp.concat(menuList[i].list)
+    } else if (menuList[i].url && /\S/.test(menuList[i].url)) { // 若url不为空
+      // 替换url开头的"/"替换为""
+      menuList[i].url = menuList[i].url.replace(/^\//, '')
+      const route = {
+        path: menuList[i].url,
+        component: null,
+        name: menuList[i].url,
+        meta: {
+          menuId: menuList[i].menuId,
+          title: menuList[i].name,
+          isDynamic: true, // 动态菜单
+          isTab: true, // 一级菜单
+          iframeUrl: ''
+        }
+      }
+      // url以http[s]://开头，通过iframe展示
+      if (isURL(menuList[i].url)) {
+        route.path = `iframe/${menuList[i].menuId}`
+        route.name = `iframe/${menuList[i].menuId}`
+        route.meta.iframeUrl = menuList[i].url
+      } else {
+        try {
+          route.component = _import(`content/${menuList[i].component}`) || null
+        } catch (e) {
+        }
+      }
+      routes.push(route)
+    }
+  }
+  if (temp.length >= 1) {
+    addDynamicMenuRoutes(temp, routes)
+  } else {
+    mainRoutes.name = 'main-dynamic'
+    mainRoutes.children = routes
+    router.addRoutes([
+      mainRoutes,
+      { path: '*', redirect: { name: '404' } }
+    ])
+    sessionStorage.setItem('dynamicMenuRoutes', JSON.stringify(mainRoutes.children || []))
+    console.log('\n')
+    console.log('%c!<-------------------- 动态(菜单)路由 s -------------------->', 'color:blue')
+    console.log(mainRoutes.children)
+    console.log('%c!<-------------------- 动态(菜单)路由 e -------------------->', 'color:blue')
+  }
+}
+```
+
+## 7.10 修饰符
+
+### 7.10.1 .sync修饰符
+
+**vue中.sync修饰符的作用**：当一个子组件改变了一个 prop 的值时，这个变化也会同步到父组件中所绑定。
+
+**本质：**.sync是一种语法糖。
+
+```vue
+// 语法糖写法
+// 父组件中的写法
+<comp :foo.syn="bar"></comp>
+// 当子组件需要更新 foo 的值时，它需要显式地触发一个更新事件
+this.$emit('update:foo', newValue) // update:foo是约定的事件名写法
+
+
+// 等价于
+// 父组件中的写法
+<comp :foo="bar" @setFoo="var => bar=var"></comp>
+// 当子组件需要更新 foo 的值时，它需要显式地触发一个更新事件
+this.$emit('setFoo', newValue)
+```
+
+> 参考博客文章：**[vue中的.sync修饰符用法及原理详解](https://blog.csdn.net/liushijun_/article/details/92426854)**
+
+### 7.10.2 .native修饰符
+
+**vue中.native修饰符的作用**：在父组件中给子组件绑定一个原生的事件，就将子组件变成了普通的HTML标签，不加`.native`事件是无法触发的。
+
+> 参考博客文章：[vue中.native修饰符的使用](https://blog.csdn.net/qq_29468573/article/details/80771625)
+
+## 7.11 方法
+
+### 7.11.1 $nextTicks
+
+**$nextTicks：**主要用于异步更新（重点理解DOM渲染的时机）。
+
+**原理：**当设置 `vm.someData = 'new value'`后，该组件不会立即重新渲染。当刷新队列时，组件会在下一个事件循环"tick"中更新。多数情况我们不需要关心这个过程，但是如果你想基于更新后的 DOM 状态来做点什么，这就可能会有些棘手。虽然 Vue.js 通常鼓励开发人员使用“数据驱动”的方式思考，避免直接接触 DOM，但是有时我们必须要这么做。为了在数据变化之后等待 Vue 完成更新 DOM，可以在数据变化之后立即使用 `Vue.nextTick(callback)`。这样回调函数将在 DOM 更新完成后被调用。
+
+```vue
+// 理解DOM渲染的时机很重要
+<div id="example">{{message}}</div>
+
+var vm = new Vue({
+  el: '#example',
+  data: {
+    message: '123'
+  }
+})
+vm.message = 'new message' // 更改数据
+vm.$el.textContent === 'new message' // false
+Vue.nextTick(function () {
+  vm.$el.textContent === 'new message' // true
+})
+
+// 另一种写法
+Vue.component('example', {
+  template: '<span>{{ message }}</span>',
+  data: function () {
+    return {
+      message: '未更新'
+    }
+  },
+  methods: {
+    updateMessage: function () {
+      this.message = '已更新'
+      console.log(this.$el.textContent) // => '未更新'
+      this.$nextTick(function () {
+        console.log(this.$el.textContent) // => '已更新'
+      })
+    }
+  }
+})
+```
+
+> 参考博客文章：[理解$nextTick的作用](https://blog.csdn.net/sinat_17775997/article/details/71638144)、[vue官网-异步更新队列](https://cn.vuejs.org/v2/guide/reactivity.html#异步更新队列)
+
+### 7.11.2 $refs
+
+**$refs：**一个对象，持有注册过`ref属性`的所有DOM元素和组件实例。
+
+```vue
+<input title="手机号"  name="mobile" ref="mobile" placeholder="手机号" type="tel" is-type="china-mobile" required :min="11" :max="11"></input>
+// 使用this.$refs.xxx获取DOM元素
+this.$refs.mobile
+```
+
+## 7.12 watch路由
+
+当使用路由参数时，例如从 /user/foo 导航到 /user/bar，原来的组件实例会被复用。因为两个路由都渲染同个组件，比起销毁再创建，复用则显得更加高效。不过，这也意味着组件的生命周期钩子不会再被调用。
+
+复用组件时，若想对路由参数的变化作出响应的话，你可以简单地 watch (监测变化) `$route` 对象。
+
+```javascript
+const User = {
+  template: '...',
+  watch: {
+    $route(to, from) {
+      // 对路由变化作出响应...
+    }
+  }
+}
+```
+
+或者使用`beforeRouteUpdate`导航守卫也可以实现同样的功能：
+
+```js
+const User = {
+  template: '...',
+  beforeRouteUpdate (to, from, next) {
+    // react to route changes...
+    // don't forget to call next()
+  }
+}
+```
 
 # 8 js相关技巧
 
@@ -1180,13 +1486,309 @@ _.merge       ([], ['a','b'], ['bb']) // => [ "bb", "b" ]
 
 ## 8.4 HTTPS加密机制及登录界面的实现
 
-> 背景：HTTP（**未加密**） --> 对称加密（**秘钥**） --> 非对称加密 （**公钥+私钥**）--> HTTPS（**证书+数字签名**）
->
-> 总结：HTTPS = HTTP + TLS/SSL
+背景：HTTP（**未加密**） --> 对称加密（**秘钥**） --> 非对称加密 （**公钥+私钥**）--> HTTPS（**证书+数字签名**）
 
-相关博客文章：[HTTPS加密机制](https://blog.csdn.net/akunshouyoudou/article/details/95184254)、[网站启用HTTPS加密传输协议](https://blog.csdn.net/weixin_30426065/article/details/97928605)
+总结：HTTPS = HTTP + TLS/SSL
+
+> 相关博客文章：[HTTPS加密机制](https://blog.csdn.net/akunshouyoudou/article/details/95184254)、[网站启用HTTPS加密传输协议](https://blog.csdn.net/weixin_30426065/article/details/97928605)
+
+## 8.5 console.log的高级用法
 
 
+
+> 参考博客文章：[console.log的高级用法](https://www.cnblogs.com/chris-oil/p/11988903.html)
+
+
+
+## 8.6 ...运算符
+
+
+
+
+
+> 参考博客文章：[es6之扩展运算符(...)](https://blog.csdn.net/astonishqft/article/details/82899965)
+
+
+
+# 9 加密传输
+
+针对用户登录时提交的用户名和密码，这里采用AES（CBC模式）对称加密。
+
+## 9.1 前台加密解密
+
+前台采用`crypto-js`实现加密和解密：
+
+```javascript
+// common/js/utils/encrypt.js
+import CryptoJS from 'crypto-js'
+
+const key = CryptoJS.enc.Hex.parse('6466326531633534343362323263623965323866373862323937613061666630')
+const iv = CryptoJS.enc.Hex.parse('30313233343536373839616263646566')
+
+/**
+ * AES加密
+ * @returns {string}
+ * @param plaintext
+ */
+export function encryptAES (plaintext) {
+  const ecrypted = CryptoJS.AES.encrypt(plaintext, key, {
+    iv: iv,
+    mode: CryptoJS.mode.CBC,
+    padding: CryptoJS.pad.Pkcs7
+  })
+  return ecrypted.ciphertext.toString()
+}
+
+/**
+ * AES解密
+ * @returns {string}
+ * @param ciphertext
+ */
+export function decryptAES (ciphertext) {
+  ciphertext = CryptoJS.format.Hex.parse(ciphertext)
+  const decrypted = CryptoJS.AES.decrypt(ciphertext, key, {
+    iv: iv,
+    mode: CryptoJS.mode.CBC,
+    padding: CryptoJS.pad.Pkcs7
+  })
+  return CryptoJS.enc.Utf8.stringify(decrypted)
+}
+```
+
+## 9.2 后台加密解密
+
+后台采用java的原生API进行加密解密：
+
+```java
+@Slf4j
+public class EncryptUtils {
+
+    /**
+     * 后台密钥
+     * 对应前台密钥：6466326531633534343362323263623965323866373862323937613061666630
+     */
+    private static final String KEY = "df2e1c5443b22cb9e28f78b297a0aff0";
+    /**
+     *
+     * 后台偏移量：偏移量字符串必须是16位，当模式是CBC的时候必须设置偏移量0123456789abcdef
+     * 对应前台偏移量为：30313233343536373839616263646566
+     */
+    private static final String IV = "0123456789abcdef";
+    private static final String ALGORITHM = "AES"; // 加密算法
+    private static final String ALGORITHMPROVIDER = "AES/CBC/PKCS5Padding"; // 算法/模式/补码方式
+
+    /**
+     * AES加密
+     * @param plaintext
+     * @return
+     */
+    public static String encrypt(String plaintext){
+        try {
+            return byteToHexString(encrypt(plaintext, KEY.getBytes("utf-8")));
+        } catch (UnsupportedEncodingException e) {
+            log.error(ErrorEnum.ENCRYPT_FAILED.getMsg());
+            throw new MyException(ErrorEnum.ENCRYPT_FAILED);
+        }
+    }
+
+    /**
+     * AES加密
+     * @param plaintext
+     * @param key
+     * @return
+     */
+    public static byte[] encrypt(String plaintext, byte[] key) {
+        SecretKey secretKey = new SecretKeySpec(key, ALGORITHM);
+        try {
+            IvParameterSpec ivParameterSpec = getIv();
+            Cipher cipher = Cipher.getInstance(ALGORITHMPROVIDER);
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivParameterSpec);
+            return cipher.doFinal(plaintext.getBytes(Charset.forName("utf-8")));
+        }catch (Exception e){
+            log.error(ErrorEnum.ENCRYPT_FAILED.getMsg());
+            throw new MyException(ErrorEnum.ENCRYPT_FAILED);
+        }
+    }
+
+    /**
+     * AES解密
+     * @param ciphertext
+     * @return
+     */
+    public static String decrypt(String ciphertext){
+
+        try {
+            return new String(decrypt(ciphertext, KEY.getBytes("utf-8")),"utf-8");
+        } catch (UnsupportedEncodingException e) {
+            log.error(ErrorEnum.DENCRYPT_FAILED.getMsg());
+            throw  new MyException(ErrorEnum.DENCRYPT_FAILED);
+        }
+    }
+
+    /**
+     * AES解密
+     * @param ciphertext
+     * @param key
+     * @return
+     */
+    public static byte[] decrypt(String ciphertext, byte[] key) {
+        SecretKey secretKey = new SecretKeySpec(key, ALGORITHM);
+        try {
+            IvParameterSpec ivParameterSpec = getIv();
+            Cipher cipher = Cipher.getInstance(ALGORITHMPROVIDER);
+            cipher.init(Cipher.DECRYPT_MODE, secretKey, ivParameterSpec);
+            byte[] hexBytes = hexStringToBytes(ciphertext);
+            return cipher.doFinal(hexBytes);
+        } catch (Exception e) {
+            log.error(ErrorEnum.DENCRYPT_FAILED.getMsg());
+            throw  new MyException(ErrorEnum.DENCRYPT_FAILED);
+        }
+    }
+
+    /**
+     * 生成随机key
+     * @return
+     * @throws NoSuchAlgorithmException
+     */
+    public static byte[] generatorKey() throws NoSuchAlgorithmException {
+        KeyGenerator keyGenerator = KeyGenerator.getInstance(ALGORITHM);
+        keyGenerator.init(256); //默认128，获得无政策权限后可为192或256
+        SecretKey secretKey = keyGenerator.generateKey();
+        return secretKey.getEncoded();
+    }
+
+    /**
+     * 生成随机偏移量
+     * @return
+     * @throws UnsupportedEncodingException
+     */
+    public static IvParameterSpec getIv() throws UnsupportedEncodingException {
+        IvParameterSpec ivParameterSpec = new IvParameterSpec(IV.getBytes("utf-8"));
+        return ivParameterSpec;
+    }
+
+    /**
+     * 将byte转换为16进制字符串
+     * @param src
+     * @return
+     */
+    private static String byteToHexString(byte[] src) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < src.length; i++) {
+            int v = src[i] & 0xff;
+            String hv = Integer.toHexString(v);
+            if (hv.length() < 2) {
+                sb.append("0");
+            }
+            sb.append(hv);
+        }
+        return sb.toString();
+    }
+
+    /**
+     * 将16进制字符串装换为byte数组
+     * @param hexString
+     * @return
+     */
+    private static byte[] hexStringToBytes(String hexString) {
+        hexString = hexString.toUpperCase();
+        int length = hexString.length() / 2;
+        char[] hexChars = hexString.toCharArray();
+        byte[] b = new byte[length];
+        for (int i = 0; i < length; i++) {
+            int pos = i * 2;
+            b[i] = (byte) (charToByte(hexChars[pos]) << 4 | charToByte(hexChars[pos + 1]));
+        }
+        return b;
+    }
+
+    private static byte charToByte(char c) {
+        return (byte) "0123456789ABCDEF".indexOf(c);
+    }
+
+    @Test
+    public void test() throws Exception{
+        byte key[] = KEY.getBytes("utf-8");
+        String plaintext = "admin123";
+        System.out.println("密钥:" + byteToHexString(key)); // 6466326531633534343362323263623965323866373862323937613061666630
+        System.out.println("偏移量：" + byteToHexString(getIv().getIV())); // 30313233343536373839616263646566
+        System.out.println("原字符串:" + plaintext);
+        String enc = byteToHexString(encrypt(plaintext, key));
+        System.out.println("加密:" + enc);
+        System.out.println("解密:" + new String(decrypt(enc, key), "utf-8"));
+
+        System.out.println("-------------------------------------------");
+        System.out.println("密钥:" + byteToHexString(key)); // 6466326531633534343362323263623965323866373862323937613061666630
+        System.out.println("偏移量：" + byteToHexString(getIv().getIV())); // 30313233343536373839616263646566
+        System.out.println("原字符串:" + plaintext);
+        System.out.println("加密:" + encrypt(plaintext));
+        System.out.println("解密:" + decrypt(encrypt(plaintext)));
+    }
+}
+```
+
+> 参考博客文章：[前后端AES加密解密](https://blog.csdn.net/lsvtogergo/article/details/80804312)
+
+# 10 正则表达式
+
+## 10.1 密码校验
+
+**问题描述：**前端页面需要对密码进行校验。密码有如下要求：
+
+1. 不能包含空格和中文字符。
+2. 字母/数字以及标点符号至少包含2种。
+3. 长度为8~16。
+
+- 第1步：分布拆解
+
+  - 不能包含空格和中文字符：
+
+  ```javascript
+  /^[^\s\u4e00-\u9fa5]+$/
+  ```
+
+  - 字母数/数字以及标点符号至少包含2种（默认第一个条件已经成立）：
+
+  ```javascript
+  // 思路：`数字/字母以及标点符号至少包含2种`拆解为以下几种情况
+  // 1. 排除只包含数字的情况
+  // 2. 排除只包含字母的情况
+  // 3. 排除只包含标点符号的情况
+  // 4. 排除数字/字母以及标点符号都不包含的情况
+  /(?!^[0-9]+$)(?!^[A-Za-z]+$)(?!^[`~!@#$%^&*()\-_+={}\[\]|;:\\"'<>,.?/]+$)(?!^[^\x21-\x7e]+$)^.+$/
+  ```
+
+  - 长度为8~16：
+
+  ```javascript
+  /^.{8,16}$/
+  ```
+
+- 第2步：在https://regex101.com/上进行校验测试（测试通过）
+
+![image-20201118123551382](zcblog-front2manage-docs.assets/image-20201118123551382.png)
+
+> 参考博客文章：[Github/learn-regex](https://github.com/ziishaned/learn-regex/blob/master/translations/README-cn.md)、[正则表达式测试网站](https://regex101.com/)
+
+
+
+## 10.2 复用轮子
+
+**复用轮子：**由于校验一般是由前端执行，正则表达式网站上大量使用。这里需要了解如何查询网页上的正则表达式进行复用。以百度首页为例：
+
+![image-20201118124120877](zcblog-front2manage-docs.assets/image-20201118124120877.png)
+
+- 第1步：打开断点调式工具，根据DOM元素定位到源代码（使用浏览器可以将代码格式化，我个人习惯下载下来自己格式化）：
+
+![image-20201118125438985](zcblog-front2manage-docs.assets/image-20201118125438985.png)
+
+- 第2步：将源代码复制下来在NotePad++里进行格式化：
+
+![image-20201118130835578](zcblog-front2manage-docs.assets/image-20201118130835578.png)
+
+- 第3步：使用正则表达式进行搜索匹配：
+
+![image-20201118130955016](zcblog-front2manage-docs.assets/image-20201118130955016.png)
 
 # 7 使用vue-cookie
 
