@@ -282,12 +282,13 @@ CREATE TABLE `sys_menu` (
   `parent_id` bigint(20) DEFAULT NULL COMMENT '父级菜单id',
   `name` tinytext COLLATE utf8_unicode_ci COMMENT '菜单名称',
   `url` varchar(200) COLLATE utf8_unicode_ci DEFAULT NULL COMMENT '路由地址',
+  `component` varchar(200) COLLATE utf8_unicode_ci DEFAULT NULL COMMENT '组件路径',
   `perms` varchar(500) COLLATE utf8_unicode_ci DEFAULT NULL COMMENT '权限',
   `type` tinyint(4) DEFAULT NULL COMMENT '菜单类型：0-目录，1-菜单，2-按钮',
   `icon` tinytext COLLATE utf8_unicode_ci COMMENT '菜单图标',
   `order_num` int(11) DEFAULT NULL COMMENT '同级菜单排序',
   PRIMARY KEY (`menu_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=85 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='菜单管理'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci COMMENT='菜单管理'
 ```
 
 ### 1.3.13 sys_role_menu表
@@ -1105,6 +1106,10 @@ GET /articles?published=true  # 查询已发布的文章；URL采用一级URL+�
 
 ![image-20201112122458552](zcblog-backend-docs.assets/image-20201112122458552.png)
 
+自动保存可以设置文件排除或包括：
+
+![image-20201117191706803](zcblog-backend-docs.assets/image-20201117191706803.png)
+
 > 参考博客文章：[IntelliJ Save Action的使用](https://blog.csdn.net/hustzw07/article/details/82824713)、[IDEA格式化代码时方法上的文字注释换行的问题](https://www.cnblogs.com/cmmplb/p/11770504.html)
 
 ## 2.10 其他插件
@@ -1649,7 +1654,7 @@ public class AutoLogin implements ApplicationListener<ContextRefreshedEvent> {
 
 ![image-20201114225346963](zcblog-backend-docs.assets/image-20201114225346963.png)
 
-> 参考博客文章：[RestTemplate详解](https://www.cnblogs.com/javazhiyin/p/9851775.html)、[RestTemplate发送远程请求](https://www.cnblogs.com/fantongxue/p/12443677.html)、[RestTemplate 发送post请求](https://www.cnblogs.com/leigepython/p/11319771.html)、[如何让java程序执行一段时间后停止](https://blog.csdn.net/kerongao/article/details/109576521)、[RestTemplate发送json请求@RequestBody实体类无法映射](https://blog.csdn.net/weixin_38626799/article/details/90213400)、[使用HashMap还是LinkedMultiValueMap](https://www.cnblogs.com/LX51/p/12214220.html)、[Spring使用反射动态修改bean](https://www.cnblogs.com/frankltf/p/11451917.html)、[spring 容器加载完成后执行某个方法](https://blog.csdn.net/weixin_34293911/article/details/86275569)
+> 参考博客文章：[RestTemplate详解](https://www.cnblogs.com/javazhiyin/p/9851775.html)、[RestTemplate发送远程请求](https://www.cnblogs.com/fantongxue/p/12443677.html)、[RestTemplate 发送post请求](https://www.cnblogs.com/leigepython/p/11319771.html)、[如何让java程序执行一段时间后停止](https://blog.csdn.net/kerongao/article/details/109576521)、[RestTemplate发送json请求@RequestBody实体类无法映射](https://blog.csdn.net/weixin_38626799/article/details/90213400)、[使用HashMap还是LinkedMultiValueMap](https://www.cnblogs.com/LX51/p/12214220.html)、[Spring使用反射动态修改bean](https://www.cnblogs.com/frankltf/p/11451917.html)、[spring 容器加载完成后执行某个方法]()
 
 ## 5.3 基本使用
 
@@ -4542,7 +4547,100 @@ POST请求属于HTTP请求中的复杂请求，HTTP协议在浏览器中对复�
 
 本项目采用的是第一种解决方案：在`Oauth2Filter.java`中放行OPTIONS请求。
 
+## 18.15 关于List<?>和List<T>
 
+
+
+> 参考博客文章：[List<?>和List<T>的区别](https://www.zhihu.com/question/31429113)
+
+## 18.16 BeanUtils.copyProperties
+
+**问题描述：**在PO层到VO层转换时，若通过get/set方法实现，代码会显得很冗余。
+
+**解决方法**：可以使用BeanUtils.copyProperties实现拷贝。
+
+**注意事项：**
+
+1、BeanUtils.copyProperties是浅拷贝。
+
+2、使用场景：如果都是单一的属性，那么不涉及到深拷贝的问题，适合用BeanUtils；虽然有子对象，但子对象并不怎么改动，那么用BeanUtils也没问题。
+
+3、常见的BeanUtils有2个：spring有BeanUtils、apache的commons也有BeanUtils（**注意二者的参数是相反的**）。
+
+|      | spring的BeanUtils | commons的BeanUtils |
+| :--: | :---------------: | :----------------: |
+| 方法 |  copyProperties   |   copyProperties   |
+| 参数 |    src ，dest     |     dest，src      |
+
+**关于深拷贝和浅拷贝：**
+
+- 浅拷贝：基本类型、String按值拷贝操作，拷贝对象时为按址拷贝；
+- 深拷贝：基本类型、String按值拷贝操作，拷贝对象时对其属性进一步进行按值拷贝。
+
+> 参考文章：[BeanUtils.copyProperties的使用(深拷贝/浅拷贝)](https://blog.csdn.net/enthan809882/article/details/104956537/)、[深拷贝和浅拷贝](https://www.oschina.net/translate/java-copy-shallow-vs-deep-in-which-you-will-swim)
+
+## 18.17 深入正则表达式
+
+**问题描述：**前端页面需要对密码进行校验（**本质上是在前台进行校验，这里在后台用java也实现一下**）。密码有如下要求：
+
+1. 不能包含空格和中文字符。
+2. 字母/数字以及标点符号至少包含2种。
+3. 长度为8~16。
+
+- 第1步：分布拆解
+  
+  - 不能包含空格和中文字符：
+  
+  ```java
+  public boolean checkChineseAndSpace(String value) {
+      String regex = "^[^\\s\\u4e00-\\u9fa5]+$";
+      return value.matches(regex);
+  }
+  ```
+  
+  - 数字/字母以及标点符号至少包含2种（默认第一个条件已经成立）：
+  
+  ```java
+  // 思路：`数字/字母以及标点符号至少包含2种`拆解为以下几种情况
+  // 1. 排除只包含数字的情况
+  // 2. 排除只包含字母的情况
+  // 3. 排除只包含标点符号的情况
+  // 4. 排除数字/字母以及标点符号都不包含的情况
+  public boolean checkInclude2Kind(String value) {
+      String regex = "(?!^[0-9]+$)(?!^[A-Za-z]+$)(?!^[`~!@#$%^&*()\\-_+={}\\[\\]|;:\"'<>,.?/]+$)(?!^[^\\x21-\\x7e]+$)^.+$";
+      return value.matches(regex);
+  }
+  ```
+  
+  - 长度为8~16：
+  
+  ```java
+  public boolean checkLength(String value) {
+      String regex = "^.{8,16}$";
+      return value.matches(regex);
+  }
+  ```
+
+- 第2步：校验测试（测试通过）
+
+  ```java
+  @Test
+  public void test(){
+      String[] strs = {"!@~#$^%&^%#@", "12345678}{|", "A12345678", "12345678:;;",
+                       "444412345678", "1234)5678", "、、、、、、、、", "11111111",
+                       "bbbbbbbbb", "无1bbbbbbb","无bbbbbbbbbbb", "12345678900", "a1234567",
+                       ",12345678", "ijhfsshahahah", ".,.,.,,.,.,.", "chaojiwudi22ah",
+                       ".,.,.,,.,55", "123456781234654687321343513213", "!!!!AAAAA", "a.a.a.a.a.a.a", "11 1"};
+      for (String str : strs) {
+          StringBuilder sb = new StringBuilder();
+          sb.append(str).append("   ");
+          sb.append(checkChineseAndSpace(str) && checkInclude2Kind(str) && checkLength(str));
+          System.out.println(sb.toString());
+      }
+  }
+  ```
+
+> 参考博客文章：[Github/learn-regex](https://github.com/ziishaned/learn-regex/blob/master/translations/README-cn.md)、[正则表达式测试网站](https://regex101.com/)
 
 # 19 提高编码效率
 
@@ -4609,9 +4707,55 @@ IDEA中的部分实时代码模块如下：
 - 引入css：link:css
 - 引入js：script:src
 
-
-
 > [IDEA使用教程](https://github.com/judasn/IntelliJ-IDEA-Tutorial)
+
+## 19.5 运维相关
+
+### 19.5.1 开启RabbitMQ
+
+在linux开启RabbitMQ需要先关闭防火墙：
+
+```bash
+service iptables stop
+service rabbitmq-server start
+service rabbitmq-server status
+```
+
+### 19.5.2 解决端口占用
+
+Windows系统解决端口占用的步骤：
+
+1. Windows查找所有进程：`netstat -ano`
+2. Windows查找某一端口对应的进程ID：`netstat -ano |findstr 端口号`
+3. Windows查找该进程ID对应的进程名：tasklist |findstr 进程ID
+4. Windows系统杀死该端口对应的进程：taskkill /f /t /im 进程名
+
+### 19.5.3 快速删除node_modules
+
+快速删除node_modules文件夹的命令：
+
+```javascript
+rimraf node_modules
+```
+
+### 19.5.4 Git相关技巧
+
+删除远程仓库上的文件：
+
+```bash
+# 不会删除本地文件
+git rm --cached 文件名
+git commit -m '日志记录'
+git push origin master
+```
+
+撤销上一个commit：
+
+```bash
+git reset --soft HEAD^
+```
+
+
 
 
 
