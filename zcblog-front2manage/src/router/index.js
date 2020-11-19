@@ -102,8 +102,8 @@ function addDynamicMenuRoutes (menuList = [], routes = []) {
           menuId: menuList[i].menuId,
           title: menuList[i].name,
           isDynamic: true, // 动态菜单
-          isTab: true, // 一级菜单
-          iframeUrl: ''
+          isTab: true, // 是否通过tab展示内容 （true: 是, false: 否）
+          iframeUrl: '' // 是否通过iframe嵌套展示内容（'以http[s]://开头': 是, '': 否）
         }
       }
       // url以http[s]://开头，通过iframe展示

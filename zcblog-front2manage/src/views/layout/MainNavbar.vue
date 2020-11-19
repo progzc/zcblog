@@ -7,13 +7,15 @@
       </h1>
     </div>
     <div class="site-navbar__body clearfix">
-      <el-menu class="site-navbar__menu" mode="horizontal">
+      <el-menu
+        class="site-navbar__menu"
+        mode="horizontal">
         <el-menu-item class="site-navbar__switch" index="0" @click="sidebarFold = !sidebarFold">
-          <svg-icon name="extend"></svg-icon>
+          <svg-icon name="zhedie"></svg-icon>
         </el-menu-item>
       </el-menu>
       <el-menu class="site-navbar__menu site-navbar__menu--right" mode="horizontal">
-        <el-menu-item class="site-navbar__avatar" index="3">
+        <el-menu-item class="site-navbar__avatar" index="0">
           <el-dropdown :show-timeout="0" placement="bottom">
             <span class="el-dropdown-link">
               <img src="~assets/img/avatar.jpg" :alt="username">{{ username }}
@@ -34,7 +36,7 @@
 
 <script type="text/ecmascript-6">
 import UpdatePassword from 'components/content/UpdatePassword'
-import { UPDATE_MAIN_TABS, UPDATE_NAVBAR_LAYOUT_TYPE } from 'store/constant/mutation-types'
+import { UPDATE_MAIN_TABS, UPDATE_SIDEBAR_FOLD } from 'store/constant/mutation-types'
 import { executeLogout } from 'network/api/login'
 import { clearLoginInfo } from 'common/js/utils/login'
 export default {
@@ -44,17 +46,20 @@ export default {
   },
   data () {
     return {
-      updatePasswordVisible: false
+      updatePasswordVisible: false,
+      show: false
     }
   },
   computed: {
     sidebarFold: {
       get () { return this.$store.state.common.sidebarFold },
-      set (val) { this.$store.commit(UPDATE_NAVBAR_LAYOUT_TYPE, val) }
+      set (val) {
+        this.$store.commit(`common/${UPDATE_SIDEBAR_FOLD}`, val)
+      }
     },
     mainTabs: {
       get () { return this.$store.state.common.mainTabs },
-      set (val) { this.$store.commit(UPDATE_MAIN_TABS, val) }
+      set (val) { this.$store.commit(`common/${UPDATE_MAIN_TABS}`, val) }
     },
     navbarLayoutType: {
       get () { return this.$store.state.common.navbarLayoutType }
@@ -91,5 +96,7 @@ export default {
 </script>
 
 <style lang="scss" type="text/scss" rel="stylesheet/scss" scoped>
-
+  .el-dropdown-link{
+    color: blue;
+  }
 </style>

@@ -1,4 +1,7 @@
-import { UPDATE_USER_ID, UPDATE_USER_NAME } from 'store/constant/mutation-types'
+import {
+  UPDATE_USER_ID,
+  UPDATE_USER_NAME
+} from 'store/constant/mutation-types'
 
 export default {
   namespace: true, // 启用命名空间

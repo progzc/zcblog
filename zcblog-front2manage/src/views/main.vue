@@ -43,15 +43,15 @@ export default {
     },
     documentClientHeight: {
       get () { return this.$store.state.common.documentClientHeight },
-      set (val) { this.$store.commit(UPDATE_DOCUMENT_CLIENT_HEIGHT, val) }
+      set (val) { this.$store.commit(`common/${UPDATE_DOCUMENT_CLIENT_HEIGHT}`, val) }
     },
     userId: {
       get () { return this.$store.state.user.id },
-      set (val) { this.$store.commit(UPDATE_USER_ID, val) }
+      set (val) { this.$store.commit(UPDATE_USER_ID, val) } // 这里加模块名为什么会报错？
     },
     username: {
       get () { return this.$store.state.user.name },
-      set (val) { this.$store.commit(UPDATE_USER_NAME, val) }
+      set (val) { this.$store.commit(UPDATE_USER_NAME, val) } // // 这里加模块名为什么会报错？
     }
   },
   created () {
