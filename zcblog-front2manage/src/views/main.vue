@@ -73,7 +73,7 @@ export default {
     },
     // 重置窗口可视高度
     resetDocumentClientHeight () {
-      // this.documentClientHeight = document.documentElement.clientHeight
+      this.documentClientHeight = document.documentElement.clientHeight
       window.onresize = () => { this.documentClientHeight = document.documentElement.clientHeight }
     }
   }

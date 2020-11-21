@@ -5,6 +5,10 @@ export const RESET_STORE = 'reset_store' // 重置Vuex的store
 // user模块的Mutation常量
 export const UPDATE_USER_ID = 'update_user_id'
 export const UPDATE_USER_NAME = 'update_user_name'
+export const UPDATE_VISITOR_NUM = 'UPDATE_VISITOR_NUM'
+export const UPDATE_COMMENT_NUM = 'UPDATE_COMMENT_NUM'
+export const UPDATE_LIKE_NUM = 'UPDATE_LIKE_NUM'
+export const UPDATE_ARTICLE_NUM = 'update_article_num'
 
 // common模块的Mutation常量
 export const UPDATE_SIDEBAR_FOLD = 'update_sidebar_fold'

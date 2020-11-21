@@ -100,5 +100,35 @@ export default {
 </script>
 
 <style lang="scss" type="text/scss" rel="stylesheet/scss" scoped>
+  /*@import "~common/scss/subject/sidebarLayoutSkin.scss";*/
+  /*@import "~common/scss/subject/sidebarFold.scss";*/
+  /*.site-sidebar{*/
+  /*  position: fixed;*/
+  /*  top: 50px;*/
+  /*  left: 0;*/
+  /*  bottom: 0;*/
+  /*  z-index: 999;*/
+  /*  width: 230px;*/
+  /*  overflow: hidden;*/
+  /*  &__inner{*/
+  /*    position: relative;*/
+  /*    z-index: 1;*/
+  /*    width: 230px;*/
+  /*    height: 100%;*/
+  /*    overflow-y: scroll;*/
+  /*    .el-menu{*/
+  /*      border-right: 0;*/
+  /*      .el-menu-item{*/
+  /*        .svg-icon{*/
+  /*          width: 24px;*/
+  /*          margin-right: 5px;*/
+  /*          text-align: center;*/
+  /*          font-size: 16px;*/
+  /*          color: currentColor;*/
+  /*        }*/
+  /*      }*/
+  /*    }*/
+  /*  }*/
+  /*}*/
 
 </style>

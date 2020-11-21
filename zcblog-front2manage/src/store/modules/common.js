@@ -19,12 +19,12 @@ export default {
     sidebarLayoutSkin: 'light', // 侧边栏，布局皮肤，light（默认浅色） / darK（黑色）
     menuList: [], // 侧边栏，菜单
     menuActiveName: '', // 激活的菜单
-    mainTabsActiveName: ''
+    mainTabsActiveName: '' // 激活状态标签页
   },
   mutations: {
     [UPDATE_SIDEBAR_FOLD] (state, sidebarFold) {
       console.log('UPDATE_SIDEBAR_FOLD', sidebarFold)
-      state.navbarLayoutType = sidebarFold
+      state.sidebarFold = sidebarFold
     },
     [UPDATE_DOCUMENT_CLIENT_HEIGHT] (state, height) {
       state.documentClientHeight = height

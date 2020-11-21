@@ -63,6 +63,7 @@ module.exports = {
       .set('router', resolve('src/router'))
       .set('store', resolve('src/store'))
       .set('views', resolve('src/views'))
+
     // 配置svg组件
     // 1. 让其他的svg loader不要对src/icons/svg进行操作
     config.module.rule('svg').exclude.add(resolve('src/icons/svg')).end()
@@ -74,6 +75,10 @@ module.exports = {
       .options({
         symbolId: '[name]'
       }).end()
+
+    // 在每个组件中自动化导入index.scss
+    const types = ['vue-modules', 'vue', 'normal-modules', 'normal']
+    types.forEach(type => addStyleResource(config.module.rule('scss').oneOf(type)))
   },
 
   // 配置SCSS全局变量
@@ -82,10 +87,18 @@ module.exports = {
     sourceMap: false,
     loaderOptions: {
       scss: {
-        prependData: `
-        @import 'src/common/scss/theme.scss';
-        `
+        additionalData: '@import "~@/common/scss/theme.scss"'
       }
     }
   }
+}
+
+function addStyleResource (rule) {
+  rule.use('style-resource')
+    .loader('style-resources-loader')
+    .options({
+      patterns: [
+        path.resolve(__dirname, '~@/common/scss/index.scss')
+      ]
+    })
 }
