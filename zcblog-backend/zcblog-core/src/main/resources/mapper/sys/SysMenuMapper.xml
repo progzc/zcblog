@@ -1,22 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.progzc.blog.mapper.sys.SysMenuMapper">
-
-    <!-- 通用查询映射结果 -->
-    <resultMap id="BaseResultMap" type="com.progzc.blog.entity.sys.SysMenu">
-        <id column="menu_id" property="menuId"/>
-        <result column="parent_id" property="parentId"/>
-        <result column="name" property="name"/>
-        <result column="url" property="url"/>
-        <result column="perms" property="perms"/>
-        <result column="type" property="type"/>
-        <result column="icon" property="icon"/>
-        <result column="order_num" property="orderNum"/>
-    </resultMap>
-
-    <!-- 通用查询结果列 -->
-    <sql id="Base_Column_List">
-        menu_id, parent_id, name, url, perms, type, icon, order_num
-    </sql>
+    <!--根据parentId查询菜单-->
+    <select id="queryListParentId" resultType="com.progzc.blog.entity.sys.SysMenu">
+        select * from sys_menu where parent_id = #{parentId} order by order_num asc
+    </select>
 
 </mapper>

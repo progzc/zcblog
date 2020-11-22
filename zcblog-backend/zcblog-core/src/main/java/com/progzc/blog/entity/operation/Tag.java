@@ -5,8 +5,11 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NonNull;
 import org.springframework.data.annotation.Id;
 
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Date;
 
@@ -29,8 +32,14 @@ public class Tag implements Serializable {
     @Id
     private Integer id;
 
+    @NotBlank(message = "标签名字不能为空")
     @ApiModelProperty(value = "标签名字")
     private String name;
+
+    @NotNull(message = "标签所属类别不能为空")
+    @ApiModelProperty(value = "所属类别：0-文章，1-相册")
+    @NonNull
+    private Integer type;
 
     @ApiModelProperty(value = "自动填充：创建时间")
     @TableField(fill = FieldFill.INSERT)

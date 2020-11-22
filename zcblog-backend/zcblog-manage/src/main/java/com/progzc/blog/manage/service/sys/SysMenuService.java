@@ -3,6 +3,8 @@ package com.progzc.blog.manage.service.sys;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.progzc.blog.entity.sys.SysMenu;
 
+import java.util.List;
+
 /**
  * @Description 菜单管理
  * @Author zhaochao
@@ -12,4 +14,10 @@ import com.progzc.blog.entity.sys.SysMenu;
  */
 public interface SysMenuService extends IService<SysMenu> {
 
+    /**
+     * 获取用户的所有菜单
+     * @param userId
+     * @return
+     */
+    List<SysMenu> listUserMenu(Long userId);
 }

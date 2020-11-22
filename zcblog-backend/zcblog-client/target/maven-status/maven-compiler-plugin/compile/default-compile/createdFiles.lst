@@ -1,0 +1,12 @@
+com\progzc\blog\client\controller\article\ArticleController.class
+com\progzc\blog\client\service\operation\TagService.class
+com\progzc\blog\client\service\article\ArticleService.class
+com\progzc\blog\client\controller\gallery\GalleryController.class
+com\progzc\blog\client\service\gallery\GalleryService.class
+com\progzc\blog\client\serviceImpl\article\ArticleServiceImpl.class
+com\progzc\blog\client\serviceImpl\operation\TagLinkServiceImpl.class
+com\progzc\blog\client\controller\operation\TagLinkController.class
+com\progzc\blog\client\serviceImpl\operation\TagServiceImpl.class
+com\progzc\blog\client\service\operation\TagLinkService.class
+com\progzc\blog\client\serviceImpl\gallery\GalleryServiceImpl.class
+com\progzc\blog\client\controller\operation\TagController.class

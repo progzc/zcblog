@@ -3,10 +3,17 @@
 <mapper namespace="com.progzc.blog.mapper.sys.SysUserMapper">
     <!--根据用户id查询用户的权限-->
     <select id="queryPermsByUserId" resultType="java.lang.String">
-        select sm.perms from sys_user_role sur
-          left join sys_role_menu srm on sur.role_id=srm.role_id
-          left join sys_menu sm on srm.menu_id = sm.menu_id
-        where sur.user_id = #{userId}
+        select m.perms from sys_user_role ur
+            left join sys_role_menu rm on ur.role_id=rm.role_id
+            left join sys_menu m on rm.menu_id = m.menu_id
+        where ur.user_id = #{userId}
+    </select>
+
+    <!--根据用户id查询用户菜单-->
+    <select id="queryAllMenuId" resultType="java.lang.Long">
+        select distinct rm.menu_id from sys_user_role ur
+            left join sys_role_menu rm on ur.role_id = rm.role_id
+        where ur.user_id = #{userId}
     </select>
 
 </mapper>

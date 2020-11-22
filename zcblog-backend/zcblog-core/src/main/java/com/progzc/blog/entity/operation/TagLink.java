@@ -37,11 +37,7 @@ public class TagLink implements Serializable {
     @ApiModelProperty(value = "关联Id")
     @NonNull
     private Integer linkId;
-
-    @ApiModelProperty(value = "所属类别：0-文章，1-相册")
-    @NonNull
-    private Integer type;
-
+    
     @ApiModelProperty(value = "自动填充：创建时间")
     @TableField(fill = FieldFill.INSERT)
     private Date createTime;
