@@ -2,8 +2,8 @@
   <nav class="site-navbar" :class="'site-navbar--' + navbarLayoutType">
     <div class="site-navbar__header">
       <h1 class="site-navbar__brand" @click="$router.push({ name: 'home' })">
-        <svg-icon v-if="!sidebarFold" name="fold" @click.native="sidebarFold = !sidebarFold"></svg-icon>
-        <svg-icon v-else name="extend" @click.native="sidebarFold = !sidebarFold"></svg-icon>
+        <svg-icon v-if="!sidebarFold" name="fold" @click.native.stop="sidebarFold = !sidebarFold"></svg-icon>
+        <svg-icon v-else name="extend" @click.native.stop="sidebarFold = !sidebarFold"></svg-icon>
         <a class="site-navbar__brand-lg" href="javascript:;">Clouds' Blog</a>
       </h1>
     </div>

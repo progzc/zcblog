@@ -12,7 +12,6 @@
   min-width: 1180px;
 }
 
-
 /* Sidebar fold */
 .site-sidebar--fold {
   .site-navbar__header,
@@ -119,6 +118,13 @@
     text-transform: uppercase;
     white-space: nowrap;
     color: #fff;
+
+    > .svg-icon {
+      &:hover {
+        cursor: pointer;
+      }
+    }
+
     &-lg,
     &-mini {
       margin: 0 5px 0 10px;
@@ -170,12 +176,6 @@
     }
   }
 
-  &__body {
-    position: relative;
-    margin-left: 230px;
-    padding-right: 15px;
-    background-color: #fff;
-  }
   &__menu {
     float: left;
     background-color: transparent;
@@ -184,6 +184,7 @@
     &--right {
       float: right;
     }
+
     a:focus,
     a:hover {
       text-decoration: none;

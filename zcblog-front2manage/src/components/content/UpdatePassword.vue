@@ -1,5 +1,5 @@
 <template>
-  <el-dialog title="修改密码" :visible.sync="visible" :append-to-body="true">
+  <el-dialog title="修改密码" :visible.sync="visible" :append-to-body="true" :close-on-click-modal="false">
     <el-form :model="dataForm" :rules="dataRule" ref="dataForm" @keyup.enter.native="dataFormSubmit()" label-width="80px">
       <el-form-item label="账号">
         <span>{{ username }}</span>
@@ -30,18 +30,18 @@ import { clearLoginInfo } from 'common/js/utils/login'
 export default {
   name: 'UpdatePassword',
   data () {
-    var validatePassword = (rule, value, callback) => {
+    const validatePassword = (rule, value, callback) => {
       if (!psdChar(value)) {
         callback(new Error('不能包含空格和中文字符'))
-      } else if (!psdKinds()) {
+      } else if (!psdKinds(value)) {
         callback(new Error('数字、字母以及特殊符号至少包含2种'))
-      } else if (!psdLen()) {
+      } else if (!psdLen(value)) {
         callback(new Error('密码长度必须在8~16位'))
       } else {
         callback()
       }
     }
-    var validateConfirmPassword = (rule, value, callback) => {
+    const validateConfirmPassword = (rule, value, callback) => {
       if (this.dataForm.newPassword !== value) {
         callback(new Error('两次输入密码不一致'))
       } else {
@@ -83,7 +83,7 @@ export default {
     init () {
       this.visible = true
       this.$nextTick(() => {
-        this.$refs.dataForm.resetField() // 重置element表单
+        this.$refs.dataForm.resetFields() // 重置element表单
       })
     },
     dataFormSubmit () {

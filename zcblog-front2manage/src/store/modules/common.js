@@ -23,7 +23,6 @@ export default {
   },
   mutations: {
     [UPDATE_SIDEBAR_FOLD] (state, sidebarFold) {
-      console.log('UPDATE_SIDEBAR_FOLD', sidebarFold)
       state.sidebarFold = sidebarFold
     },
     [UPDATE_DOCUMENT_CLIENT_HEIGHT] (state, height) {

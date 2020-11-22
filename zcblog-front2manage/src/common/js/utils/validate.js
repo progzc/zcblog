@@ -31,3 +31,12 @@ export function psdKinds (s) {
 export function psdLen (s) {
   return /^.{8,16}$/.test(s)
 }
+
+/**
+ * 是否具有权限
+ * @param key
+ * @returns {boolean}
+ */
+export function isAuth (key) {
+  return JSON.parse(sessionStorage.getItem('perms') || '[]').indexOf(key) !== -1 || false
+}
