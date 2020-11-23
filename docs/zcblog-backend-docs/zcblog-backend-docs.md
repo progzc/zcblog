@@ -148,6 +148,7 @@ CREATE TABLE `gallery` (
 CREATE TABLE `tag` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '主键',
   `name` varchar(50) COLLATE utf8_unicode_ci DEFAULT NULL COMMENT '标签名字',
+  `type` int(4) DEFAULT NULL COMMENT '所属类别：0-文章，1-相册',
   `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '自动填充：创建时间',
   `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '自动填充：更新时间',
   `version` int(11) NOT NULL DEFAULT '1' COMMENT '乐观锁',
@@ -165,7 +166,6 @@ CREATE TABLE `tag_link` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '主键',
   `tag_id` int(11) DEFAULT NULL COMMENT '标签Id',
   `link_id` int(11) DEFAULT NULL COMMENT '关联Id',
-  `type` int(4) DEFAULT NULL COMMENT '所属类别：0-文章，1-相册',
   `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '自动填充：创建时间',
   `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '自动填充：更新时间',
   `version` int(11) NOT NULL DEFAULT '1' COMMENT '乐观锁',
@@ -1663,9 +1663,11 @@ public class AutoLogin implements ApplicationListener<ContextRefreshedEvent> {
 > 例如：`@Api(value = "/user", description = "Operations about user")`表示映射路径和描述。
 
 - **@ApiOperation：一般作用在类（如Controller）的方法上**
+
+> 例如：@ApiOperation(value = "获取验证码")
+
 - **@ApiParam：一般作用在类（如Controller）方法的参数上**
 - **@ApiModel：一般给entity类（或者PO/VO/...）添加此注解**
-
 - **@ApiModelProperty：一般给entity类（或者PO/VO/...）的成员变量添加此注解**
 
 > 例如：`@ApiModelProperty(value = "xxx属性说明", hidden = true)`，其中hidden默认为false，若设置为true可以隐藏该属性。
@@ -1824,7 +1826,7 @@ spring.devtools.restart.enabled: true
 # 1. 在Controller层做验证
   # 1.1 首先在Controller类上添加@Validated注解。
   # 1.2 然后在COntroller类的方法参数上添加@Valid注解（可去掉1.1的@Validated注解，详见@Valid与@Validated的区别）。
-  # 1.3 最后给方法参数添加指定的校验方式(如@NotNoll、@NotBlank...);若在entity类的成员变量中指定的话，则对所有使用的ServiceImpl层均生效。
+  # 1.3 最后给方法参数添加指定的校验方式(如@NotNull、@NotBlank...);若在entity类的成员变量中指定的话，则对所有使用的ServiceImpl层均生效。
   
 # 2. 在ServiceImpl层做验证
   # 1.1 首先在ServiceImpl类上添加@Validated注解。
@@ -2632,23 +2634,53 @@ public Result handleException(Exception e) {
 
 ![image-20201113204818852](zcblog-backend-docs.assets/image-20201113204818852.png)
 
-## 10.7 源码总结
+## 10.7认证/鉴权缓存
+
+### 10.7.1 Shiro缓存概述
+
+Shiro内部提供了对认证信息和授权信息的缓存，但是Shiro默认是关闭认证信息缓存，对于授权信息的缓存shiro默认是开启的。Shiro使用缓存处理认证和鉴权需要注意如下几点：
+
+1. 一般情况下，使用shiro缓存时，只需要关注授权信息缓存，因为认证信息只是一次验证查询，而授权信息需要在每次认证都会执行（访问量大），且一般情况下授权的数据量大。
+
+2. 当用户信息被修改时，我们希望理解看到认证信息也被同步时，需要关注认证信息清空同步问题。
+
+### 10.7.2 缓存的解决方案
+
+先看一下缓存的继承关系：
+
+![image-20201123185741506](zcblog-backend-docs.assets/image-20201123185741506.png)
+
+Shiro缓存的解决方案有：
+
+1. 使用Ehcache（系统混合缓存方案）
+2. 使用本地内存缓存方案
+3. 自定义CacheManager（比如Redis用来作为缓存）
+
+**本项目采用第3种解决方案。**
+
+
+
+
+
+> 参考博客文章：[Shiro认证/鉴权信息缓存](https://www.cnblogs.com/yy3b2007com/p/12110973.html)
+
+## 10.8 源码总结
 
 到此为止，Shiro已经折腾的比较清楚了，这里根据整个登录过程回顾归纳一下认证与鉴权的方法链。
 
-### 10.7.1 Bean初始化顺序
+### 10.8.1 Bean初始化顺序
 
 ShiroConfig中的Bean初始化顺序：
 
 lifecycleBeanPostProcessor（**注入Shiro生命管理器**）== 》defaultAdvisorAutoProxyCreator （**注入AOP代理：寻找所有的通知器**） == 》sessionManager（**注入会话管理器**） ==》securityManager（**注入安全管理器**） ==》shirFilter（**注入Shiro过滤器**） ==》authorizationAttributeSourceAdvisor （**注入Shiro通知器**）
 
-### 10.7.2 跨域请求执行过程
+### 10.8.2 跨域请求执行过程
 
 跨域请求执行顺序（【】表示可无这一步）：
 
 【OAuth2Filter.isAccessAllowed（**POST预请求OPTIONS**）】 ==》OAuth2Filter.isAccessAllowed（**正常GET/DELETE...请求**） == 》OAuth2Filter.onAccessDenied（**提交登录操作**） ==》OAuth2Filter.createToken（**获取token，封装成Oauth2Token**） ==》OAuth2Filter.getRequestToken（**从请求头获取token**） ==》 OAuth2Realm.supports（**判断Realm中Oauth2Token的类型**） ==》OAuth2Realm.doGetAuthenticationInfo（**获取数据源进行认证**） ==》【OAuth2Filter.onLoginFailure（**认证失败**）】 ==》OAuth2Realm.doGetAuthorizationInfo（**进行鉴权**）==》【OAuth2Filter.onLoginSuccess（**认证成功**）】
 
-### 10.7.3 图解跨域请求过程
+### 10.8.3 图解跨域请求过程
 
 ![zcblog-登录认证鉴权逻辑](zcblog-backend-docs.assets/zcblog-登录认证鉴权逻辑.png)
 
@@ -2671,11 +2703,19 @@ lifecycleBeanPostProcessor（**注入Shiro生命管理器**）== 》defaultAdvis
 ## 11.2 缓存注解
 
 - **@EnableCaching**：开启缓存。在项目启动类或某个配置类上使用此注解后，则表示允许使用注解的方式进行缓存操作。
-- **@CacheEvict**：可用于类或方法上。在执行完目标方法后，清除缓存中对应key的数据（如果缓存中有对应key的数据缓存的话）。
-- **@Cacheable**：可用于类或方法上。在目标方法执行前，会根据key先去缓存中查询看是否有数据，若存在就直接返回缓存中的key对应的value值。不再执行目标方法；若不存在则执行目标方法，并将方法的返回值作为value，并以键值对的形式存入缓存。
-- **@CachePut**：可用于类或方法上。在执行完目标方法后，并将方法的返回值作为value，并以键值对的形式存入缓存中。
+- **@CacheEvict**：可用于类或方法上。**在执行完目标方法后**，清除缓存中对应key的数据（如果缓存中有对应key的数据缓存的话）。
+- **@Cacheable**：可用于类或方法上。**在目标方法执行前**，会根据key先去缓存中查询看是否有数据，若存在就直接返回缓存中的key对应的value值。不再执行目标方法；若不存在则执行目标方法，并将方法的返回值作为value，并以键值对的形式存入缓存。
+- **@CachePut**：可用于类或方法上。**在执行完目标方法后**，并将方法的返回值作为value，并以键值对的形式存入缓存中。
+
+>关于@Cacheable和@CachePut：
+>
+>1. @Cacheable配置在方法或类上，作用：本方法执行后，先去缓存看有没有数据，如果没有，从数据库中查找出来，给缓存中存一份，返回结果，下次本方法执行，在缓存未过期情况下，先在缓存中查找，有的话直接返回，没有的话从数据库查找。
+>2. @CachePut**类似于更新操作**，即每次不管缓存中有没有结果，都从数据库查找结果，并将结果更新到缓存，并返回结果。
+
 - @Caching：可作为@Cacheable、@CacheEvict、@CachePut三种注解中的的任何一种或几种来使用。
 - **@CacheConfig**：@Cacheable、@CacheEvict、@CachePut这三个注解的cacheNames属性是必填项（或value属性是必填项，因为value属性是cacheNames的别名属性）；如果上述三种注解都用的是同一个cacheNames的话，那么在每次都写cacheNames的话，就会显得麻烦。@CacheConfig注解就是来配置一些公共属性（如：cacheNames、keyGenerator等）的值。该注解一般用于类上。
+
+> 参考博客文章：[Spring缓存注解](https://www.cnblogs.com/qlqwjy/p/8574121.html)
 
 ## 11.3 缓存注解的常用属性
 
@@ -2713,7 +2753,55 @@ lifecycleBeanPostProcessor（**注入Shiro生命管理器**）== 》defaultAdvis
 - **allEntries属性**：主要出现在@CacheEvict注解中，表示是否清除指定命名空间中的所有数据，默认为false（即不清除所有数据）。
 - **beforeInvocation属性**：主要出现在@CacheEvict注解中，表示是否在目标方法执行前使此注解生效， 默认为false（即不生效）。
 
-## 11.4 配置CacheManager
+## 11.4 Spring缓存操作Redis
+
+可以使用Redis来存储Spring缓存中的内容，步骤如下：
+
+- 第1步：在.yml中配置Spring缓存存储到Redis。
+
+```properties
+spring.cache.type=Redis
+spring.cache.cache-names=ZCBLOG:ARTICLE,ZCBLOG:GALLERY,ZCBLOG:TAG
+```
+
+- 第2步：自定义key生成器。
+
+```java
+@Configuration
+@EnableCaching // 开启Spring缓存注解
+public class RedisConfig extends CachingConfigurerSupport {
+
+    /**
+     * 自定义key生成器: 全限定类名 + 方法名 + 参数名
+     * @return
+     */
+    @Bean
+    @Override
+    public KeyGenerator keyGenerator() {
+        return (Object target, Method method, Object... params) -> {
+            StringBuilder sb = new StringBuilder(16);
+            sb.append(target.getClass().getName());
+            sb.append("_");
+            sb.append(method.getName());
+            sb.append("_");
+            for (int i = 0; i < params.length; i++) {
+                sb.append(params[i]);
+                if (i < params.length - 1) {
+                    sb.append(",");
+                }
+            }
+            return sb.toString();
+        };
+    }
+}
+```
+
+- 第3步：配置CacheManager（详见`11.5`）。
+- 第4步：使用缓存注解（详见`11.1~11.3`）。
+
+> 参考博客文章：[Springboot yml文件中的各类型数据配置举例](https://blog.csdn.net/torpidcat/article/details/88026841)、[使用Spring缓存注解操作Redis](https://blog.csdn.net/weixin_42968500/article/details/102649569)、[Redis序列化异常](https://www.cnblogs.com/technologykai/p/10097167.html)
+
+## 11.5 配置CacheManager
 
 Spring缓存本质上是将缓存存储在Spring容器中，使用缓存管理器可以将Spring缓存储存在Redis内存中，可以给不同的缓存空间进行不同的设置（如过期时间、序列化方式...）
 
@@ -4229,7 +4317,7 @@ public class RedisUtilsTest {
 
 ## 18.11 流式计算与链式编程
 
-**Stream流式计算的特点：**
+**Stream流式计算的特点：**优雅、高效！！！
 
 - Stream不会改变源对象，会返回一个新的Stream。
 - Stream中的操作是延时执行。
@@ -4361,6 +4449,24 @@ public class RedisUtilsTest {
          }
      }
      ```
+### 18.11.1 字符串转换为整型数组
+
+采用流式操作将字符串转换为整型数组：
+
+```java
+int[] result = Arrays.stream(str.split(" ")).mapToInt(Integer::parseInt).toArray();
+```
+
+### 18.11.2 字符串数组转换为整型链表
+
+采用流式操作将字符串数组转换为整型链表：
+
+```java
+int[] result = Arrays.stream(strs).mapToInt(Integer::parseInt).toArray();
+List<int> list = Arrays.asList(result);
+```
+
+
 
 > 参考博客文章：[Java8新特性之流式计算](https://blog.csdn.net/weixin_42193813/article/details/108087715?utm_medium=distribute.pc_relevant.none-task-blog-baidulandingword-2&spm=1001.2101.3001.4242)、**[JDK8新特性流式数据处理](https://blog.csdn.net/canot/article/details/52957262?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-2.add_param_isCf&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-2.add_param_isCf)**、[map和flatMap的区别](https://blog.csdn.net/weixin_39723544/article/details/97976604)
 
@@ -4587,7 +4693,7 @@ POST请求属于HTTP请求中的复杂请求，HTTP协议在浏览器中对复�
 2. 字母/数字以及标点符号至少包含2种。
 3. 长度为8~16。
 
-- 第1步：分布拆解
+- 第1步：分步拆解
   
   - 不能包含空格和中文字符：
   
@@ -4641,6 +4747,231 @@ POST请求属于HTTP请求中的复杂请求，HTTP协议在浏览器中对复�
   ```
 
 > 参考博客文章：[Github/learn-regex](https://github.com/ziishaned/learn-regex/blob/master/translations/README-cn.md)、[正则表达式测试网站](https://regex101.com/)
+
+## 18.18 常用的工具类
+
+### 18.18.1 Math
+
+**Math.round()：**"四舍五入"， 该函数返回的是一个四舍五入后的的整数。
+
+- **注意：**负数，小数点第一位是5时，直接舍去，整数部分不+1； 正数，小数点第一位是5时，往整数部分+1。
+
+**Math.ceil()：**"向上取整"，即小数部分直接舍去，并向正数部分进1。
+
+**Math.floor()：**"向下取整"，即小数部分直接舍去。
+
+- **注意：**Math.floor()容易出现精度问题。例如，对小数8.54保留两位小数（虽然它已经保留了2位小数），`Math.floor(8.54*100)/100  // 输出结果为 8.53, 注意是 8.53 而不是 8.54`。**Math.floor()慎用！**
+
+## 18.19 MyBatisPlus相关
+
+### 18.19.1 MyBatis分页查询
+
+
+
+> 参考博客文章：[MyBatisPlus分页查询/自定义sql分页/多表分页查询](https://blog.csdn.net/weixin_38111957/article/details/91554108)
+
+### 18.19.2 IService和BaseMapper
+
+IService和BaseMapper有很多CRUD方法是类似的，这样设计是为什么呢？
+
+Iservice与BaseMapper之间的继承关系如下：
+
+![image-20201122190354351](zcblog-backend-docs.assets/image-20201122190354351.png)
+
+Iservice与BaseMapper之间的方法对比：
+
+![image-20201122190623014](zcblog-backend-docs.assets/image-20201122190623014.png)
+
+**总结：**IService是对BaseMapper的扩展（IService增加了很多批处理操作）。
+
+> 参考博客文章：[关于mybatis-plus中Service和Mapper的分析](https://zhuanlan.zhihu.com/p/114451975)
+
+### 18.9.3 Serializable序列化？
+
+**注意：**Service和Mapper的CRUD操作时要求参数类型是Serializable即可。
+
+Mapper CRUD操作：
+
+```java
+// 根据 ID 查询
+T selectById(Serializable id);
+// 查询（根据ID 批量查询）
+List<T> selectBatchIds(@Param(Constants.COLLECTION) Collection<? extends Serializable> idList);
+```
+
+Service CRUD操作：
+
+```java
+// 根据 ID 查询
+T getById(Serializable id);
+```
+
+**实例：**
+
+![image-20201122231755252](zcblog-backend-docs.assets/image-20201122231755252.png)
+
+**原因：**暂未知？需要分析源码解决（猜测Integer与String（如1与"1"）的序列化值相等，待证实？）...
+
+## 18.20 @Transactional与分层
+
+关于@Transactional一般添加在哪一个层？
+
+**事务的四大特性：**
+
+1. **原子性：**原子性是指事务是一个不可分割的工作单位，事务中的操作要么都发生，要么都不发生。
+2. **一致性：**事务必须使数据库从一个一致性状态变换到另外一个一致性状态。(数据不被破坏）。
+3. **隔离性：**事务的隔离性是指一个事务的执行不能被其他事务干扰。
+4. **持久性：**持久性是指一个事务一旦被提交，它对数据库中数据的改变就是永久性的。即使系统重启也不会丢失。
+
+结合事务的特点，@Transactional一般添加在Service层。若@Transactional加在dao层，那么只要与数据库做增删改，就要提交一次事务，如此做事务的特性就发挥不出来，**尤其是事务的一致性**，当出现并发问题是，用户从数据库查到的数据都会有所偏差。而service层可以调用多个dao层，只需要在service层加一个事务注解@Transactional，就可以一个事务处理多个请求，事务的特性也会充分的发挥出来。
+
+> 参考博客文章：[https://blog.csdn.net/panyangxu/article/details/77431873](https://blog.csdn.net/panyangxu/article/details/77431873)
+
+## 18.21 Bug解决
+
+### 18.21.1 控制器层无法序列化
+
+**问题描述：**Controller进行CRUD操作时，出现实体类无法序列化。
+
+![image-20201123115443387](zcblog-backend-docs.assets/image-20201123115443387.png)
+
+**原因：**实体类没有无参构造器，使用Lombok的话需要添加@NoArgsConstructor注解。
+
+### 18.21.2 控制器层获取实体为空
+
+**问题描述：**Controller获取到的实体为空。
+
+![image-20201123115809284](zcblog-backend-docs.assets/image-20201123115809284.png)
+
+**原因：**前端请求的格式与后端无法对应。
+
+```java
+// 这种写法正确
+export function executePostOrPutTag (id, tag) {
+  return request({
+    url: `/admin/operation/tag/${!id ? 'save' : 'update'}`,
+    method: !id ? 'post' : 'put',
+    data: {
+      id: !id ? null : id,
+      name: tag.name,
+      type: tag.type
+    }
+  })
+}
+
+// 这种写法也可以
+export function executePostOrPutTag (id, tag) {
+  return request({
+    url: `/admin/operation/tag/${!id ? 'save' : 'update'}`,
+    method: !id ? 'post' : 'put',
+    data: tag
+  })
+}
+
+// 这种写法错误
+export function executePostOrPutTag (id, tag) {
+  return request({
+    url: `/admin/operation/tag/${!id ? 'save' : 'update'}`,
+    method: !id ? 'post' : 'put',
+    data: {
+      tag: tag
+    }
+  })
+}
+```
+
+### 18.21.3 控制器层参数转换异常
+
+**问题描述：**Controller层出现参数转换异常。
+
+![image-20201123132148282](zcblog-backend-docs.assets/image-20201123132148282.png)
+
+**原因：**请求体参数的写法有误。
+
+```java
+// 错误的写法：
+export function executeDeleteTag (ids) {
+  return request({
+    url: '/admin/operation/tag/delete',
+    method: 'delete',
+    data: {  // 此时data的请求体为：{ids: [1]}
+      ids: ids
+    }
+  }, false) // 添加时间戳会出错
+}
+
+// 正确的写法：
+export function executeDeleteTag (ids) {
+  return request({
+    url: '/admin/operation/tag/delete',
+    method: 'delete',
+    data: ids // 此时data的请求体为：[1]
+  }, false) // 添加时间戳会出错
+}
+
+// 至于这两种写法如何选择，应该视情况而定
+// 1. 当前后端参数名不对应时，采用第一种写法比较好（可以指定自定义参数名）
+// 2. 当前后端参数名对应时，采用第二种写法比较好
+// 3. 一些特殊情况，采用第二种写法比较好（如本例，否则会出现参数转换异常）
+```
+
+### 18.21.4 自动填充的时间不对
+
+**问题描述：**采用MyBatisPlus自动填充的日期不对。
+
+![image-20201123133427332](zcblog-backend-docs.assets/image-20201123133427332.png)
+
+**原因：**数据库的时间类型是timestamp、而自动填充的时间类型为java.util.Date，正确应该采用LocalDateTime.now()，**同时应该将Entity类的createTime和updateTime属性类型修改为LocalDateTime**（这一点不要忘记了）。
+
+![image-20201123135016805](zcblog-backend-docs.assets/image-20201123135016805.png)
+
+### 18.21.5 逻辑删除未生效
+
+**问题描述：**逻辑删除未生效。
+
+**原因：**未注入ISqlInjector。
+
+![image-20201123141215199](zcblog-backend-docs.assets/image-20201123141215199.png)
+
+### 18.21.6 乐观锁未生效
+
+**问题描述：**乐观锁未生效。
+
+**原因：**执行插入和更新操作时，应先增加一步查询操作。
+
+![image-20201123153029552](zcblog-backend-docs.assets/image-20201123153029552.png)
+
+### 18.21.7 LocalDateTime序列化失败
+
+**问题描述：**LocalDateTime序列化失败。
+
+![image-20201123174623554](zcblog-backend-docs.assets/image-20201123174623554.png)
+
+**解决方法：**在LocalDateTime属性上加上**@JsonDeserialize**和**@JsonSerialize**注解。
+
+```java
+@ApiModelProperty(value = "自动填充：创建时间")
+@TableField(fill = FieldFill.INSERT)
+@JsonDeserialize(using = LocalDateTimeDeserializer.class)
+@JsonSerialize(using = LocalDateTimeSerializer.class)
+private LocalDateTime createTime;
+
+@ApiModelProperty(value = "自动填充：更新时间")
+@TableField(fill = FieldFill.INSERT_UPDATE)
+@JsonDeserialize(using = LocalDateTimeDeserializer.class)
+@JsonSerialize(using = LocalDateTimeSerializer.class)
+private LocalDateTime updateTime;
+```
+
+> 参考博客文章：[java中JSON序列化异常](https://blog.csdn.net/Tony_zt/article/details/105074792)
+
+### 18.21.8 避免缓存"失效"
+
+**注意事项：**由于请求带时间戳，可能会导致缓存失效。
+
+![image-20201123221712192](zcblog-backend-docs.assets/image-20201123221712192.png)
+
+
 
 # 19 提高编码效率
 
