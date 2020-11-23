@@ -312,14 +312,15 @@ module.exports = {
     sourceMap: false,
     loaderOptions: {
       scss: {
-        prependData: `
-        @import 'src/common/scss/theme.scss';
-        `
+        // 注意：在sass-loader v8中，这个选项名是"prependData"（选项名写错会导致编译时报错Undefined variable）
+        additionalData: `@import "~@/common/scss/theme.scss"`
       }
     }
   }
 }
 ```
+
+> 参考博客文章：[VueCLI官网-CSS相关](https://cli.vuejs.org/zh/guide/css.html)
 
 ## 3.6 使用SVG组件
 
@@ -459,6 +460,20 @@ symbolId: 'icon-[name]'
 // 修改后
 symbolId: '[name]'
 ```
+
+### 3.6.3 去除底色
+
+若要能自己设置svg组件的颜色，需要先在iconfont网站上批量去除底色。
+
+<img src="zcblog-front2manage-docs.assets/image-20201121170454004.png" alt="image-20201121170454004" style="zoom: 80%;" />
+
+设置底色时可以设置：
+
+```css
+fill: currentColor;
+```
+
+
 
 ## 3.7 package.json
 
@@ -709,6 +724,34 @@ export default {
 ```javascript
 import 'elementUI/theme/elementUITheme' // 引入element-ui自定义主题色
 ```
+
+## 5.4 v-loading
+
+`v-loading`：来自于ElementUI，用于给正在加载的内容添加遮罩。
+
+> 参考博客文章：[v-loading使用](https://blog.csdn.net/sherpan/article/details/97935370)
+
+## 5.5 ElementUI源码
+
+ElementUI组件的源码文档组织结构如下（可以用来深入学习Vue组件化的思想）：
+
+![image-20201122103744701](zcblog-front2manage-docs.assets/image-20201122103744701.png)
+
+**总结：**
+
+1. 当调用Vue.use方法的时候就会调用组件的install方法，将Vue注入到组件中去来实现组件的全局注册。
+2. 父组件通过provide方法向后代注入，子组件通过inject从父代引入依赖。使用依赖注入的方式，可以避免组件之间的逐级传递。缺点是耦合度上升，日常开发中避免少使用，可以用vuex等方案来代替，尽量做到组件之间解耦。
+3. 当有多个组件有用到相同的data、methods、life hooks等等，都可以用mixins抽象出来复用（**注意：**生命周期函数混入的话，是先执行混入的方法，再执行原来的方法）。
+
+> 参考博客文章：[ElementUI源码探索](https://www.imooc.com/article/275102)
+
+## 5.6 表单校验规则
+
+ElementUI表单校验实际上是依赖`async-validator`插件实现的，因此具体的校验规则可以参考[async-validator官网](https://github.com/yiminghe/async-validator)。
+
+![image-20201123154418131](zcblog-front2manage-docs.assets/image-20201123154418131.png)
+
+
 
 # 6 封装网络请求
 
@@ -1257,6 +1300,12 @@ this.$emit('setFoo', newValue)
 
 > 参考博客文章：[vue中.native修饰符的使用](https://blog.csdn.net/qq_29468573/article/details/80771625)
 
+### 7.10.3 .stop修饰符
+
+**.stop修饰符：**阻止事件冒泡。
+
+> 参考博客文章：[.stop阻止事件继续传播](https://www.cnblogs.com/dongyuezhuang/p/11527447.html)
+
 ## 7.11 方法
 
 ### 7.11.1 $nextTicks
@@ -1342,6 +1391,75 @@ const User = {
 }
 ```
 
+## 7.13 keep-alive缓存组件
+
+**keep-alive概念：**keep-alive是Vue的内置组件，当它包裹动态组件时，会缓存不活动的组件实例，而不是销毁它们。和transition相似，keep-alive是一个抽象组件：它自身不会渲染成一个DOM元素，也不会出现在父组件链中。
+
+**keep-alive作用：**在组件切换过程中将状态保留在内存中，防止重复渲染DOM，减少加载时间及性能消耗，提高用户体验性。
+
+**keep-alive原理：**在created 函数调用时将需要缓存的VNode（虚拟DOM，其实就是一个js对象）节点保存在this.cache中／在render（页面渲染）时，如果VNode的name符合缓存条件（可以用include以及exclude控制），则会从this.cache中取出之前缓存的VNode实例进行渲染。
+
+**keep-alive属性：**
+
+1. include：字符串或正则表达式，只有名称匹配的组件会被缓存（采用LRU缓存策略）。
+2. exclude：字符串或正则表达式，任何名称匹配的组件都不会被缓存。
+3. max：数字，最多可以缓存多少组件实例。
+
+**生命周期函数：**
+
+1. **activated：**在keep-alive组件激活时调用，该钩子函数在服务器端渲染期间不被调用。
+
+2. **deactivated：**在keep-alive组件停用时调用，该钩子在服务器端渲染期间不被调用。
+
+   注意事项：
+
+   - 被包含在keep-alive中创建的组件，会多出两个生命周期的钩子：activated与deactivated，使用keep-alive会将数据保留在内存中，如果要在每次进入页面的时候获取最新的数据，需要在activated阶段获取数据，承担原来created钩子函数中获取数据的任务。
+   - 只有组件被keep-alive包裹时，这两个生命周期函数才会被调用，如果作为正常组件使用，是不会被调用的，以及在2.1.0版本之后，使用exclude排除之后，就算被包裹在keep-alive中，这两个钩子函数依然不会被调用！另外，在服务端渲染时，此钩子函数也不会被调用。
+
+```vue
+// 用法一：在动态组件中的应用
+<keep-alive :include="whiteList" :exclude="blackList" :max="amount">
+     <component :is="currentComponent"></component>
+</keep-alive>
+
+// 用法二：在vue-router中的应用
+<keep-alive :include="whiteList" :exclude="blackList" :max="amount">
+    <router-view></router-view>
+</keep-alive>
+```
+
+**LRU算法策略：**一种缓存淘汰策略。计算机的缓存容量有限，如果缓存满了就要删除一些内容，给新内容腾位置。但问题是，删除哪些内容呢？我们肯定希望删掉哪些没什么用的缓存，而把有用的数据继续留在缓存里，方便之后继续使用。LRU 的全称是 **Least Recently Used**，也就是说我们认为最近使用过的数据应该是是「有用的」，很久都没用过的数据应该是无用的，内存满了就优先删那些很久没用过的数据。
+
+**LRU算法的实现：**采用哈希链表（即双向链表和哈希表的结合体）。
+
+> 参考博客文章：[LRU算法策略详解](https://blog.csdn.net/fdl123456/article/details/97623208)、[vue中keep-alive的使用及详解](https://blog.csdn.net/fu983531588/article/details/90321827)
+
+## 7.14 插槽/具名插槽/作用域插槽
+
+**匿名插槽：**单个vue组件只能有一个匿名插槽。
+
+**具名插槽：**单个vue组件可以有多个具名插槽。
+
+**作用域插槽：**父组件指示如何渲染，子组件提供数据。
+
+**注意：**vue2.6以后使用v-slot替换slot-scope。
+
+> 参考博客文章：[作用域插槽](https://cn.vuejs.org/v2/guide/components-slots.html#作用域插槽)、[作用域插槽总结](https://www.cnblogs.com/steamed-twisted-roll/p/10001512.html)
+
+## 7.15 关于created和activated
+
+**created()：**在创建vue对象时，当html渲染之前就触发；但是注意，**全局vue.js不强制刷新或者重启时只创建一次**，也就是说，created()只会触发一次。
+
+**activated()：**在vue对象存活的情况下，进入当前存在activated()函数的页面时，**一进入页面就触发**；可用于初始化页面数据等。
+
+**activated与keep-alive的关系：**
+
+1. keep-alive包裹的动态组件会被缓存，它是一个抽象组件，它自身不会渲染一个dom元素,当组件在 keep-alive内被切换，组件里的 activated 和 deactivated 这两个生命周期钩子函数将会被对应执行。
+
+2. 如keep-alive包裹两个组件：组件A和组件B。当第一次切换到组件A时，组件A的created和activated生命周期函数都会被执行。切换到组件B，这时组件A的deactivated的生命周期函数会被触发。在切换回组件A，组件A的activated生命周期函数会被触发，但是它的created生命周期函数不会被触发了。
+
+> 参考博客文章：[created()与activated()的区别](https://blog.csdn.net/qq_36608921/article/details/82216617)、[vue的activated生命周期](https://blog.csdn.net/u012201879/article/details/103271831?utm_medium=distribute.pc_relevant_t0.none-task-blog-BlogCommendFromBaidu-1.control&depth_1-utm_source=distribute.pc_relevant_t0.none-task-blog-BlogCommendFromBaidu-1.control)
+
 # 8 js相关技巧
 
 ## 8.1 JS生成随机UUID（模拟）
@@ -1360,10 +1478,9 @@ const User = {
       s[8] = s[13] = s[18] = s[23] = "-"
       var uuid = s.join("")
       return uuid
-  
   }
   ```
-
+  
 - 算法2（本项目所采用）：
 
   ```javascript
@@ -1790,7 +1907,46 @@ public class EncryptUtils {
 
 ![image-20201118130955016](zcblog-front2manage-docs.assets/image-20201118130955016.png)
 
-# 7 使用vue-cookie
+# 8 使用echarts
+
+**echarts：**百度开源的一款图标制作的js插件。类似产品还有hightchart、v-chart（基于vue2.0和echarts封装，含词云、地图）。
+
+
+
+
+
+# 9 使用vue-countTo
+
+**vue-countTo：**动态化计数过程的一款js插件（借鉴于`countUp.js`）。
+
+- 第1步：安装`vue-count-to`。
+
+```bash
+npm install vue-count-to
+```
+
+- 第2步：使用例子。
+
+```vue
+<template>
+  <countTo :startVal='startVal' :endVal='endVal' :duration='3000'></countTo>
+</template>
+
+<script>
+  import countTo from 'vue-count-to';
+  export default {
+    components: { countTo },
+    data () {
+      return {
+        startVal: 0,
+        endVal: 2017
+      }
+    }
+  }
+</script>
+```
+
+# 10 使用vue-cookie
 
 本项目涉及到跨域登录问题，采取的解决方案是登录成功后生成一个token缓存到cookie中作为通行证。使用vue-cookie进行cookie的设置。
 
@@ -1800,9 +1956,11 @@ public class EncryptUtils {
 
 
 
-# 8 使用mavon-editor
+# 11 使用mavon-editor
 
 > 参考博客文章：
+
+
 
 
 
