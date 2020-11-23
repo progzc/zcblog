@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.stereotype.Component;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 /**
  * @Description 处理MyBatisPlus的自动填充
@@ -26,11 +26,11 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
     public void insertFill(MetaObject metaObject) {
         log.info("start insert fill...");
         if (metaObject.hasGetter("createTime")) {
-            setFieldValByName("createTime", new Date(), metaObject);
+            setFieldValByName("createTime", LocalDateTime.now(), metaObject);
         }
 
         if (metaObject.hasGetter("updateTime")) {
-            setFieldValByName("updateTime", new Date(), metaObject);
+            setFieldValByName("updateTime", LocalDateTime.now(), metaObject);
         }
 
     }
@@ -43,7 +43,7 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
     public void updateFill(MetaObject metaObject) {
         log.info("start update fill...");
         if (metaObject.hasGetter("updateTime")) {
-            setFieldValByName("updateTime", new Date(), metaObject);
+            setFieldValByName("updateTime", LocalDateTime.now(), metaObject);
         }
     }
 }
