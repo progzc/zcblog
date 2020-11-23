@@ -37,7 +37,7 @@ import java.util.Map;
 public class RedisConfig extends CachingConfigurerSupport {
 
     /**
-     * 自定义key生成器: 全限定类名 + 方法名 + 参数名
+     * 自定义key生成器: 全限定类名+方法名+参数名
      * @return
      */
     @Bean
