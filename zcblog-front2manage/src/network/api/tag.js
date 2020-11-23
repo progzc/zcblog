@@ -12,11 +12,11 @@ export function executeGetTagList (currentPage, pageSize, keyWord) {
     url: '/admin/operation/tag/list',
     method: 'get',
     params: {
-      page: currentPage,
-      limit: pageSize,
-      key: keyWord
+      currentPage: currentPage,
+      pageSize: pageSize,
+      keyWord: keyWord
     }
-  })
+  }, false)
 }
 
 /**
@@ -28,10 +28,8 @@ export function executeDeleteTag (ids) {
   return request({
     url: '/admin/operation/tag/delete',
     method: 'delete',
-    data: {
-      ids: ids
-    }
-  })
+    data: ids
+  }, false) // 添加事件参数会出错
 }
 
 /**
@@ -57,7 +55,9 @@ export function executePostOrPutTag (id, tag) {
     url: `/admin/operation/tag/${!id ? 'save' : 'update'}`,
     method: !id ? 'post' : 'put',
     data: {
-      tag: tag
+      id: !id ? null : id,
+      name: tag.name,
+      type: tag.type
     }
   })
 }

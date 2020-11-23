@@ -4,8 +4,16 @@ import router from '@/router'
 
 import { clearLoginInfo } from 'common/js/utils/login'
 import merge from 'lodash/merge'
+import qs from 'qs'
 
-export default function request (config) { // 封装网络请求
+/**
+ * 封装axios请求
+ * @param config http请求配置
+ * @param openDefaultParams 默认添加时间戳
+ * @param contentType 数据类型默认为json
+ * @returns {AxiosPromise}
+ */
+export default function request (config, openDefaultParams = true, contentType = 'json') { // 封装网络请求
   // 1. 创建axios的示例
   const instance = axios.create({ // 创建网络请求实例（若有不同配置，可以封装多个网络请求实例）
     baseURL: process.env.VUE_APP_API,
@@ -22,14 +30,16 @@ export default function request (config) { // 封装网络请求
       t: new Date().getTime()
     }
     if (config.params) { // 若存在请求参数，请求参数处理添加时间戳，并json化
-      config.params = merge(timestamp, config.params)
+      config.params = openDefaultParams ? merge(timestamp, config.params) : config.params
     }
     if (config.data) { // 若存在请求体，请求体添加时间戳，并json化
-      config.data = JSON.stringify(merge(timestamp, config.data))
+      config.data = openDefaultParams ? merge(timestamp, config.data) : config.data
+      config.data = contentType === 'json' ? JSON.stringify(config.data) : qs.stringify(config.data)
     }
     if (!config.params && !config.data) { // 若请求参数和请求体均不存在，则给请求参数添加时间戳
-      config.params = merge(timestamp, config.params)
+      config.params = openDefaultParams ? merge(timestamp, config.params) : config.params
     }
+
     config.headers.token = Vue.cookie.get('token') // 请求头带上token
     return config
   }, error => {
