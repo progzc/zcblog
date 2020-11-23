@@ -1,6 +1,10 @@
 package com.progzc.blog.entity.article;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -13,7 +17,7 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 
 import javax.validation.constraints.NotBlank;
 import java.io.Serializable;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 /**
  * @Description 文章
@@ -73,12 +77,16 @@ public class Article implements Serializable {
     @ApiModelProperty(value = "自动填充：创建时间")
     @Field(type = FieldType.Date, format = DateFormat.none)
     @TableField(fill = FieldFill.INSERT)
-    private Date createTime;
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    private LocalDateTime createTime;
 
     @ApiModelProperty(value = "自动填充：更新时间")
     @Field(type = FieldType.Date, format = DateFormat.none)
     @TableField(fill = FieldFill.INSERT_UPDATE)
-    private Date updateTime;
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    private LocalDateTime updateTime;
 
     @ApiModelProperty(value = "乐观锁")
     @Version

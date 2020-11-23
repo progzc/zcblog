@@ -1,6 +1,10 @@
 package com.progzc.blog.entity.oss;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -9,7 +13,7 @@ import lombok.NonNull;
 import org.springframework.data.annotation.Id;
 
 import java.io.Serializable;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 /**
  * @Description 云存储资源表
@@ -40,11 +44,15 @@ public class OssResource implements Serializable {
 
     @ApiModelProperty(value = "自动填充：创建时间")
     @TableField(fill = FieldFill.INSERT)
-    private Date createTime;
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    private LocalDateTime createTime;
 
     @ApiModelProperty(value = "自动填充：更新时间")
     @TableField(fill = FieldFill.INSERT_UPDATE)
-    private Date updateTime;
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    private LocalDateTime updateTime;
 
     @ApiModelProperty(value = "乐观锁")
     @Version
