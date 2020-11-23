@@ -5,7 +5,9 @@ import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.progzc.blog.common.constants.RedisCacheNames;
 import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CachingConfigurerSupport;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.cache.interceptor.KeyGenerator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
@@ -18,6 +20,7 @@ import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
+import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,7 +34,30 @@ import java.util.Map;
  */
 @Configuration
 @EnableCaching // 开启Spring缓存注解
-public class RedisConfig {
+public class RedisConfig extends CachingConfigurerSupport {
+
+    /**
+     * 自定义key生成器: 全限定类名 + 方法名 + 参数名
+     * @return
+     */
+    @Bean
+    @Override
+    public KeyGenerator keyGenerator() {
+        return (Object target, Method method, Object... params) -> {
+            StringBuilder sb = new StringBuilder(16);
+            sb.append(target.getClass().getName()); // 全限定类名
+            sb.append("_");
+            sb.append(method.getName()); // 方法名
+            sb.append("_");
+            for (int i = 0; i < params.length; i++) {
+                sb.append(params[i]);
+                if (i < params.length - 1) {
+                    sb.append(",");
+                }
+            }
+            return sb.toString();
+        };
+    }
 
     /**
      * 通过改造Spring提供的RedisTemplate实现自定义RedisTemplate
@@ -109,6 +135,9 @@ public class RedisConfig {
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer())));
         // ZCBLOG:GALLERY缓存空间过期时间为1天（相册缓存1天）
         redisCacheConfigurationMap.put(RedisCacheNames.GALLERY, RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofDays(1))
+                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer())));
+        // ZCBLOG:TAG缓存空间过期时间为1天（标签缓存1天）
+        redisCacheConfigurationMap.put(RedisCacheNames.TAG, RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofDays(1))
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer())));
         return redisCacheConfigurationMap;
     }
