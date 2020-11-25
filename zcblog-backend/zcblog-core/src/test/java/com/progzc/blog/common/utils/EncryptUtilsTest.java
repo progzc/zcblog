@@ -27,4 +27,10 @@ public class EncryptUtilsTest {
         String encrypt = EncryptUtils.encrypt(sysUserVO.getUsername());
         System.out.println(encrypt);
     }
+
+    @Test
+    public void test3() {
+        System.out.println(EncryptUtils.encrypt(""));
+        System.out.println(EncryptUtils.encrypt(null)); // 报错
+    }
 }
