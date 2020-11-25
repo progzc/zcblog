@@ -41,7 +41,8 @@ spring:
       enabled: true # 配置项目进行热部署
   cache:
     type: redis
-    cache-names: ZCBLOG:ARTICLE,ZCBLOG:GALLERY,ZCBLOG:TAG
+    cache-names: ZCBLOG:ARTICLE,ZCBLOG:GALLERY,ZCBLOG:TAG # Spring缓存命名空间
+
 # MyBatisPlus配置
 mybatis-plus:
   mapper-locations: classpath:mapper/**/*.xml # 指定mapper文件位置
