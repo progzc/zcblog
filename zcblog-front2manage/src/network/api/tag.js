@@ -2,9 +2,9 @@ import request from 'network/request'
 
 /**
  * 查询标签列表
- * @param currentPage
- * @param pageSize
- * @param keyWord
+ * @param currentPage 当前页
+ * @param pageSize 每页记录数
+ * @param keyWord 搜索关键词
  * @returns {*}
  */
 export function executeGetTagList (currentPage, pageSize, keyWord) {
@@ -29,7 +29,7 @@ export function executeDeleteTag (ids) {
     url: '/admin/operation/tag/delete',
     method: 'delete',
     data: ids
-  }, false) // 添加事件参数会出错
+  }, false) // 添加时间戳会出错
 }
 
 /**

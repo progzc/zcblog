@@ -32,9 +32,9 @@ export default {
   data () {
     const validatePassword = (rule, value, callback) => {
       if (!psdChar(value)) {
-        callback(new Error('不能包含空格和中文字符'))
+        callback(new Error('密码不能包含空格和中文字符'))
       } else if (!psdKinds(value)) {
-        callback(new Error('数字、字母以及特殊符号至少包含2种'))
+        callback(new Error('密码至少由数字、字母或特殊符号2种组成'))
       } else if (!psdLen(value)) {
         callback(new Error('密码长度必须在8~16位'))
       } else {
