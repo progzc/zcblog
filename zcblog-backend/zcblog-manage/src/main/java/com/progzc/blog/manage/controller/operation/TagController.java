@@ -1,11 +1,15 @@
 package com.progzc.blog.manage.controller.operation;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.progzc.blog.common.Result;
 import com.progzc.blog.common.base.AbstractController;
+import com.progzc.blog.common.constants.RedisCacheNames;
 import com.progzc.blog.common.enums.TagTypeEnum;
 import com.progzc.blog.common.utils.ValidatorUtils;
+import com.progzc.blog.common.validation.AddGroup;
+import com.progzc.blog.common.validation.UpdateGroup;
 import com.progzc.blog.entity.MyPage;
 import com.progzc.blog.entity.operation.Tag;
 import com.progzc.blog.entity.operation.TagLink;
@@ -15,6 +19,9 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,6 +37,7 @@ import java.util.Map;
  * @Version V1.0
  */
 @Slf4j
+@CacheConfig(cacheNames = RedisCacheNames.TAG)
 @RestController
 @RequestMapping("/admin/operation/tag")
 public class TagController extends AbstractController {
@@ -50,6 +58,7 @@ public class TagController extends AbstractController {
      */
     @GetMapping("/list")
     @RequiresPermissions("operation:tag:list")
+    @Cacheable
     @ApiOperation(value = "查询标签列表")
     public Result list(@RequestParam Map<String, Object> params) {
         MyPage page = tagService.queryPage(params);
@@ -63,11 +72,12 @@ public class TagController extends AbstractController {
      */
     @DeleteMapping("/delete")
     @RequiresPermissions("operation:tag:delete")
+    @CacheEvict(allEntries = true)
     @ApiOperation(value = "删除标签[列表]")
-    public Result delete(@RequestBody String[] ids) {
-        for (String id : ids) {
+    public Result delete(@RequestBody Integer[] ids) {
+        for (Integer id : ids) {
             List<TagLink> tagLinks = tagLinkService.list(new QueryWrapper<TagLink>().lambda()
-                    .eq(TagLink::getTagId, id)); // 注意这里：TagLink::getTagId返回Integer类型，id是字符串类型？？
+                    .eq(TagLink::getTagId, id));
             if (!CollectionUtils.isEmpty(tagLinks)) {
                 Tag tag = tagService.getById(tagLinks.get(0).getTagId());
                 if (!ObjectUtils.isEmpty(tag)) {
@@ -91,8 +101,9 @@ public class TagController extends AbstractController {
      */
     @GetMapping("/info/{id}")
     @RequiresPermissions("operation:tag:info")
+    @Cacheable
     @ApiOperation(value = "根据id查询标签信息")
-    public Result info(@PathVariable("id") String id) {
+    public Result info(@PathVariable("id") Integer id) {
         Tag tag = tagService.getById(id);
         return Result.ok().put("tag", tag);
     }
@@ -104,15 +115,41 @@ public class TagController extends AbstractController {
      */
     @PostMapping("/save")
     @RequiresPermissions("operation:tag:save")
+    @CacheEvict(allEntries = true)
     @ApiOperation(value = "新增标签")
     public Result save(@RequestBody Tag tag) {
-        validatorUtils.validateEntity(tag);
-        List<Tag> tagList = tagService.list(new QueryWrapper<Tag>().lambda()
+        validatorUtils.validateEntity(tag, AddGroup.class);
+        List<Tag> tagList = tagService.list(new UpdateWrapper<Tag>().lambda()
                 .eq(Tag::getName, tag.getName()).eq(Tag::getType, tag.getType()));
-        if (CollectionUtils.isEmpty(tagList)) {
+        if (!CollectionUtils.isEmpty(tagList)) {
             return Result.error("系统中已存在该标签，请重新添加");
         }
         tagService.save(tag);
+        return Result.ok();
+    }
+
+
+    /**
+     * 修改标签
+     * @param tag
+     * @return
+     */
+    @PutMapping("/update")
+    @RequiresPermissions("operation:tag:update")
+    @CacheEvict(allEntries = true)
+    @ApiOperation(value = "修改标签")
+    public Result update(@RequestBody Tag tag) {
+        validatorUtils.validateEntity(tag, UpdateGroup.class);
+        List<Tag> tagList = tagService.list(new UpdateWrapper<Tag>().lambda()
+                .eq(Tag::getName, tag.getName()).eq(Tag::getType, tag.getType()));
+        if (!CollectionUtils.isEmpty(tagList)) {
+            return Result.error("系统中已存在该标签，请重新修改");
+        }
+        // 乐观锁
+        Tag oldTag = tagService.getById(tag);
+        oldTag.setName(tag.getName());
+        oldTag.setType(tag.getType());
+        tagService.updateById(oldTag);
         return Result.ok();
     }
 }

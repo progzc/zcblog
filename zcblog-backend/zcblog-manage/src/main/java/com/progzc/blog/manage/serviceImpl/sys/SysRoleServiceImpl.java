@@ -6,6 +6,9 @@ import com.progzc.blog.manage.service.sys.SysRoleService;
 import com.progzc.blog.mapper.sys.SysRoleMapper;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
+import java.util.List;
+
 /**
  * @Description 角色
  * @Author zhaochao
@@ -16,4 +19,16 @@ import org.springframework.stereotype.Service;
 @Service
 public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> implements SysRoleService {
 
+    @Resource
+    private SysRoleMapper sysRoleMapper;
+
+    /**
+     * 根据创建者查询角色列表
+     * @param createUserId
+     * @return
+     */
+    @Override
+    public List<Long> queryRoleIdList(Long createUserId) {
+        return sysRoleMapper.queryRoleIdList(createUserId);
+    }
 }

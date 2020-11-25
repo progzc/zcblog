@@ -33,8 +33,10 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
      */
     @Override
     public MyPage queryPage(Map<String, Object> params) {
-        IPage<Tag> page = tagMapper.selectPage(new Query<Tag>(params).getPage(),
-                new QueryWrapper<Tag>().lambda());
+        Query<Tag> query = new Query<>(params);
+        // 若keyWord为null，则.like条件不存在，表示查询所有记录
+        IPage<Tag> page = tagMapper.selectPage(query.getPage(),
+                new QueryWrapper<Tag>().lambda().like(query.getKeyWord() != null, Tag::getName, query.getKeyWord()));
         return new MyPage(page);
     }
 }

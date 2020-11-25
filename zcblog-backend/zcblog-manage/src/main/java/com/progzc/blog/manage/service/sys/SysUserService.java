@@ -1,9 +1,11 @@
 package com.progzc.blog.manage.service.sys;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.progzc.blog.entity.MyPage;
 import com.progzc.blog.entity.sys.SysUser;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @Description 用户
@@ -29,4 +31,31 @@ public interface SysUserService extends IService<SysUser> {
      * @return
      */
     boolean updatePassword(Long userId, String password, String newPassword);
+
+    /**
+     * 查询用户列表
+     * @param params
+     * @return
+     */
+    MyPage queryPage(Map<String, Object> params);
+
+    /**
+     * 删除用户
+     * @param userIds
+     */
+    void deleteBatch(Long[] userIds);
+
+    /**
+     * 新增用户
+     * @param sysUser
+     * @return
+     */
+    boolean saveNewUser(SysUser sysUser);
+
+    /**
+     * 更新用户
+     * @param sysUser
+     * @return
+     */
+    boolean updateUser(SysUser sysUser);
 }
