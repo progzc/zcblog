@@ -1367,7 +1367,9 @@ lombok中的常见注解：
 
 - **@Builder：表示该类可以通过builder（建造者模式）构建对象**（非常好用）
 
-> 1. 对属性赋值可以实现链式操作。
+> 1. 对属性赋值可以实现链式操作（**添加注解@Builder(toBuilder = true)**）。
+>
+> > 参考博客文章：[Lombok下的@Builder注解用法](https://blog.csdn.net/qq_35568099/article/details/80438538)
 
 - **@RequiredArgsConstructor：生成一个该类的构造函数，禁止无参构造**
 
@@ -1812,9 +1814,9 @@ spring.devtools.restart.enabled: true
 
 ![image-20201027084516470](zcblog-backend-docs.assets/image-20201027084516470.png)
 
-## 7.1 基本使用
+## 7.2 基本使用
 
-### 7.1.1 使用场景
+### 7.2.1 使用场景
 
 **根据项目架构选择在哪个业务层进行参数校验**：
 
@@ -1841,7 +1843,7 @@ spring.devtools.restart.enabled: true
 # 4. 对返回值添加注解：与方法参数校验类似，只是作用在返回值上。
 ```
 
-### 7.1.2 使用注解
+### 7.2.2 使用注解
 
 - @NotBlank：不能为null，并且长度大于0（**只能用于String上面不能为null，调用trim()后，长度必须大于0**）
 - @NotNull：不能为null（**适用于任何类型被注解的元素必须不能为null**）
@@ -1854,7 +1856,7 @@ spring.devtools.restart.enabled: true
 > 4. @Valid不提供分组功能；而@Validated提供分组功能（可实现**分组检验**、**按组序列校验**、**同时校验多个参数**）。
 > 5. 针对**有接口的实现类的方法参数添加校验**时，应该在接口的方法参数上添加@Valid注解，在接口的实现类的方法参数上添加注解会报错（**详见7.1.1使用场景3**）。
 
-### 7.1.3 级联及一对多检验
+### 7.2.3 级联及一对多检验
 
 级联即一对一验证。级联及一对多验证采用@Valid注解。
 
@@ -1871,7 +1873,7 @@ public Class Employee {
 } 
 ```
 
-### 7.1.4 规范异常信息
+### 7.2.4 规范异常信息
 
 将异常信息（由**状态码+消息**组成）封装成枚举类，这样便于统一管理。**异常信息遵循RETSTful原则**。
 
@@ -1905,7 +1907,7 @@ public enum ErrorEnum {
 }
 ```
 
-### 7.1.5 全局异常处理
+### 7.2.5 全局异常处理
 
 为了使参数校验后返回给前端的结果更加优雅，需要自定义全局异常处理器（**这个全局处理异常不仅仅处理参数校验返回的异常，还可以对项目中出现的其他异常进行处理**）。
 
@@ -2023,7 +2025,7 @@ public class MyException extends RuntimeException{
 
 > 参考博客文章：[关于NoHandlerFoundException异常](https://blog.csdn.net/qq_36666651/article/details/81135139)
 
-### 7.1.6 分组校验
+### 7.2.6 分组校验
 
 有这样的场景：需要在插入/更新时保证某个字段不为空；查询时却没有这个要求。那么分组校验就可以很好地解决这个问题了。
 
@@ -2064,6 +2066,47 @@ public class EmployeeController{
 **特别提示：**关于参数校验的高级用法（如自定义注解、list中做分组检验、bean参数间的逻辑校验，本项目并未使用到。可以需要时再去学习...）
 
 > 参考博客文章：**[B站Hibernate Validator参数校验视频](https://www.bilibili.com/video/BV1UE411t7BZ)**、**[SpringBoot参数校验](https://www.cnblogs.com/mooba/p/11276062.html)**、[@NotBlank/@NotNull/@NotEmpty](https://www.cnblogs.com/xinruyi/p/11257663.html)、[@Valid与@Validated的区别](https://blog.csdn.net/gaojp008/article/details/80583301)、[@Valid与@Validated总结](https://www.cnblogs.com/javastack/p/10297550.html)、[深入了解数据校验](https://cloud.tencent.com/developer/article/1497733)、[@ControllerAdvice的三种功能](https://www.cnblogs.com/lenve/p/10748453.html)
+
+## 7.3 自定义校验规则
+
+自定义校验规则按照如下步骤（以邮箱校验为例）：
+
+- 第1步：自定义校验注解。
+
+```java
+@Documented
+@Constraint(validatedBy = MyEmailVerify.class)
+@Target({METHOD, FIELD, ANNOTATION_TYPE, CONSTRUCTOR, PARAMETER, TYPE_USE})
+@Retention(RUNTIME)
+public @interface MyEmail {
+    String message() default "邮箱格式不正确";
+    Class<?>[] groups() default {};
+    Class<? extends Payload>[] payload() default {};
+}
+```
+
+- 第2步：自定义校验类。
+
+```java
+@Slf4j
+public class MyEmailVerify implements ConstraintValidator<MyEmail, String> {
+    @Override
+    public void initialize(MyEmail constraintAnnotation) {
+    }
+
+    @Override
+    public boolean isValid(String email, ConstraintValidatorContext context) {
+        if (StringUtils.isEmpty(email)) {
+            log.error("邮箱为空");
+            return false;
+        }
+        String regex = "^[a-zA-Z0-9_.-]+@[a-zA-Z0-9-]+(\\.[a-zA-Z0-9-]+)*\\.[a-zA-Z0-9]{2,6}$";
+        return email.matches(regex);
+    }
+}
+```
+
+> 参考博客文章：[java自定义校验注解的使用](https://www.cnblogs.com/guagua-join-1/p/10270350.html)
 
 # 8 封装响应结果
 
@@ -4204,14 +4247,13 @@ public <T> T getObj(String key, Class<T> clazz, long expire) {
 
 ## 18.8 Redis中的缓存策略
 
-- 验证码
-  1. 写入验证码时设置**5分钟**过期。（写入时若未设置过期时间，则默认设置过期时间为1天，不过程序已经明确写过）
-  2. 验证码校验之后（无论校验成功与否），都要从缓存中删掉。
-  3. 读取验证码时不设置过期时间。
+- **LRU/LFU/FIFO算法剔除：**剔除算法通常用于缓存使用量超过了预设的最大值时候，如何对现有的数据进行剔除。例如Redis使用maxmemory-policy这个配置作为内存最大值后对于数据的剔除策略。
+  - LRU算法的全称是Least Recently Used：最近最不经常使用，跟使用的最后一次时间有关，淘汰最近使用时间离现在最久的（底层由哈希表和双端链表实现）。
+  - LFU算法的全称是Least Frequently Used：最近最少使用，跟使用的次数有关，淘汰使用次数最少的。
+- **超时剔除：**通过给缓存数据设置过期时间，让其在过期时间后自动删除，例如Redis提供的expire命令。如果业务可以容忍一段时间内，缓存层数据和存储层数据不一致，那么可以为其设置过期时间。在数据过期后，再从真实数据源获取数据，重新放到缓存并设置过期时间。
+- **主动更新：**应用方对于数据的一致性要求高，需要在真实数据更新后，立即更新缓存数据。例如可以利用消息系统或者其他方式通知缓存更新。
 
-- 用户token与用户id
-  1. 写入用户token与用户id时设置**12h**过期。（写入时若未设置过期时间，则默认设置过期时间为1天）
-  2. 
+> 参考博客文章：[Redis缓存设计及常见问题](https://www.cnblogs.com/jing99/p/11124093.html)、[Redis缓存淘汰策略](https://blog.csdn.net/u011485472/article/details/109630941)
 
 ## 18.9 json字符串转化为集合
 
@@ -4316,6 +4358,8 @@ public class RedisUtilsTest {
 ![image-20201110112122022](zcblog-backend-docs.assets/image-20201110112122022.png)
 
 ## 18.11 流式计算与链式编程
+
+### 18.11.1 java流式编程
 
 **Stream流式计算的特点：**优雅、高效！！！
 
@@ -4449,7 +4493,7 @@ public class RedisUtilsTest {
          }
      }
      ```
-### 18.11.1 字符串转换为整型数组
+### 18.11.2 字符串转换为整型数组
 
 采用流式操作将字符串转换为整型数组：
 
@@ -4457,7 +4501,7 @@ public class RedisUtilsTest {
 int[] result = Arrays.stream(str.split(" ")).mapToInt(Integer::parseInt).toArray();
 ```
 
-### 18.11.2 字符串数组转换为整型链表
+### 18.11.3 字符串数组转换为整型链表
 
 采用流式操作将字符串数组转换为整型链表：
 
@@ -4466,9 +4510,40 @@ int[] result = Arrays.stream(strs).mapToInt(Integer::parseInt).toArray();
 List<int> list = Arrays.asList(result);
 ```
 
+### 18.11.4 js流式编程
+
+- **filter：**过滤操作。
+
+```js
+const raw = [1, 2, 5, 100, 121]
+let result = []
+for (const e of raw) {
+    if (e > 100) {
+        result.push(e)
+    }
+}
+// 等价于
+const raw = [1, 2, 5, 100, 121]
+const result = raw.filter(e => e > 100)
+```
+
+- **map：**元素映射，其作用是将原集合的每个元素，通过一个操作映射到目标集合。
+
+```js
+const raw = [1, 2, 3]
+const res = raw.map(e => e * e)  // [1, 4, 9]
+```
+
+- **reduce：**元素合并，其作用是迭代地对两个元素进行合并操作。
+
+```js
+const raw = [1, 2, 3]
+const sum = raw.reduce((x, y) => x + y) // 6
+```
 
 
-> 参考博客文章：[Java8新特性之流式计算](https://blog.csdn.net/weixin_42193813/article/details/108087715?utm_medium=distribute.pc_relevant.none-task-blog-baidulandingword-2&spm=1001.2101.3001.4242)、**[JDK8新特性流式数据处理](https://blog.csdn.net/canot/article/details/52957262?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-2.add_param_isCf&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-2.add_param_isCf)**、[map和flatMap的区别](https://blog.csdn.net/weixin_39723544/article/details/97976604)
+
+> 参考博客文章：[Java8新特性之流式计算](https://blog.csdn.net/weixin_42193813/article/details/108087715?utm_medium=distribute.pc_relevant.none-task-blog-baidulandingword-2&spm=1001.2101.3001.4242)、**[JDK8新特性流式数据处理](https://blog.csdn.net/canot/article/details/52957262?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-2.add_param_isCf&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-2.add_param_isCf)**、[map和flatMap的区别](https://blog.csdn.net/weixin_39723544/article/details/97976604)、**[Java/Python/JS流式编程](https://blog.csdn.net/liaodong2010/article/details/102686009)**
 
 ## 18.12 Lambda方法引用
 
@@ -4971,7 +5046,57 @@ private LocalDateTime updateTime;
 
 ![image-20201123221712192](zcblog-backend-docs.assets/image-20201123221712192.png)
 
+### 18.21.9 QueryWrapper与UpdateWrapper
 
+**问题描述**：QueryWrapper与UpdateWrapper很多地方混用，二者到底有什么区别？
+
+**问题解答：**先看MyBatisPlus中条件构造器的继承关系：QueryWrapper与UpdateWrapper二者都继承自AbstractWrapper，而AbstractWrapper中提供了大部分的条件方法（如allEq/eq/ne/gt/lt/...），QueryWrapper与UpdateWrapper的绝大部分功能是相同的，所以大部分情况下可以混用。但是二者各提供了一些额外的条件方法，**如QueryWrapper的select方法可以设置查询字段；UpdateWrapper可以设置字段值及设置部分SQL。**
+
+本项目遵循如下习惯：**QueryWrapper用在查询操作中；UpdateWrapper用于增删改操作中**。
+
+![image-20201124153831175](zcblog-backend-docs.assets/image-20201124153831175.png)
+
+![image-20201124154721889](zcblog-backend-docs.assets/image-20201124154721889.png)
+
+### 18.21.10 时间差问题
+
+**问题描述：**后台返回给前台的时间与数据库中相差8个小时。
+
+![image-20201125195046461](zcblog-backend-docs.assets/image-20201125195046461.png)
+
+![image-20201125195106843](zcblog-backend-docs.assets/image-20201125195106843.png)
+
+**解决方法：**
+
+- 方法一：在实体类的时间字段上增加注解。
+
+```java
+// 若使用的是jackson
+// 1.@JsonFormat用于输出的时候解析，并且设置解析时区
+@JsonFormat(pattern="yyyy-MM-dd HH:mm:ss", timezone="GMT+8") // 亲测，只能解决格式问题，不能解决8h时差问题
+// 2.DateTimeFormat用于接收 前端传的时间值自动转换可以是Date 可以是string注意格式要一样如yyyy-MM-dd HH:mm:ss
+@DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss")
+private LocalDateTime updateTime;
+
+// 若使用的是fastjson
+@JSONField(format="yyyy-MM-dd HH:mm:ss")
+private LocalDateTime updateTime;
+```
+- 方法二：.yml中配置（亲测，无效果）
+
+```properties
+spring.jackson.date-format=yyyy-MM-dd HH:mm:ss
+spring.jackson.time-zone=GMT+8
+```
+- 方法三：.yml中数据库的配置（**亲测，可以解决8h时差问题，查询和插入均无问题**）
+
+```properties
+&serverTimezone=GMT%2b8
+```
+
+
+
+> 参考博客文章：[后台时间格式设置](https://blog.csdn.net/qq_38553950/article/details/103111058?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-3.control&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-3.control)、[前后台时间格式的转换](https://www.cnblogs.com/wangshen31/p/8961691.html)、**[时差8h的解决方法](https://blog.csdn.net/qq_42031483/article/details/100625564)**、[前后台时区问题](https://blog.csdn.net/u012946310/article/details/86689755)
 
 # 19 提高编码效率
 
