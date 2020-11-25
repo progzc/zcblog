@@ -1,6 +1,7 @@
 package com.progzc.blog.entity.operation;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
@@ -14,6 +15,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import org.springframework.data.annotation.Id;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -50,16 +52,20 @@ public class Tag implements Serializable {
     @NonNull
     private Integer type;
 
-    @ApiModelProperty(value = "自动填充：创建时间")
     @TableField(fill = FieldFill.INSERT)
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class) // 解决反序列化问题
+    @JsonSerialize(using = LocalDateTimeSerializer.class) // 解决序列化问题
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8") // 解决输出时的格式问题
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") // 解决前台输入时的格式问题
+    @ApiModelProperty(value = "自动填充：创建时间")
     private LocalDateTime createTime;
 
-    @ApiModelProperty(value = "自动填充：更新时间")
     @TableField(fill = FieldFill.INSERT_UPDATE)
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class) // 解决反序列化问题
+    @JsonSerialize(using = LocalDateTimeSerializer.class) // 解决序列化问题
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8") // 解决输出时的格式问题
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") // 解决前台输入时的格式问题
+    @ApiModelProperty(value = "自动填充：更新时间")
     private LocalDateTime updateTime;
 
     @ApiModelProperty(value = "乐观锁")

@@ -3,6 +3,8 @@ package com.progzc.blog.entity.sys.vo;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 /**
  * @Description 封装表单登录数据
@@ -12,6 +14,8 @@ import lombok.Data;
  * @Version V1.0
  */
 @Data
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 @ApiModel(value = "登录表单提交数据")
 public class SysLoginForm {
 

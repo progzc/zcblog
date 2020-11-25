@@ -3,6 +3,7 @@ package com.progzc.blog.entity;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.progzc.blog.common.xss.SQLFilterUtils;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -15,6 +16,7 @@ import java.util.Map;
  * @Version V1.0
  */
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class Query<T> extends LinkedHashMap<String, Object> {
 
     private static final long serialVersionUID = -6706175593173109120L;
@@ -56,6 +58,5 @@ public class Query<T> extends LinkedHashMap<String, Object> {
         this.put("keyWord", keyWord);
 
         this.page = new Page<>(currentPage, pageSize);
-
     }
 }
