@@ -39,10 +39,22 @@
 <script type="text/ecmascript-6">
 import { getUUID } from 'common/js/utils/login'
 import { executeGetCaptchaPath, executeLogin } from 'network/api/login'
+import { psdChar, psdKinds, psdLen } from 'common/js/utils/validate'
 
 export default {
   name: 'login',
   data () {
+    const validatePasswordOrUsername = (rule, value, callback) => {
+      if (!psdChar(value)) {
+        callback(new Error('不能包含空格和中文字符'))
+      } else if (!psdKinds(value)) {
+        callback(new Error('至少由数字、字母或特殊符号2种组成'))
+      } else if (!psdLen(value)) {
+        callback(new Error('长度必须在8~16位'))
+      } else {
+        callback()
+      }
+    }
     return {
       dataForm: {
         username: '',
@@ -52,10 +64,12 @@ export default {
       },
       dataRule: {
         username: [
-          { required: true, message: '帐号不能为空', trigger: 'blur' }
+          { required: true, message: '帐号不能为空', trigger: 'blur' },
+          { validator: validatePasswordOrUsername, trigger: 'blur' }
         ],
         password: [
-          { required: true, message: '密码不能为空', trigger: 'blur' }
+          { required: true, message: '密码不能为空', trigger: 'blur' },
+          { validator: validatePasswordOrUsername, trigger: 'blur' }
         ],
         captcha: [
           { required: true, message: '验证码不能为空', trigger: 'blur' }
