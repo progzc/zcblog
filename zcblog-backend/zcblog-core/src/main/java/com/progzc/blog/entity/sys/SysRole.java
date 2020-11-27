@@ -9,6 +9,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
+import com.progzc.blog.common.validation.AddGroup;
+import com.progzc.blog.common.validation.UpdateGroup;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -18,8 +20,11 @@ import org.springframework.data.annotation.Id;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * @Description 角色
@@ -36,15 +41,17 @@ public class SysRole implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @ApiModelProperty(value = "主键")
     @TableId(value = "role_id", type = IdType.AUTO)
     @Id
+    @NotNull(message = "角色id不能为空", groups = UpdateGroup.class)
+    @ApiModelProperty(value = "主键")
     private Long roleId;
 
     @ApiModelProperty(value = "角色名称")
-    @NotBlank(message = "角色不能为空") // 校验
+    @NotBlank(message = "角色不能为空", groups = {UpdateGroup.class, AddGroup.class})
     private String roleName;
 
+    @NotBlank(message = "角色备注信息不能为空", groups = {UpdateGroup.class, AddGroup.class})
     @ApiModelProperty(value = "备注")
     private String remark;
 
@@ -58,5 +65,12 @@ public class SysRole implements Serializable {
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") // 解决前台输入时的格式问题
     @ApiModelProperty(value = "自动填充：创建时间")
     private LocalDateTime createTime;
+
+
+    @TableField(exist = false)
+    @NotNull(message = "菜单id列表为空", groups = {UpdateGroup.class, AddGroup.class})
+    @Size(min = 1, message = "菜单id列表长度为0", groups = {UpdateGroup.class, AddGroup.class})
+    @ApiModelProperty(value = "菜单id列表")
+    private List<Long> menuIdList;
 
 }
