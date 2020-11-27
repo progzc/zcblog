@@ -56,7 +56,7 @@ export default {
           { required: true, message: '角色备注不能为空', trigger: 'blur' }
         ]
       },
-      tempKey: -666666 // 临时key, 用于解决tree半选中状态项不能传给后台接口问题. # 待优化
+      tempKey: -666666 // 分隔key, 用于解决tree半选中状态
     }
   },
   methods: {
@@ -77,6 +77,10 @@ export default {
             if (data && data.code === 200) {
               this.dataForm.roleName = data.role.roleName
               this.dataForm.remark = data.role.remark
+              const idx = data.role.menuIdList.indexOf(this.tempKey)
+              if (idx !== -1) {
+                data.role.menuIdList.splice(idx, data.role.menuIdList.length - idx)
+              }
               this.$refs.menuListTree.setCheckedKeys(data.role.menuIdList)
             }
           })
@@ -87,11 +91,13 @@ export default {
     dataFormSubmit () {
       this.$refs.dataForm.validate((valid) => {
         if (valid) {
+          const chooseMenuIdList = [].concat(this.$refs.menuListTree.getCheckedKeys(), [this.tempKey], this.$refs.menuListTree.getHalfCheckedKeys())
           executeSubmitRoleInfo(
             this.dataForm.id,
             this.dataForm.roleName,
             this.dataForm.remark,
-            this.$refs.menuListTree.getCheckedKeys()).then(data => {
+            // this.$refs.menuListTree.getCheckedKeys()).then(data => {
+            chooseMenuIdList).then(data => {
             if (data && data.code === 200) {
               this.$message({
                 message: '操作成功',
