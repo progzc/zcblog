@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.progzc.blog.common.xss.SQLFilterUtils;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -16,6 +17,7 @@ import java.util.Map;
  * @Version V1.0
  */
 @Data
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 public class Query<T> extends LinkedHashMap<String, Object> {
 

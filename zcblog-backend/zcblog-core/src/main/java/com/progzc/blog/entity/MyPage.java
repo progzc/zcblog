@@ -3,6 +3,7 @@ package com.progzc.blog.entity;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.List;
  * @Version V1.0
  */
 @Data
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 public class MyPage implements Serializable {
 
