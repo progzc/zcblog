@@ -25,8 +25,8 @@ spring:
       stat-view-servlet:
         enabled: true  #  启用监控页面的配置
         url-pattern: /druid/*  # 设置监控页面的url
-        login-username: admin  # 设置监控页面的登录名
-        login-password: admin  # 设置监控页面的登录密码
+      # login-username: admin  # 设置监控页面的登录名
+      # login-password: admin  # 设置监控页面的登录密码
       filter:
         # 监控统计
         stat:
