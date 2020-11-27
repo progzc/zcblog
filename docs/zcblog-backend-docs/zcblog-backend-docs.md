@@ -1,4 +1,4 @@
-# 0 技术方案
+0 技术方案
 
 `Springboot`+`Spring` + `SpringMVC` + `MyBatis` + `MyBatisPlus`：主流web框架；
 
@@ -5094,9 +5094,87 @@ spring.jackson.time-zone=GMT+8
 &serverTimezone=GMT%2b8
 ```
 
+参考博客文章：[后台时间格式设置](https://blog.csdn.net/qq_38553950/article/details/103111058?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-3.control&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-3.control)、[前后台时间格式的转换](https://www.cnblogs.com/wangshen31/p/8961691.html)、**[时差8h的解决方法](https://blog.csdn.net/qq_42031483/article/details/100625564)**、[前后台时区问题](https://blog.csdn.net/u012946310/article/details/86689755)
+
+### 18.21.11 MyPage反序列化失败
+
+**问题描述：**MyPage反序列化失败。
+
+![image-20201126095122390](zcblog-backend-docs.assets/image-20201126095122390.png)
+
+**原因：**MyPage没有无参构造器，jackson反序列化时不能创建实体。
+
+![image-20201126095928936](zcblog-backend-docs.assets/image-20201126095928936.png)
+
+**解决方法：**
+
+- 方法一：给实体类添加无参构造器（使用Lombok的@NoArgsConstructor注解，**本项目采用这种解决方案**）。
+
+- 方法二：为构造器参数添加`@JsonProperty("field_name")`注解。@JsonProperty位于jackson包，搭配ObjectMapper().writeValueAsString(实体类)方法使用，将实体类转换成字符串；搭配ObjectMapper().readValue(字符串)方法使用，将字符串转换成实体类。
+
+```java
+// 关于@JsonProperty注解的使用
+// 1. 实体类
+public class User {
+	@JsonProperty("JsonPropertyName")
+	private String name;
+	private String sex;
+	private Integer age;
+    // 省略get/set方法
+    ...
+	public User(String name, String sex, Integer age) {
+		super();
+		this.name = name;
+		this.sex = sex;
+		this.age = age;
+	}
+}
+// 2. 测试
+@Test
+public void testJsonProperty() throws IOException{
+	User user=new User("shiyu","man",22);
+	System.out.println(new ObjectMapper().writeValueAsString(user));
+	String str="{\"sex\":\"man\",\"age\":22,\"JsonPropertyName\":\"shiyu\"}";
+	System.out.println(new ObjectMapper().readValue(str, User.class).toString());
+}
+// 3. 输出结果
+{"sex":"man","age":22,"JsonPropertyName":"shiyu"}
+User [name=shiyu, sex=man, age=22]
+```
+
+> 参考博客文章：[stackoverflow问题解决](https://stackoverflow.com/questions/53191468/no-creators-like-default-construct-exist-cannot-deserialize-from-object-valu)、**[@JsonProperty和JSONField的区别](https://blog.csdn.net/weixin_40327259/article/details/91491164)**
+
+### 18.21.12 条件构造器Bug（非常重要）
+
+**注意事项：**MyBatisPlus的条件构造器有一个非常重要的细节需要注意，即在条件构造器后添加**单个**条件约束时，当条件约束的condition为false时，new UpdateWrapper<>().lambda()表示选择所有（特别是在**删除/更新**操作时非常危险），**因此谨慎使用带condition的单个条件约束的条件构造器来操作数据库**。
+
+```java
+@Test
+public void test() {
+    Long[] roleIds = {2L, 1L};
+    Arrays.stream(roleIds).forEach(roleId -> {
+        sysRoleMenuMapper.delete(new UpdateWrapper<SysRoleMenu>().lambda()
+                .eq(false, SysRoleMenu::getRoleId, roleId)); // 注意：eq的条件为false时会删除所有
+    });
+}
+```
+
+### 18.21.13 解决循环依赖
+
+**问题描述：**项目中出现了循环依赖，导致Bean注入失败。
+
+![image-20201127154550160](zcblog-backend-docs.assets/image-20201127154550160.png)
+
+采用继承图分析循环依赖问题：
+
+![image-20201127162037996](zcblog-backend-docs.assets/image-20201127162037996.png)
+
+**解决方法：**
+
+- 方法一：解耦（最优先考虑）。
+- 方法二：改动比较大，可以在互相依赖的两个bean中的某一个上添加@Lazy注解。
 
 
-> 参考博客文章：[后台时间格式设置](https://blog.csdn.net/qq_38553950/article/details/103111058?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-3.control&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-3.control)、[前后台时间格式的转换](https://www.cnblogs.com/wangshen31/p/8961691.html)、**[时差8h的解决方法](https://blog.csdn.net/qq_42031483/article/details/100625564)**、[前后台时区问题](https://blog.csdn.net/u012946310/article/details/86689755)
 
 # 19 提高编码效率
 
