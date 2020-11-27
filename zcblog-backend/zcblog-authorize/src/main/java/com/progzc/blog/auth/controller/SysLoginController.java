@@ -8,6 +8,7 @@ import com.progzc.blog.common.Result;
 import com.progzc.blog.common.base.AbstractController;
 import com.progzc.blog.common.enums.ErrorEnum;
 import com.progzc.blog.common.utils.EncryptUtils;
+import com.progzc.blog.common.utils.ValidatorUtils;
 import com.progzc.blog.entity.sys.SysUser;
 import com.progzc.blog.entity.sys.vo.SysLoginForm;
 import com.progzc.blog.mapper.sys.SysUserMapper;
@@ -23,6 +24,7 @@ import sun.misc.BASE64Encoder;
 
 import javax.annotation.Resource;
 import javax.imageio.ImageIO;
+import javax.validation.groups.Default;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -37,6 +39,9 @@ import java.io.IOException;
 @Slf4j
 @RestController
 public class SysLoginController extends AbstractController {
+
+    @Autowired
+    private ValidatorUtils validatorUtils;
 
     @Autowired
     private SysCaptchaService sysCaptchaService;
@@ -76,6 +81,7 @@ public class SysLoginController extends AbstractController {
     @PostMapping("/admin/sys/login")
     @ApiOperation(value = "提交表单，进行登录")
     public Result login(@RequestBody SysLoginForm form) {
+        validatorUtils.validateEntity(form, Default.class);
         boolean flag = sysCaptchaService.validate(form.getUuid(), form.getCaptcha());
         if (!flag) {
             log.error(ErrorEnum.CAPTCHA_WRONG.getMsg());
@@ -85,7 +91,7 @@ public class SysLoginController extends AbstractController {
         // 进行AES解密
         String username = EncryptUtils.decrypt(form.getUsername());
         String password = EncryptUtils.decrypt(form.getPassword());
-        
+
         SysUser sysUser = sysUserMapper.selectOne(new QueryWrapper<SysUser>()
                 .lambda()
                 .eq(SysUser::getUsername, username));
