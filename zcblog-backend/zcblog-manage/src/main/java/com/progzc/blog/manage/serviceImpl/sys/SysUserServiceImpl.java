@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +44,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     private SysUserRoleService sysUserRoleService;
 
     @Autowired
+    @Lazy
     private SysRoleService sysRoleService;
 
     /**
@@ -81,7 +83,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         Long createUserId = (Long) query.get("createUserId");
 
         // 若是超级管理员，flag = false，表示.eq条件不存在，则可以查询所有用户
-        boolean flag = !SysConstants.SUPER_ADMIN.equals(createUserId);
+        boolean flag = createUserId != null && !SysConstants.SUPER_ADMIN.equals(createUserId);
 
         IPage<SysUser> page = sysUserMapper.selectPage(query.getPage(), new QueryWrapper<SysUser>().lambda()
                 // 查询时只输出"用户id/用户名/用户邮箱/用户电话/用户状态/用户创建时间"字段

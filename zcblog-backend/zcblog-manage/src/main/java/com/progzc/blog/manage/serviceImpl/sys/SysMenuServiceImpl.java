@@ -59,7 +59,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
     private List<SysMenu> getMenuTreeList(List<SysMenu> menuList, List<Long> menuIdList) {
         List<SysMenu> subMenuList = new ArrayList<>();
         for (SysMenu menu : menuList) {
-            if (menu.getType() == MenuTypeEnum.CATALOG.getValue()) {
+            if (menu.getType() == MenuTypeEnum.CATALOG.getValue() || menu.getType() == MenuTypeEnum.MENU.getValue()) {
                 menu.setList(getMenuTreeList(queryListParentId(menu.getMenuId(), menuIdList), menuIdList));
             }
             subMenuList.add(menu);

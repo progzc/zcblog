@@ -32,11 +32,11 @@ public class SysUserRoleServiceImpl extends ServiceImpl<SysUserRoleMapper, SysUs
     @Override
     public void deleteBatchByUserIds(Long[] userIds) {
         Arrays.stream(userIds).forEach(userId -> {
-            sysUserRoleMapper.delete(new UpdateWrapper<SysUserRole>().lambda()
-                    .eq(userId != null, SysUserRole::getUserId, userId));
+            if (userId != null) {
+                sysUserRoleMapper.delete(new UpdateWrapper<SysUserRole>().lambda()
+                        .eq(SysUserRole::getUserId, userId));
+            }
         });
-
-
     }
 
     /**
@@ -47,7 +47,7 @@ public class SysUserRoleServiceImpl extends ServiceImpl<SysUserRoleMapper, SysUs
     @Override
     public List<Long> queryRoleIdList(Long userId) {
         return sysUserRoleMapper.queryRoleIdList(userId);
-//        下面这种做法虽然也能实现，但是效率比较低
+//        下面这种做法虽然也能实现，但是效率比较，推荐使用XML写SQL的方式
 //        List<SysUserRole> sysUserRoles = sysUserRoleMapper.selectList(new QueryWrapper<SysUserRole>().lambda()
 //                .select(SysUserRole::getRoleId)
 //                .eq(SysUserRole::getUserId, userId));
