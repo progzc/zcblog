@@ -1,6 +1,6 @@
 <template>
   <el-submenu
-    v-if="menu.list && menu.list.length >= 1"
+    v-if="menu.list && menu.list.length >= 1 && menu.list[0].type === menuType"
     :index="menu.menuId + ''"
     :popper-class="'site-sidebar--' + sidebarLayoutSkin + '-popper'">
     <template slot="title">
@@ -22,6 +22,7 @@
 
 <script type="text/ecmascript-6">
 import SubMenu from 'components/content/SubMenu'
+import MENU_TYPE from 'common/js/constants/menuType'
 export default {
   name: 'sub-menu',
   components: {
@@ -35,6 +36,11 @@ export default {
     dynamicMenuRoutes: {
       type: Array,
       required: true
+    }
+  },
+  data () {
+    return {
+      menuType: MENU_TYPE.MENU
     }
   },
   computed: {

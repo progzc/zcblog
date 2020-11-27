@@ -87,7 +87,7 @@ module.exports = {
     sourceMap: false,
     loaderOptions: {
       scss: {
-        additionalData: '@import "~@/common/scss/theme.scss"'
+        additionalData: '@import "~@/common/scss/theme.scss";'
       }
     }
   }

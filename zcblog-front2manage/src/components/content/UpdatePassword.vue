@@ -2,7 +2,7 @@
   <el-dialog title="修改密码" :visible.sync="visible" :append-to-body="true" :close-on-click-modal="false">
     <el-form :model="dataForm" :rules="dataRule" ref="dataForm" @keyup.enter.native="dataFormSubmit()" label-width="80px">
       <el-form-item label="账号">
-        <span>{{ username }}</span>
+        <el-input v-model="username" disabled>{{ username }}</el-input>
       </el-form-item>
       <el-form-item label="原密码" prop="password">
         <el-input type="password" v-model="dataForm.password"></el-input>

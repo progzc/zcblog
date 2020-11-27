@@ -7,7 +7,7 @@
         <a class="site-navbar__brand-lg" href="javascript:;">Clouds' Blog</a>
       </h1>
     </div>
-    <div class="site-navbar__body clearfix">
+    <div class="site-navbar__body clearfix" :class="'site-navbar__body__' + navbarLayoutType">
       <el-dropdown class="site-navbar__user" :show-timeout="0" placement="bottom">
         <span class="el-dropdown-link">
           <img src="~assets/img/avatar.jpg" :alt="username" >{{ username }}
@@ -29,6 +29,7 @@ import UpdatePassword from 'components/content/UpdatePassword'
 import { UPDATE_MAIN_TABS, UPDATE_SIDEBAR_FOLD } from 'store/constant/mutation-types'
 import { executeLogout } from 'network/api/login'
 import { clearLoginInfo } from 'common/js/utils/login'
+
 export default {
   name: 'MainNavbar',
   components: {

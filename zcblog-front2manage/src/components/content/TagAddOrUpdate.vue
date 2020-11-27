@@ -57,12 +57,10 @@ export default {
           executeGetTagById(this.dataForm.id).then(data => {
             if (data && data.code === 200) {
               this.dataForm = data.tag
-              this.dataCache = this.dataForm // 缓存值
             }
           })
         } else { // 执行的是新增操作
           this.dataForm = {}
-          this.dataCache = this.dataForm // 缓存值
         }
       })
     },

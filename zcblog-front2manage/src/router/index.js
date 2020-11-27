@@ -91,7 +91,8 @@ function addDynamicMenuRoutes (menuList = [], routes = []) {
   for (let i = 0; i < menuList.length; i++) {
     if (menuList[i].list && menuList[i].list.length >= 1) {
       temp = temp.concat(menuList[i].list)
-    } else if (menuList[i].url && /\S/.test(menuList[i].url)) { // 若url不为空
+    }
+    if (menuList[i].url && /\S/.test(menuList[i].url)) { // 若url不为空
       // 替换url开头的"/"替换为""
       menuList[i].url = menuList[i].url.replace(/^\//, '')
       const route = {
@@ -103,7 +104,7 @@ function addDynamicMenuRoutes (menuList = [], routes = []) {
           title: menuList[i].name,
           isDynamic: true, // 动态菜单
           isTab: true, // 是否通过tab展示内容 （true: 是, false: 否）
-          iframeUrl: '' // 是否通过iframe嵌套展示内容（'以http[s]://开头': 是, '': 否）
+          iframeUrl: ''// 是否通过iframe嵌套展示内容（'以http[s]://开头': 是, '': 否）
         }
       }
       // url以http[s]://开头，通过iframe展示
@@ -114,8 +115,7 @@ function addDynamicMenuRoutes (menuList = [], routes = []) {
       } else {
         try {
           route.component = _import(`content/${menuList[i].component}`) || null
-        } catch (e) {
-        }
+        } catch (e) { }
       }
       routes.push(route)
     }
