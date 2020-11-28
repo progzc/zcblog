@@ -11,6 +11,7 @@ import com.progzc.blog.mapper.operation.TagMapper;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -38,5 +39,16 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
         IPage<Tag> page = tagMapper.selectPage(query.getPage(),
                 new QueryWrapper<Tag>().lambda().like(query.getKeyWord() != null, Tag::getName, query.getKeyWord()));
         return new MyPage(page);
+    }
+
+    /**
+     * 根据id和类型查询标签列表
+     * @param linkId
+     * @param type   标签类别：0代表文章，1代表相册
+     * @return
+     */
+    @Override
+    public List<Tag> listByLinkId(Integer linkId, int type) {
+        return tagMapper.listByLinkId(linkId, type);
     }
 }
