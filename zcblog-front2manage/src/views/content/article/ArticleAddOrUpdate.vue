@@ -110,7 +110,7 @@ import 'mavon-editor/dist/highlightjs/styles/ir-black.min.css'
 import marked from 'marked'
 
 import { executeGetTagsByType } from 'network/api/tag'
-import { executeGetArticleInfo } from 'network/api/article'
+import { executeGetArticleInfo, executeSubmitArticleInfo } from 'network/api/article'
 
 export default {
   name: 'ArticleAddOrUpdate',
@@ -234,12 +234,7 @@ export default {
       // 第一步.将图片上传到服务器.
       const formData = new FormData()
       formData.append('file', $file)
-      this.$http({
-        url: this.url,
-        method: 'post',
-        data: formData,
-        headers: { 'Content-Type': 'multipart/form-data' }
-      }).then(data => {
+      executeSubmitArticleInfo(formData).then(data => {
         this.$refs.md.$img2Url(pos, data.resource.url)
       })
     },
