@@ -3,6 +3,7 @@ const resolve = dir => path.join(__dirname, dir)
 const IS_PROD = ['production', 'prod'].includes(process.env.NODE_ENV)
 const IS_DEV = ['dev'].includes(process.env.NODE_ENV)
 const StylelintPlugin = require('stylelint-webpack-plugin')
+const CopyWebpackPlugin = require('copy-webpack-plugin')
 
 module.exports = {
   publicPath: IS_PROD ? process.env.VUE_APP_PUBLIC_PATH : '/', // 默认'/'，部署应用包时的基本 URL
@@ -90,7 +91,22 @@ module.exports = {
         additionalData: '@import "~@/common/scss/theme.scss";'
       }
     }
-  }
+  },
+
+  // 配置mavonEditor的本地高亮样式
+  plugins: [
+    new CopyWebpackPlugin([{
+      from: 'node_modules/mavon-editor/dist/highlightjs',
+      to: path.resolve(__dirname, './dist/highlightjs') // 插件将会把文件导出于/dist/highlightjs之下
+    }, {
+      from: 'node_modules/mavon-editor/dist/markdown',
+      to: path.resolve(__dirname, './dist/markdown') // 插件将会把文件导出于/dist/markdown之下
+    }, {
+      from: 'node_modules/mavon-editor/dist/katex',
+      to: path.resolve(__dirname, './dist/katex') // 插件将会把文件导出/dist/katex之下
+    }])
+  ]
+
 }
 
 function addStyleResource (rule) {
