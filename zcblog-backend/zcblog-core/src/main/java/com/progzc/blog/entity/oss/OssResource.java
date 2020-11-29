@@ -33,6 +33,11 @@ public class OssResource implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    public OssResource(String url, String name) {
+        this.name = name;
+        this.url = url;
+    }
+
     @ApiModelProperty(value = "主键")
     @TableId(value = "id", type = IdType.AUTO)
     @Id
