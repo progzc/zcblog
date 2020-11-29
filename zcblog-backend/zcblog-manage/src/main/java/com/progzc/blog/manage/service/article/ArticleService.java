@@ -12,4 +12,10 @@ import com.progzc.blog.entity.article.Article;
  */
 public interface ArticleService extends IService<Article> {
 
+    /**
+     * 根据id查询文章信息
+     * @param articleId
+     * @return
+     */
+    Article getArticleInfo(Integer articleId);
 }

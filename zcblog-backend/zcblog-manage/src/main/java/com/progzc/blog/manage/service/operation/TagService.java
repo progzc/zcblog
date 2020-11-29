@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.progzc.blog.entity.MyPage;
 import com.progzc.blog.entity.operation.Tag;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -21,4 +22,12 @@ public interface TagService extends IService<Tag> {
      * @return
      */
     MyPage queryPage(Map<String, Object> params);
+
+    /**
+     * 根据id和类型查询标签列表
+     * @param linkId
+     * @param type   标签类别：0代表文章，1代表相册
+     * @return
+     */
+    List<Tag> listByLinkId(Integer linkId, int type);
 }

@@ -4,8 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
- * @Description 例用枚举类封装RESTful规范的异常信息
- * @Author zhaocho
+ * @Description 利用枚举类封装RESTful规范的异常信息
+ * @Author zhaochao
  * @Date 2020/10/28 0:11
  * @Email zcprog@foxmail.com
  * @Version V1.0

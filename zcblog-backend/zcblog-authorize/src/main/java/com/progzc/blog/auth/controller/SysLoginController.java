@@ -51,8 +51,7 @@ public class SysLoginController extends AbstractController {
 
     @Autowired
     private SysUserTokenService sysUserTokenService;
-
-
+    
     /**
      * 获取验证码
      * @param uuid
@@ -81,16 +80,20 @@ public class SysLoginController extends AbstractController {
     @PostMapping("/admin/sys/login")
     @ApiOperation(value = "提交表单，进行登录")
     public Result login(@RequestBody SysLoginForm form) {
+        // 进行AES解密
+        String username = EncryptUtils.decrypt(form.getUsername());
+        String password = EncryptUtils.decrypt(form.getPassword());
+        form.setUsername(username);
+        form.setPassword(password);
+        // 校验用户名/密码格式
         validatorUtils.validateEntity(form, Default.class);
+
+        // 校验验证码
         boolean flag = sysCaptchaService.validate(form.getUuid(), form.getCaptcha());
         if (!flag) {
             log.error(ErrorEnum.CAPTCHA_WRONG.getMsg());
             return Result.error(ErrorEnum.CAPTCHA_WRONG);
         }
-
-        // 进行AES解密
-        String username = EncryptUtils.decrypt(form.getUsername());
-        String password = EncryptUtils.decrypt(form.getPassword());
 
         SysUser sysUser = sysUserMapper.selectOne(new QueryWrapper<SysUser>()
                 .lambda()

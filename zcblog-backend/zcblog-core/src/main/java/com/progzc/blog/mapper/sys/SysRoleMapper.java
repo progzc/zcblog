@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.progzc.blog.entity.sys.SysRole;
 import org.apache.ibatis.annotations.Mapper;
 
+import java.util.List;
+
 /**
  * @Description 角色
  * @Author zhaochao
@@ -14,4 +16,10 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface SysRoleMapper extends BaseMapper<SysRole> {
 
+    /**
+     * 根据创建者查询角色列表
+     * @param createUserId
+     * @return
+     */
+    List<Long> queryRoleIdList(Long createUserId);
 }

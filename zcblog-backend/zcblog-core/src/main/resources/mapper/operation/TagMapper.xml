@@ -2,19 +2,17 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.progzc.blog.mapper.operation.TagMapper">
 
-    <!-- 通用查询映射结果 -->
-    <resultMap id="BaseResultMap" type="com.progzc.blog.entity.operation.Tag">
-        <id column="id" property="id"/>
-        <result column="name" property="name"/>
-        <result column="create_time" property="createTime"/>
-        <result column="update_time" property="updateTime"/>
-        <result column="version" property="version"/>
-        <result column="deleted" property="deleted"/>
-    </resultMap>
-
-    <!-- 通用查询结果列 -->
-    <sql id="Base_Column_List">
-        id, name, create_time, update_time, version, deleted
-    </sql>
+    <!--根据id和类型查询标签列表-->
+    <select id="listByLinkId" resultType="com.progzc.blog.entity.operation.Tag">
+        select t.* from tag t left join tag_Link tl on t.id = tl.tag_id
+        <where>
+            <if test="linkId!=null">
+                and tl.link_id = #{linkId}
+            </if>
+            <if test="type!=null">
+                and t.type = #{type}
+            </if>
+        </where>
+    </select>
 
 </mapper>
