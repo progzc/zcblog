@@ -36,7 +36,10 @@ public enum ErrorEnum {
 
     //七牛云OSS错误
     OSS_CONFIG_ERROR(10050, "七牛云配置信息错误"),
-    OSS_UPLOAD_ERROR(10051, "Article图片上传失败");
+    OSS_ARTICLE_UPLOAD_ERROR(10051, "文章图片上传失败"),
+    OSS_ARTICLE_DELETE_ERROR(10052, "文章图片删除失败"),
+    OSS_GALLERY_UPLOAD_ERROR(10053, "相册图片上传失败"),
+    OSS_GALLERY_DELETE_ERROR(10054, "相册图片删除失败");
 
     private int code;
     private String msg;
