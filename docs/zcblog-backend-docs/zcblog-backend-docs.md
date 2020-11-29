@@ -1,4 +1,4 @@
-0 技术方案
+# 0 技术方案
 
 `Springboot`+`Spring` + `SpringMVC` + `MyBatis` + `MyBatisPlus`：主流web框架；
 
@@ -4641,7 +4641,7 @@ id    class
 2      2
 
 #############################执行SQL语句1###################################
-SELECT a.*, b.* FROM a LEFT JOIN b ON a.id = b.id;1
+SELECT a.*, b.* FROM a LEFT JOIN b ON a.id = b.id;
 #查询结果：
 a.id    a.type    b.id    b.class
 -----------------------------------
@@ -4823,7 +4823,7 @@ POST请求属于HTTP请求中的复杂请求，HTTP协议在浏览器中对复�
 
 > 参考博客文章：[Github/learn-regex](https://github.com/ziishaned/learn-regex/blob/master/translations/README-cn.md)、[正则表达式测试网站](https://regex101.com/)
 
-## 18.18 常用的工具类
+## 18.18 常用的工具类/包
 
 ### 18.18.1 Math
 
@@ -4836,6 +4836,18 @@ POST请求属于HTTP请求中的复杂请求，HTTP协议在浏览器中对复�
 **Math.floor()：**"向下取整"，即小数部分直接舍去。
 
 - **注意：**Math.floor()容易出现精度问题。例如，对小数8.54保留两位小数（虽然它已经保留了2位小数），`Math.floor(8.54*100)/100  // 输出结果为 8.53, 注意是 8.53 而不是 8.54`。**Math.floor()慎用！**
+
+### 18.18.2 commons-io包
+
+
+
+### 18.18.3 commons-lang包
+
+
+
+### 18.18.4 commons-fileupload包
+
+
 
 ## 18.19 MyBatisPlus相关
 
@@ -5173,6 +5185,264 @@ public void test() {
 
 - 方法一：解耦（最优先考虑）。
 - 方法二：改动比较大，可以在互相依赖的两个bean中的某一个上添加@Lazy注解。
+
+### 18.21.14 文件上传与文件删除
+
+**背景：**本项目采用七牛云的OSS产品服务来实现文件上传的云存储。
+
+#### 18.21.14.1 文件上传
+
+1. 鉴权
+
+   - 简单上传的凭证
+
+   ```java
+   String accessKey = "access key";
+   String secretKey = "secret key";
+   String bucket = "bucket name"; // 存储空间
+   Auth auth = Auth.create(accessKey, secretKey);
+   String upToken = auth.uploadToken(bucket);
+   System.out.println(upToken);
+   ```
+
+   - 覆盖上传的凭证
+
+   ```java
+   String accessKey = "access key";
+   String secretKey = "secret key";
+   String bucket = "bucket name"; // 存储空间
+   String key = "file key"; // 想进行覆盖的文件名称
+   Auth auth = Auth.create(accessKey, secretKey);
+   String upToken = auth.uploadToken(bucket, key);
+   System.out.println(upToken);
+   ```
+
+2. 构建配置
+
+```java
+// 构造一个带指定Region对象的配置类
+Configuration cfg = new Configuration(Region.autoRegion());
+//...其他参数参考类注释
+UploadManager uploadManager = new UploadManager(cfg);
+//...生成上传凭证，然后准备上传
+```
+
+3. 文件上传
+
+   - **上传本地文件：**直接指定文件的完整路径即可上传。
+
+   ```java
+   // 构造一个带指定 Region 对象的配置类
+   Configuration cfg = new Configuration(Region.autoRegion());
+   //...其他参数参考类注释
+   UploadManager uploadManager = new UploadManager(cfg);
+   //...生成上传凭证，然后准备上传
+   String accessKey = "your access key";
+   String secretKey = "your secret key";
+   String bucket = "your bucket name";
+   //如果是Windows情况下，格式是 D:\\qiniu\\test.png
+   String localFilePath = "/home/qiniu/test.png";
+   //默认不指定key的情况下，以文件内容的hash值作为文件名
+   String key = null;
+   Auth auth = Auth.create(accessKey, secretKey);
+   String upToken = auth.uploadToken(bucket);
+   try {
+       Response response = uploadManager.put(localFilePath, key, upToken);
+       //解析上传成功的结果
+       DefaultPutRet putRet = new Gson().fromJson(response.bodyString(), DefaultPutRet.class);
+       System.out.println(putRet.key);
+       System.out.println(putRet.hash);
+   } catch (QiniuException ex) {
+       Response r = ex.response;
+       System.err.println(r.toString());
+       try {
+           System.err.println(r.bodyString());
+       } catch (QiniuException ex2) {
+           //ignore
+       }
+   }
+   ```
+
+   - **字节数组上传：**可以支持将内存中的字节数组上传到空间中。
+
+   ```java
+   //构造一个带指定 Region 对象的配置类
+   Configuration cfg = new Configuration(Region.autoRegion());
+   //...其他参数参考类注释
+   UploadManager uploadManager = new UploadManager(cfg);
+   //...生成上传凭证，然后准备上传
+   String accessKey = "your access key";
+   String secretKey = "your secret key";
+   String bucket = "your bucket name";
+   //默认不指定key的情况下，以文件内容的hash值作为文件名
+   String key = null;
+   try {
+       byte[] uploadBytes = "hello qiniu cloud".getBytes("utf-8");
+       Auth auth = Auth.create(accessKey, secretKey);
+       String upToken = auth.uploadToken(bucket);
+       try {
+           Response response = uploadManager.put(uploadBytes, key, upToken);
+           //解析上传成功的结果
+           DefaultPutRet putRet = new Gson().fromJson(response.bodyString(), DefaultPutRet.class);
+           System.out.println(putRet.key);
+           System.out.println(putRet.hash);
+       } catch (QiniuException ex) {
+           Response r = ex.response;
+           System.err.println(r.toString());
+           try {
+               System.err.println(r.bodyString());
+           } catch (QiniuException ex2) {
+               //ignore
+           }
+       }
+   } catch (UnsupportedEncodingException ex) {
+       //ignore
+   }
+   ```
+
+   - **数据流上传：**演示的是`InputStream`对象的上传，适用于所有的`InputStream`子类。
+
+   ```java
+   //构造一个带指定 Region 对象的配置类
+   Configuration cfg = new Configuration(Region.autoRegion());
+   //...其他参数参考类注释
+   UploadManager uploadManager = new UploadManager(cfg);
+   //...生成上传凭证，然后准备上传
+   String accessKey = "your access key";
+   String secretKey = "your secret key";
+   String bucket = "your bucket name";
+   //默认不指定key的情况下，以文件内容的hash值作为文件名
+   String key = null;
+   try {
+       byte[] uploadBytes = "hello qiniu cloud".getBytes("utf-8");
+       ByteArrayInputStream byteInputStream=new ByteArrayInputStream(uploadBytes);
+       Auth auth = Auth.create(accessKey, secretKey);
+       String upToken = auth.uploadToken(bucket);
+       try {
+           Response response = uploadManager.put(byteInputStream,key,upToken,null, null);
+           //解析上传成功的结果
+           DefaultPutRet putRet = new Gson().fromJson(response.bodyString(), DefaultPutRet.class);
+           System.out.println(putRet.key);
+           System.out.println(putRet.hash);
+       } catch (QiniuException ex) {
+           Response r = ex.response;
+           System.err.println(r.toString());
+           try {
+               System.err.println(r.bodyString());
+           } catch (QiniuException ex2) {
+               //ignore
+           }
+       }
+   } catch (UnsupportedEncodingException ex) {
+       //ignore
+   }
+   ```
+
+   - **断点续传：**
+
+   ```java
+   //构造一个带指定 Region 对象的配置类
+   Configuration cfg = new Configuration(Region.autoRegion());
+   //...其他参数参考类注释
+   //...生成上传凭证，然后准备上传
+   String accessKey = "your access key";
+   String secretKey = "your secret key";
+   String bucket = "your bucket name";
+   //如果是Windows情况下，格式是 D:\\qiniu\\test.png
+   String localFilePath = "/home/qiniu/test.mp4";
+   //默认不指定key的情况下，以文件内容的hash值作为文件名
+   String key = null;
+   Auth auth = Auth.create(accessKey, secretKey);
+   String upToken = auth.uploadToken(bucket);
+   String localTempDir = Paths.get(System.getenv("java.io.tmpdir"), bucket).toString();
+   try {
+       //设置断点续传文件进度保存目录
+       FileRecorder fileRecorder = new FileRecorder(localTempDir);
+       UploadManager uploadManager = new UploadManager(cfg, fileRecorder);
+       try {
+           Response response = uploadManager.put(localFilePath, key, upToken);
+           //解析上传成功的结果
+           DefaultPutRet putRet = new Gson().fromJson(response.bodyString(), DefaultPutRet.class);
+           System.out.println(putRet.key);
+           System.out.println(putRet.hash);
+       } catch (QiniuException ex) {
+           Response r = ex.response;
+           System.err.println(r.toString());
+           try {
+               System.err.println(r.bodyString());
+           } catch (QiniuException ex2) {
+               //ignore
+           }
+       }
+   } catch (IOException ex) {
+       ex.printStackTrace();
+   }
+   ```
+
+
+#### 18.21.14.2 文件删除
+
+   资源管理包括获取文件信息/修改文件/删除文件...，如下所示，具体可以参考七牛云官网SDK。
+
+   详细的资源管理请参考七牛云官网：
+
+   ![image-20201129115206904](zcblog-backend-docs.assets/image-20201129115206904.png)
+
+- 文件删除
+
+  ```java
+  Auth auth = Auth.create(accessKey, secretKey);
+  BucketManager bucketManager = new BucketManager(auth, cfg);
+  try {
+      bucketManager.delete(bucket, key);
+  } catch (QiniuException ex) {
+  }
+  ```
+  
+- 复制文件副本
+
+  ```java
+  Auth auth = Auth.create(accessKey, secretKey);
+  BucketManager bucketManager = new BucketManager(auth, cfg);
+  try {
+      bucketManager.copy(fromBucket, fromKey, toBucket, toKey);
+  } catch (QiniuException ex) {
+  }
+  ```
+- 设置或更新文件的生存时间
+
+  ```java
+  //过期天数，该文件10天后删除
+  int days = 10;
+  Auth auth = Auth.create(accessKey, secretKey);
+  BucketManager bucketManager = new BucketManager(auth, cfg);
+  try {
+      bucketManager.deleteAfterDays(bucket, key, days);
+  } catch (QiniuException ex) {
+  }
+  ```
+
+**本项目的删除逻辑：**为了安全操作，这里的删除并非真正的删除，会先生成一个具有**过期时间（1个月）的副本备份**，然后再删除源文件，实现类似于回收站的功能。
+
+> 参考博客文章：[七牛云SDK](https://developer.qiniu.com/kodo/sdk/1239/java)
+
+#### 18.21.14.3 解决no boundary
+
+**问题描述：**markdown里的图片在上传时后台报错“no multipart boundary”。
+
+![image-20201129163449059](zcblog-backend-docs.assets/image-20201129163449059.png)
+
+![image-20201129164040996](zcblog-backend-docs.assets/image-20201129164040996.png)
+
+**原因分析：**发送axios请求时，FormData在axios的请求拦截器被修改了。
+
+![image-20201129164643403](zcblog-backend-docs.assets/image-20201129164643403.png)
+
+**解决办法：**当请求数据是FormData，不要将请求数据进行JSON.stringfy或qs.stringify操作。
+
+![image-20201129164841504](zcblog-backend-docs.assets/image-20201129164841504.png)
+
+> 参考博客文章：[axios上传file遇到的坑](https://segmentfault.com/q/1010000018349544)
 
 
 
