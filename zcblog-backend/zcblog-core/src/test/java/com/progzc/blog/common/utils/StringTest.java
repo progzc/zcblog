@@ -2,6 +2,8 @@ package com.progzc.blog.common.utils;
 
 import org.junit.Test;
 
+import java.util.Arrays;
+
 /**
  * @Description 字符串测试
  * @Author zhaochao
@@ -30,5 +32,32 @@ public class StringTest {
         System.out.println(src);
         System.out.println(suffix);
         System.out.println(backup);
+    }
+
+    @Test
+    public void test3() {
+        String[] urlList = {"abc", "def", "ghi"};
+        Arrays.stream(urlList).forEach(url -> {
+            url = url.substring(0, 2);
+        });
+        System.out.println(Arrays.asList(urlList)); //  [abc, def, ghi]
+    }
+
+    @Test
+    public void test4() {
+        String[] urlList = {"abc", "def", "ghi"};
+        for (String url : urlList) {
+            url = url.substring(0, 2);
+        }
+        System.out.println(Arrays.asList(urlList)); //  [abc, def, ghi]
+    }
+
+    @Test
+    public void test5() {
+        String[] urlList = {"abc", "def", "ghi"};
+        for (int i = 0; i < urlList.length; i++) {
+            urlList[i] = urlList[i].substring(0, 2);
+        }
+        System.out.println(Arrays.asList(urlList)); //  [ab, de, gh]
     }
 }
