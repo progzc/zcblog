@@ -3,6 +3,8 @@ package com.progzc.blog.common.utils;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @Description 正则表达式测试
@@ -86,5 +88,20 @@ public class RegExpTest {
             StringBuilder result = new StringBuilder().append(str).append("   ").append(str.matches(regex));
             System.out.println(result);
         });
+    }
+
+    /**
+     * 查找url
+     */
+    @Test
+    public void urlTest() {
+        String content = "-0`http://cloud.progzc.com/blog/2020/11/29/d71f9789a26c4ef3888862080e82e52b.png-0j"
+                + "-0`&*http://cloud.progzc.com/blog/2020/11/29/d71f9789a26c4ef3888862080e82e52b.png*-0j";
+        String regex = "http://cloud.progzc.com[a-zA-Z0-9/]*(\\.jpg|\\.png|\\.gif|\\.tif|\\.bmp|\\.jpeg)";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(content);
+        while (matcher.find()) {
+            System.out.println(matcher.group());
+        }
     }
 }
