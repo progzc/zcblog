@@ -5384,9 +5384,7 @@ UploadManager uploadManager = new UploadManager(cfg);
 
    资源管理包括获取文件信息/修改文件/删除文件...，如下所示，具体可以参考七牛云官网SDK。
 
-   详细的资源管理请参考七牛云官网：
-
-   ![image-20201129115206904](zcblog-backend-docs.assets/image-20201129115206904.png)
+   详细的资源管理请参考七牛云官网：   ![image-20201129115206904](zcblog-backend-docs.assets/image-20201129115206904.png)
 
 - 文件删除
 
@@ -5412,7 +5410,7 @@ UploadManager uploadManager = new UploadManager(cfg);
 - 设置或更新文件的生存时间
 
   ```java
-  //过期天数，该文件10天后删除
+  // 过期天数，该文件10天后删除
   int days = 10;
   Auth auth = Auth.create(accessKey, secretKey);
   BucketManager bucketManager = new BucketManager(auth, cfg);
@@ -5444,7 +5442,14 @@ UploadManager uploadManager = new UploadManager(cfg);
 
 > 参考博客文章：[axios上传file遇到的坑](https://segmentfault.com/q/1010000018349544)
 
+#### 18.21.14.4 本项目OSS策略
 
+由于云储存空间有限，需要对未使用的图片文件及时清除。
+
+1. 未保存文章/相册之前，文章/相册中上传的图片**30天过期**。
+2. 保存文章/相册后，文章/相册中上传的图片**永不过期**。
+3. 删除文章/相册后，文章/相册中的图片将在**30天后从OSS彻底清除**（类似于回收站的功能）。
+4. 从文章或相册上传图片需要**不同的访问权限**。
 
 # 19 提高编码效率
 
