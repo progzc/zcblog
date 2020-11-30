@@ -30,4 +30,10 @@ public interface TagService extends IService<Tag> {
      * @return
      */
     List<Tag> listByLinkId(Integer linkId, int type);
+
+    /**
+     * 新增标签
+     * @param tag
+     */
+    void saveTag(Tag tag);
 }

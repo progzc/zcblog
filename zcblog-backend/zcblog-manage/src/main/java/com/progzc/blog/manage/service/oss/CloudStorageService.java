@@ -44,46 +44,57 @@ public abstract class CloudStorageService {
     /**
      * 上传本地文件
      * @param filePath 本地文件路径
+     * @param day      设置多少天后过期
      * @return
      */
-    public abstract String upload(String filePath);
+    public abstract String upload(String filePath, int day);
 
     /**
      * 字节数组上传：文件路径（包含文件名）
      * @param data 文件字节数组
      * @param path 文件路径，包含文件名
+     * @param day  设置多少天后过期
      * @return 返回http地址
      */
-    public abstract String upload(byte[] data, String path);
+    public abstract String upload(byte[] data, String path, int day);
 
     /**
      * 数据流上传：文件路径（包含文件名）
      * @param inputStream 字节流
      * @param path        文件路径，包含文件名
+     * @param day         设置多少天后过期
      * @return 返回http地址
      */
-    public abstract String upload(InputStream inputStream, String path);
+    public abstract String upload(InputStream inputStream, String path, int day);
 
     /**
      * 字节数组上传：只包含后缀
      * @param data   文件字节数组
      * @param suffix 后缀
+     * @param day    设置多少天后过期
      * @return 返回http地址
      */
-    public abstract String uploadSuffix(byte[] data, String suffix);
+    public abstract String uploadSuffix(byte[] data, String suffix, int day);
 
     /**
      * 数据流上传：只包含后缀
      * @param inputStream 字节流
      * @param suffix      后缀
+     * @param day         设置多少天后过期
      * @return 返回http地址
      */
-    public abstract String uploadSuffix(InputStream inputStream, String suffix);
+    public abstract String uploadSuffix(InputStream inputStream, String suffix, int day);
 
     /**
-     * 删除文件：根据url删除文件
-     * @param url
-     * @return
+     * 批量设置文件不过期
+     * @param urlList
      */
-    public abstract void delete(String url);
+    public abstract void setNotExpire(String[] urlList);
+
+    /**
+     * 批量删除文件
+     * @param urlList
+     * @param day     设置备份多少天后过期
+     */
+    public abstract void deleteBatch(String[] urlList, int day);
 }

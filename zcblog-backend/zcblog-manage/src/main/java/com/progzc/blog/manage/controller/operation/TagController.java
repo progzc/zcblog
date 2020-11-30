@@ -115,12 +115,7 @@ public class TagController extends AbstractController {
     @ApiOperation(value = "新增标签")
     public Result save(@RequestBody Tag tag) {
         validatorUtils.validateEntity(tag, AddGroup.class);
-        List<Tag> tagList = tagService.list(new UpdateWrapper<Tag>().lambda()
-                .eq(Tag::getName, tag.getName()).eq(Tag::getType, tag.getType()));
-        if (!CollectionUtils.isEmpty(tagList)) {
-            return Result.error("系统中已存在该标签，请重新添加");
-        }
-        tagService.save(tag);
+        tagService.saveTag(tag);
         return Result.ok();
     }
 

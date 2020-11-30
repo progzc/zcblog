@@ -42,7 +42,7 @@ public class OssResourceServiceImpl extends ServiceImpl<OssResourceMapper, OssRe
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public OssResource upload(MultipartFile file) {
+    public OssResource upload(MultipartFile file, int type, int day) {
         // 获取文件后缀名
         String originName = file.getOriginalFilename();
         if (originName == null || originName.lastIndexOf(".") < 0) {
@@ -51,12 +51,12 @@ public class OssResourceServiceImpl extends ServiceImpl<OssResourceMapper, OssRe
         String suffix = originName.substring(originName.lastIndexOf("."));
         String url = null;
         try {
-            url = cloudStorageService.uploadSuffix(file.getBytes(), suffix);
+            url = cloudStorageService.uploadSuffix(file.getBytes(), suffix, day);
         } catch (IOException e) {
             log.error("文件转换为字节数组出错");
             throw new MyException(ErrorEnum.UNKNOWN);
         }
-        OssResource ossResource = new OssResource(url, originName);
+        OssResource ossResource = new OssResource(url, originName, type);
         ossResourceMapper.insert(ossResource);
 
         return ossResource;
@@ -68,9 +68,11 @@ public class OssResourceServiceImpl extends ServiceImpl<OssResourceMapper, OssRe
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void deleteFileByUrl(String url) {
+    public void deleteByUrl(String url, int day) {
         ossResourceMapper.delete(new UpdateWrapper<OssResource>().lambda()
                 .eq(OssResource::getUrl, url));
-        cloudStorageService.delete(url);
+        String[] urlList = new String[1];
+        urlList[0] = url;
+        cloudStorageService.deleteBatch(urlList, day);
     }
 }

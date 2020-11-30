@@ -18,4 +18,16 @@ public interface ArticleService extends IService<Article> {
      * @return
      */
     Article getArticleInfo(Integer articleId);
+
+    /**
+     * 新增文章
+     * @param article
+     */
+    void saveArticle(Article article);
+
+    /**
+     * 更新文章
+     * @param article
+     */
+    void updateArticle(Article article);
 }

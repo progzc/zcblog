@@ -1,14 +1,17 @@
 package com.progzc.blog.manage.serviceImpl.operation;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.progzc.blog.common.exception.MyException;
 import com.progzc.blog.entity.MyPage;
 import com.progzc.blog.entity.Query;
 import com.progzc.blog.entity.operation.Tag;
 import com.progzc.blog.manage.service.operation.TagService;
 import com.progzc.blog.mapper.operation.TagMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -50,5 +53,19 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
     @Override
     public List<Tag> listByLinkId(Integer linkId, int type) {
         return tagMapper.listByLinkId(linkId, type);
+    }
+
+    /**
+     * 新增标签
+     * @param tag
+     */
+    @Override
+    public void saveTag(Tag tag) {
+        List<Tag> tagList = tagMapper.selectList(new UpdateWrapper<Tag>().lambda()
+                .eq(Tag::getName, tag.getName()).eq(Tag::getType, tag.getType()));
+        if (!CollectionUtils.isEmpty(tagList)) {
+            throw new MyException("系统中已存在该标签，请重新添加");
+        }
+        tagMapper.insert(tag);
     }
 }
