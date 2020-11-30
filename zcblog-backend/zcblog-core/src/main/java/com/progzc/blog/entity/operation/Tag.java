@@ -13,7 +13,6 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
 import org.springframework.data.annotation.Id;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -49,7 +48,6 @@ public class Tag implements Serializable {
 
     @NotNull(message = "标签所属类别不能为空", groups = {AddGroup.class, UpdateGroup.class})
     @ApiModelProperty(value = "所属类别：0-文章，1-相册")
-    @NonNull
     private Integer type;
 
     @TableField(fill = FieldFill.INSERT)

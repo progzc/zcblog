@@ -39,7 +39,8 @@ public enum ErrorEnum {
     OSS_ARTICLE_UPLOAD_ERROR(10051, "文章图片上传失败"),
     OSS_ARTICLE_DELETE_ERROR(10052, "文章图片删除失败"),
     OSS_GALLERY_UPLOAD_ERROR(10053, "相册图片上传失败"),
-    OSS_GALLERY_DELETE_ERROR(10054, "相册图片删除失败");
+    OSS_GALLERY_DELETE_ERROR(10054, "相册图片删除失败"),
+    OSS_EXPIRE_ERROR(10055, "设置过期出错");
 
     private int code;
     private String msg;

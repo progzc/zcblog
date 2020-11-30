@@ -43,9 +43,6 @@ public class Encrypt implements Serializable {
     @ApiModelProperty(value = "加密密码")
     private String password;
 
-    @ApiModelProperty(value = "加密盐")
-    private String salt;
-
     @TableField(fill = FieldFill.INSERT)
     @JsonDeserialize(using = LocalDateTimeDeserializer.class) // 解决反序列化问题
     @JsonSerialize(using = LocalDateTimeSerializer.class) // 解决序列化问题

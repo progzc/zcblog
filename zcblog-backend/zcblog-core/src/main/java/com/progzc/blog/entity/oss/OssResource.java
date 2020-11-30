@@ -33,9 +33,10 @@ public class OssResource implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    public OssResource(String url, String name) {
+    public OssResource(String url, String name, Integer type) {
         this.name = name;
         this.url = url;
+        this.type = type;
     }
 
     @ApiModelProperty(value = "主键")
@@ -43,13 +44,19 @@ public class OssResource implements Serializable {
     @Id
     private Integer id;
 
-    @ApiModelProperty(value = "名称")
+    @ApiModelProperty(value = "资源名称")
     @NonNull
     private String name;
 
     @ApiModelProperty(value = "资源链接")
     @NonNull
     private String url;
+
+    @ApiModelProperty(value = "关联id")
+    private Integer linkId;
+
+    @ApiModelProperty(value = "所属类型：0-文章，1-相册")
+    private Integer type;
 
     @TableField(fill = FieldFill.INSERT)
     @JsonDeserialize(using = LocalDateTimeDeserializer.class) // 解决反序列化问题

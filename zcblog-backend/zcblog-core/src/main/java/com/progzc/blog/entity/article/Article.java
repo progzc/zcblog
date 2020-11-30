@@ -23,6 +23,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -75,15 +76,19 @@ public class Article implements Serializable {
     @ApiModelProperty(value = "点赞量")
     private Integer likeNum;
 
+    @NotNull(message = "是否推荐文章为必填项", groups = {UpdateGroup.class, AddGroup.class})
     @ApiModelProperty(value = "是否推荐文章：0-不推荐，1-推荐")
     private Boolean recommend;
 
+    @NotNull(message = "是否发布文章为必填项", groups = {UpdateGroup.class, AddGroup.class})
     @ApiModelProperty(value = "是否发布：0-不发布，1-发布")
     private Boolean publish;
 
+    @NotNull(message = "是否置顶文章为必填项", groups = {UpdateGroup.class, AddGroup.class})
     @ApiModelProperty(value = "是否置顶：0-不置顶，1-置顶")
     private Boolean top;
 
+    @NotNull(message = "是否加密文章为必填项", groups = {UpdateGroup.class, AddGroup.class})
     @ApiModelProperty(value = "是否加密：0-不加密，1-加密")
     private Boolean needEncrypt;
 
@@ -117,6 +122,7 @@ public class Article implements Serializable {
     @ApiModelProperty(value = "文章加密的密码")
     private String password;
 
+    @Size(min = 1, message = "请为文章选择至少一个标签", groups = {UpdateGroup.class, AddGroup.class})
     @TableField(exist = false)
     @ApiModelProperty(value = "文章对应的标签")
     private List<Tag> tagList;

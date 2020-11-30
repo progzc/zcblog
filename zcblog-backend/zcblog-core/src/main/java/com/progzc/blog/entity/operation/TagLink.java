@@ -15,6 +15,7 @@ import lombok.NonNull;
 import org.springframework.data.annotation.Id;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -45,6 +46,10 @@ public class TagLink implements Serializable {
     @ApiModelProperty(value = "关联Id")
     @NonNull
     private Integer linkId;
+
+    @ApiModelProperty(value = "所属类别：0-文章，1-相册")
+    @NotNull
+    private Integer type;
 
     @TableField(fill = FieldFill.INSERT)
     @JsonDeserialize(using = LocalDateTimeDeserializer.class) // 解决反序列化问题

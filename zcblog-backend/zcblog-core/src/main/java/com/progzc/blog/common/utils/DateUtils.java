@@ -22,5 +22,4 @@ public class DateUtils {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
         return simpleDateFormat.format(date);
     }
-
 }
