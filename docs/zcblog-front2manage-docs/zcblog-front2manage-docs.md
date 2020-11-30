@@ -209,6 +209,12 @@ module.exports = {
 
 > 参考博客文章：[Stylelint规则用户指南](https://cloud.tencent.com/developer/section/1489630)、[配置Stylelint检测Scss、CSS语法](https://staven630.github.io/vue-cli4-config/#stylelint)
 
+### 2.2.3 Scss/Sass/Stylus/Less用法
+
+
+
+> 参考博客文档：
+
 # 3 Vue Cli4配置
 
 ## 3.1 项目配置构建
@@ -1460,6 +1466,14 @@ const User = {
 
 > 参考博客文章：[created()与activated()的区别](https://blog.csdn.net/qq_36608921/article/details/82216617)、[vue的activated生命周期](https://blog.csdn.net/u012201879/article/details/103271831?utm_medium=distribute.pc_relevant_t0.none-task-blog-BlogCommendFromBaidu-1.control&depth_1-utm_source=distribute.pc_relevant_t0.none-task-blog-BlogCommendFromBaidu-1.control)
 
+## 7.16 iframe父子页面通信
+
+**问题描述：**Druid性能监控页面作为iframe内嵌在网页中，如何解决内嵌页面的登录问题？
+
+**解决办法：**涉及到iframe的跨域请求。（问题暂未解决）
+
+> 参考博客文章：[解决iframe跨域传参](https://blog.csdn.net/momdiy/article/details/101290144?utm_medium=distribute.pc_relevant.none-task-blog-title-2&spm=1001.2101.3001.4242)、[解决iframe跨域/跨端口报错 ](https://blog.csdn.net/Mo_Luffy/article/details/103994369?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.control&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.control)、
+
 # 8 js相关技巧
 
 ## 8.1 JS生成随机UUID（模拟）
@@ -1625,7 +1639,57 @@ _.merge       ([], ['a','b'], ['bb']) // => [ "bb", "b" ]
 
 > 参考博客文章：[es6之扩展运算符(...)](https://blog.csdn.net/astonishqft/article/details/82899965)
 
+## 8.7 qs.stringify与JSON.stringify
 
+**qs.stringify：**将对象序列化成URL的形式，以&进行拼接。
+
+**JSON.stringify：**将对象序列化为json格式。
+
+```js
+var a = {name:'hehe',age:10};
+qs.stringify(a) // 'name=hehe&age=10'
+JSON.stringify(a) // '{"name":"hehe","age":10}'
+```
+
+### 8.7.1 qs的使用
+
+- qs.parse：把一段格式化的字符串转换为对象格式。
+
+```js
+let url = 'http://item.taobao.com/item.htm?a=1&b=2&c=&d=xxx&e';
+let data = qs.parse(url.split('?')[1]);
+ 
+// data的结果：
+{
+    a: 1, 
+    b: 2, 
+    c: ‘‘, 
+    d: xxx, 
+    e: ‘‘
+}
+```
+
+- qs.stringify：把一个参数对象格式化为一个字符串。
+
+```js
+// 1. 基本用法
+let params = { c: 'b', a: 'd' };
+qs.stringify(params)
+// 结果是
+'c=b&a=d'
+
+// 2. 排序
+qs.stringify(params, (a,b) => a.localeCompare(b))
+// 结果是
+'a=b&c=d'
+```
+
+### 8.7.2 JSON的使用
+
+- JSON.parse()：将json字符串格式化为对象。
+- JSON.stringify()：将对象转换为json字符串。
+
+> 参考博客文章：[qs官网](https://www.npmjs.com/package/qs)、[qs.js处理url参数](https://blog.csdn.net/weixin_43417444/article/details/83060833?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522160664028719724848188178%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fall.%2522%257D&request_id=160664028719724848188178&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~first_rank_v2~rank_v28-3-83060833.pc_search_result_cache&utm_term=qs.js%E5%BA%93&spm=1018.2118.3001.4449)、[json.js/ json2.js/json3.js的使用区别](https://blog.csdn.net/chenchunlin526/article/details/78850996)
 
 # 9 加密传输
 
@@ -1887,8 +1951,6 @@ public class EncryptUtils {
 
 > 参考博客文章：[Github/learn-regex](https://github.com/ziishaned/learn-regex/blob/master/translations/README-cn.md)、[正则表达式测试网站](https://regex101.com/)
 
-
-
 ## 10.2 复用轮子
 
 **复用轮子：**由于校验一般是由前端执行，正则表达式网站上大量使用。这里需要了解如何查询网页上的正则表达式进行复用。以百度首页为例：
@@ -1958,21 +2020,233 @@ npm install vue-count-to
 
 # 11 使用mavon-editor
 
-> 参考博客文章：
+## 11.1 引入方式
+
+- 方式一：全局注册。
+
+```vue
+// 全局注册
+// import with ES6
+import Vue from 'vue'
+import mavonEditor from 'mavon-editor'
+import 'mavon-editor/dist/css/index.css'
+// use
+Vue.use(mavonEditor)
+new Vue({
+	'el': '#main',
+	data() {
+		return { value: '' }
+	}
+})
+
+// require with Webpack/Node.js
+...
+var mavonEditor = require('mavon-editor')
+import 'mavon-editor/dist/css/index.css'
+...
+
+// 使用
+<div id="main">
+    <mavon-editor v-model="value"/>
+</div>
+```
+
+- 方式二：单组件引入。
+
+```vue
+<template>
+	<div id="editor">
+		<mavon-editor style="height: 100%"></mavon-editor>
+    </div>
+</template>
+<script>
+// Local Registration
+import { mavonEditor } from 'mavon-editor'
+import 'mavon-editor/dist/css/index.css'
+export default {
+	name: 'editor',
+	components: {
+		mavonEditor
+		// or 'mavon-editor': mavonEditor
+	}
+}
+</script>
+<style>
+#editor {
+	margin: auto;
+	width: 80%;
+	height: 580px;
+}
+</style>
+```
+
+## 11.2 events事件绑定
+
+- imgAdd：图片文件添加回调事件。
+- imgDel：图片文件删除回调事件。
+- change：将markdown文件转换为html。
+
+### 11.2.1 图片上传
+
+mavon-editor绑定imgAdd事件：
+
+```js
+// 文章内容图片上传
+imgAdd (pos, $file) {
+  const formData = new FormData()
+  formData.append('file', $file)
+  executeImgUpload(formData).then(data => {
+    if (data && data.code === 200) {
+      this.$message.success('图片上传成功')
+      this.$refs.md.$img2Url(pos, data.resource.url)
+    }
+  })
+}
+```
+
+### 11.2.2 图片删除
+
+mavon-editor绑定imgDel事件：
+
+```javascript
+// 文章内容图片删除
+imgDel (pos) {
+  console.log(pos[0])
+  const formData = new FormData()
+  formData.append('url', pos[0])
+  executeImgDelete(pos[0]).then(data => {
+    if (data && data.code === 200) {
+      this.$message.success('图片删除成功')
+    }
+  })
+},
+```
+
+### 11.2.3 markdown转换为Html
+
+mavon-editor绑定change事件：
+
+```javascript
+// markdown转换为html
+markdownToHtml (content, render) {
+  this.article.contentFormat = marked(content, { breaks: true })
+}
+```
+
+## 11.3 本地/CDN加载样式
+
+- 第1步：安装copy-webpack-plugin插件。
+
+```bash
+npm install copy-webpack-plugin -D
+```
+
+- 第2步：配置vue.config.js。
+
+```javascript
+const CopyWebpackPlugin = require('copy-webpack-plugin')
+module.exports = {
+  configureWebpack: {
+    // 配置mavonEditor的本地高亮样式
+    plugins: [
+      new CopyWebpackPlugin({
+        patterns: [{
+          from: 'node_modules/mavon-editor/dist/highlightjs',
+          to: path.resolve(__dirname, './dist/highlightjs') // 插件将会把文件导出于/dist/highlightjs之下
+        }, {
+          from: 'node_modules/mavon-editor/dist/markdown',
+          to: path.resolve(__dirname, './dist/markdown') // 插件将会把文件导出于/dist/markdown之下
+        }, {
+          from: 'node_modules/mavon-editor/dist/katex',
+          to: path.resolve(__dirname, './dist/katex') // 插件将会把文件导出/dist/katex之下
+        }]
+      })
+    ]
+  }
+}
+```
+
+- 第3步：组件里配置mavon-editor。
+
+```vue
+<!--subfield:是否双栏；code_style：markdown样式；ishljs：是否开启代码高亮；-->
+<template>
+  <div id="app">
+      <mavon-editor
+      :subfield = "subfield"
+      :code_style="code_style"
+      :ishljs="true"
+      :externalLink="externalLink"
+      ></mavon-editor>
+  </div>
+</template>
+<!--采用本地加载-->
+<script>
+export default {
+    data () {
+      return {
+        subfield: true,
+        code_style: 'solarized-dark',
+        externalLink: {
+            markdown_css: function() {
+                return '/markdown/github-markdown.min.css'; // 这是你的markdown css文件路径
+            },
+            hljs_js: function() {
+                return '/highlightjs/highlight.min.js'; // 这是你的hljs文件路径
+            },
+            hljs_css: function(css) {
+                return '/highlightjs/styles/' + css + '.min.css'; // 这是你的代码高亮配色文件路径
+            },
+            hljs_lang: function(lang) {
+                return '/highlightjs/languages/' + lang + '.min.js'; // 这是你的代码高亮语言解析路径
+            },
+            katex_css: function() {
+                return '/katex/katex.min.css'; // 这是你的katex配色方案路径路径
+            },
+            katex_js: function() {
+                return '/katex/katex.min.js'; // 这是你的katex.js路径
+            }
+        }
+      }
+    }
+}
+</script>
+<!--采用cdnjs外链-->
+<script>
+export default {
+    data () {
+      return {
+        subfield: true,
+        code_style: 'solarized-dark',
+        externalLink: {
+            hljs_css: function () {
+          		return '/highlightjs/styles/ir-black.min.css' // 这是你的代码高亮配色文件路径
+        	},
+            // false表示禁用自动加载，它也可以是个函数，如果它是个函数，那么这个函数应该返回一个可访问的katex的css路径字符串
+        	katex_css: false
+        	// 没有设置katex_js, hljs_js, hljs_lang, markdown_css, mavon-editor会认为它的值为true，它会默认使用cdnjs相关外链加载
+        }
+      }
+    }
+}
+</script>
+```
+
+## 11.4 代码高亮样式的选择
+
+代码高亮样式可以在[highlight官网](https://highlightjs.org/static/demo/)进行比对选择：
+
+![image-20201128220845164](zcblog-front2manage-docs.assets/image-20201128220845164.png)
+
+> 参考博客文章：[mavonEditor官网](https://github.com/hinesboy/mavonEditor)、[highlight官网](https://highlightjs.org/static/demo/)
+
+# 12 使用js-xss阻止攻击
+
+js-xss是一个阻止XSS攻击的插件。这里拟采用js-xss对前端提交的表单进行过滤操作。
 
 
 
-
-
-
-
-
-
-
-
-
-
-
+> 参考博客文章：[js-xss](https://github.com/leizongmin/js-xss)
 
 
 
