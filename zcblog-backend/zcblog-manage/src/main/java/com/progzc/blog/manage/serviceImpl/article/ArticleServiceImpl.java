@@ -2,7 +2,7 @@ package com.progzc.blog.manage.serviceImpl.article;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.progzc.blog.common.constants.QiniuExpireConstants;
 import com.progzc.blog.common.enums.OssTypeEnum;
@@ -22,12 +22,15 @@ import com.progzc.blog.manage.service.oss.CloudStorageService;
 import com.progzc.blog.mapper.article.ArticleMapper;
 import com.progzc.blog.mapper.operation.EncryptMapper;
 import com.progzc.blog.mapper.oss.OssResourceMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +45,7 @@ import java.util.stream.Collectors;
  * @Email zcprog@foxmail.com
  * @Version V1.0
  */
+@Slf4j
 @Service
 public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> implements ArticleService {
 
@@ -167,9 +171,10 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     public MyPage queryPage(Map<String, Object> params) {
         Query<Article> query = new Query<>(params);
         // 按照更新时间降序排列
-        List<Article> articleList = articleMapper.selectList(new QueryWrapper<Article>().lambda()
-                .like(query.getKeyWord() != null, Article::getTitle, query.getKeyWord())
-                .orderByDesc(Article::getUpdateTime));
+        IPage<Article> articleIPage = articleMapper.selectPage(query.getPage(), new QueryWrapper<Article>().lambda()
+                .like(StringUtils.isNotBlank(query.getKeyWord()), Article::getTitle, query.getKeyWord())
+                .orderByDesc(Article::getCreateTime));
+        List<Article> articleList = articleIPage.getRecords();
         for (Article article : articleList) {
             List<TagLink> tagLinkList = tagLinkService.list(new QueryWrapper<TagLink>().lambda()
                     .eq(TagLink::getLinkId, article.getId())
@@ -179,9 +184,8 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
                     .in(Tag::getId, tagIdList));
             article.setTagList(tagList);
         }
-        Page<Article> page = query.getPage();
-        page.setRecords(articleList);
-        return new MyPage(page);
+        articleIPage.setRecords(articleList);
+        return new MyPage(articleIPage);
     }
 
     /**
@@ -231,6 +235,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         oldArticle.setPublish(article.getPublish());
         oldArticle.setTop(article.getTop());
         oldArticle.setNeedEncrypt(article.getNeedEncrypt());
+        oldArticle.setUpdateTime(LocalDateTime.now());
         articleMapper.updateById(oldArticle);
     }
 
