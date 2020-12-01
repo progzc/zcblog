@@ -36,7 +36,7 @@ spring:
           merge-sql: false  # 禁止合并SQL
         wall:
           db-type: mysql  # 数据库为MySQL
-          enabled: true  # 防止SQL注入
+          enabled: false  # 防止SQL注入
           config:
             multi-statement-allow: true  # 允许进行批处理(spring.datasource.druid.url也要进行配置)
   # 配置redis
