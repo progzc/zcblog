@@ -2,9 +2,13 @@ package com.progzc.blog.manage.serviceImpl.article;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.progzc.blog.common.constants.QiniuExpireConstants;
+import com.progzc.blog.common.enums.OssTypeEnum;
 import com.progzc.blog.common.enums.TagTypeEnum;
+import com.progzc.blog.entity.MyPage;
+import com.progzc.blog.entity.Query;
 import com.progzc.blog.entity.article.Article;
 import com.progzc.blog.entity.operation.Encrypt;
 import com.progzc.blog.entity.operation.Tag;
@@ -26,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -127,7 +132,8 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         List<String> urlList = findAllImg(article);
         // 2. 找出删除后的文件将其设置为备份过期
         List<OssResource> ossResourceList = ossResourceMapper.selectList(new QueryWrapper<OssResource>().lambda()
-                .eq(OssResource::getLinkId, article.getId()));
+                .eq(OssResource::getLinkId, article.getId())
+                .eq(OssResource::getType, OssTypeEnum.ARTILCLE.getValue()));
         if (CollectionUtils.isEmpty(ossResourceList)) {
             setBatchNotExpire(urlList, article);
         } else {
@@ -137,7 +143,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
             setBatchNotExpire(saveUrlList, article);
             deleteBatch(deleteUrlList, article);
         }
-        
+
         // 先删除文章与标签之间的关系（不管是否存在与否）；然后下一步保存标签（如果有新增的话）及文章与标签之间的关系
         tagLinkService.remove(new UpdateWrapper<TagLink>().lambda()
                 .eq(TagLink::getLinkId, article.getId())
@@ -149,6 +155,64 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
                 .eq(Encrypt::getArticleId, article.getId()));
         if (article.getNeedEncrypt().equals(true)) {
             encryptService.saveByArticle(article);
+        }
+    }
+
+    /**
+     * 查询文章列表
+     * @param params
+     * @return
+     */
+    @Override
+    public MyPage queryPage(Map<String, Object> params) {
+        Query<Article> query = new Query<>(params);
+        // 按照更新时间降序排列
+        List<Article> articleList = articleMapper.selectList(new QueryWrapper<Article>().lambda()
+                .like(query.getKeyWord() != null, Article::getTitle, query.getKeyWord())
+                .orderByDesc(Article::getUpdateTime));
+        for (Article article : articleList) {
+            List<TagLink> tagLinkList = tagLinkService.list(new QueryWrapper<TagLink>().lambda()
+                    .eq(TagLink::getLinkId, article.getId())
+                    .eq(TagLink::getType, TagTypeEnum.ARTILCLE.getValue()));
+            List<Integer> tagIdList = tagLinkList.stream().map(TagLink::getTagId).collect(Collectors.toList());
+            List<Tag> tagList = tagService.list(new QueryWrapper<Tag>().lambda()
+                    .in(Tag::getId, tagIdList));
+            article.setTagList(tagList);
+        }
+        Page<Article> page = query.getPage();
+        page.setRecords(articleList);
+        return new MyPage(page);
+    }
+
+    /**
+     * 删除文章
+     * @param articleIds
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteBatch(Integer[] articleIds) {
+        for (Integer articleId : articleIds) {
+            // 1. 删除文章
+            Article article = articleMapper.selectById(articleId);
+            List<String> urlList = findAllImg(article);
+            if (CollectionUtils.isNotEmpty(urlList)) {
+                // 1.1 找出文章中的所有图片的url，并从OSS中删除
+                deleteBatch(urlList, article);
+                // 1.2 删除oss_resource中的图片
+                ossResourceMapper.delete(new UpdateWrapper<OssResource>().lambda()
+                        .eq(OssResource::getLinkId, articleId)
+                        .eq(OssResource::getType, OssTypeEnum.ARTILCLE.getValue()));
+            }
+            articleMapper.deleteById(articleId);
+
+            // 2. 删除文章与标签的关系
+            tagLinkService.remove(new UpdateWrapper<TagLink>().lambda()
+                    .eq(TagLink::getLinkId, articleId)
+                    .eq(TagLink::getType, TagTypeEnum.ARTILCLE.getValue()));
+
+            // 3. 删除密码
+            encryptMapper.delete(new UpdateWrapper<Encrypt>().lambda()
+                    .eq(Encrypt::getArticleId, articleId));
         }
     }
 
