@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Set;
 
@@ -119,6 +120,7 @@ public class ArticleController extends AbstractController {
     @ApiOperation(value = "更新文章的状态：发布/置顶/推荐/")
     public Result updateStatus(@RequestBody Article article) {
         Article oldArticle = articleService.getById(article.getId());
+        LocalDateTime now = LocalDateTime.now();
         if (article.getPublish() != null) {
             oldArticle.setPublish(article.getPublish());
         }
@@ -128,6 +130,8 @@ public class ArticleController extends AbstractController {
         if (article.getRecommend() != null) {
             oldArticle.setRecommend(article.getRecommend());
         }
+        // 由于自动填充未生效，这里手动插入
+        oldArticle.setUpdateTime(now);
         articleService.updateById(oldArticle);
 
         return Result.ok();
