@@ -63,8 +63,4 @@ public class Encrypt implements Serializable {
     @Version
     private Integer version;
 
-    @ApiModelProperty(value = "逻辑删除：0-未删除，1-已删除")
-    @TableLogic
-    private Integer deleted;
-
 }
