@@ -117,7 +117,7 @@ import {
   executeImgDelete,
   executeSubmitArticleInfo
 } from 'network/api/article'
-import { decryptAES } from 'common/js/utils/encrypt'
+import { decryptAES, encryptAES } from 'common/js/utils/encrypt'
 
 export default {
   name: 'ArticleAddOrUpdate',
@@ -125,11 +125,6 @@ export default {
     'mavon-editor': mavonEditor
   },
   data () {
-    const checkTagList = (rule, value, callback) => {
-      if (this.article.tagList === null || this.article.tagList.length < 1) {
-        callback(new Error('至少选择一种标签'))
-      }
-    }
     return {
       article: {
         title: '',
@@ -148,7 +143,6 @@ export default {
       tagSelectList: [],
       rules: {
         title: { required: true, message: '文章标题不能为空', trigger: 'blur' },
-        tagSelectList: { validator: checkTagList, trigger: 'blur' },
         author: { required: true, message: '作者不能为空', trigger: 'blur' },
         description: { required: true, message: '文章概述不能为空', trigger: 'blur' },
         content: { required: true, message: '文章内容不能为空', trigger: 'blur' }
@@ -221,19 +215,25 @@ export default {
     saveArticle () {
       this.$refs.articleForm.validate(valid => {
         if (valid) {
-          executeSubmitArticleInfo(this.article).then(data => {
-            if (data && data.code === 200) {
-              this.$message.success('保存文章成功')
-              // 关闭当前标签
-              this.$emit('closeCurrentTabs')
-              // 跳转到list
-              this.$router.push('article/list')
-            } else {
-              this.$message.error(data.msg)
-            }
-          })
+          if (this.article.tagList.length > 0) {
+            this.article.password = (this.article.password !== null && this.article.password.length > 0)
+              ? encryptAES(this.article.password) : this.article.password
+            executeSubmitArticleInfo(this.article).then(data => {
+              if (data && data.code === 200) {
+                this.$message.success('文章保存成功')
+                // 关闭当前标签
+                this.$emit('closeCurrentTabs')
+                // 跳转到list
+                this.$router.push({ name: 'article/list' })
+              } else {
+                this.$message.error(data.msg)
+              }
+            })
+          } else {
+            this.$message.error('至少为文章选择一种标签')
+          }
         } else {
-          return false
+          this.$message.error('您有必填项未填写')
         }
       })
     },
