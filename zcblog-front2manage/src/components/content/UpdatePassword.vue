@@ -57,7 +57,8 @@ export default {
       },
       dataRule: {
         password: [
-          { required: true, message: '原密码不能为空', trigger: 'blur' }
+          { required: true, message: '原密码不能为空', trigger: 'blur' },
+          { validator: validatePassword, trigger: 'blur' }
         ],
         newPassword: [
           { required: true, message: '新密码不能为空', trigger: 'blur' },

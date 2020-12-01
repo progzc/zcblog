@@ -61,3 +61,18 @@ export function executePostOrPutTag (id, tag) {
     }
   })
 }
+
+/**
+ * 根据标签类别查询所有标签
+ * @param type
+ * @returns {AxiosPromise}
+ */
+export function executeGetTagsByType (type) {
+  return request({
+    url: '/admin/operation/tag/select',
+    method: 'get',
+    params: {
+      type: type
+    }
+  })
+}

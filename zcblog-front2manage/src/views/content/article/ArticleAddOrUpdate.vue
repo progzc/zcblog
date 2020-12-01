@@ -53,7 +53,7 @@
         </el-col>
         <el-col :span="6">
           <el-form-item label="加密密码" prop="password">
-            <el-input placeholder="请输入加密密码" v-model="password" :disabled="!article.needEncrypt" type="password" clearable></el-input>
+            <el-input placeholder="请输入加密密码" v-model="article.password" :disabled="!article.needEncrypt" type="password" clearable></el-input>
           </el-form-item>
         </el-col>
       </el-row>
@@ -83,12 +83,13 @@
       <el-form-item label="文章内容" prop="content">
         <mavon-editor
           ref="md"
-          subfield="true"
-          code_style="solarized-dark"
-          ishljs="true"
+          :subfield="true"
+          :code_style="code_style"
+          :ishljs="true"
           :externalLink="externalLink"
           v-model="article.content"
           @imgAdd="imgAdd"
+          @imgDel="imgDel"
           @change="markdownToHtml">
         </mavon-editor>
       </el-form-item>
@@ -110,7 +111,13 @@ import 'mavon-editor/dist/highlightjs/styles/ir-black.min.css'
 import marked from 'marked'
 
 import { executeGetTagsByType } from 'network/api/tag'
-import { executeGetArticleInfo, executeSubmitArticleInfo } from 'network/api/article'
+import {
+  executeGetArticleInfo,
+  executeImgUpload,
+  executeImgDelete,
+  executeSubmitArticleInfo
+} from 'network/api/article'
+import { decryptAES } from 'common/js/utils/encrypt'
 
 export default {
   name: 'ArticleAddOrUpdate',
@@ -134,11 +141,11 @@ export default {
         recommend: false,
         description: '',
         content: '',
-        contentFormat: ''
+        contentFormat: '',
+        password: null
       },
       tags: [],
       tagSelectList: [],
-      password: '',
       rules: {
         title: { required: true, message: '文章标题不能为空', trigger: 'blur' },
         tagSelectList: { validator: checkTagList, trigger: 'blur' },
@@ -146,6 +153,7 @@ export default {
         description: { required: true, message: '文章概述不能为空', trigger: 'blur' },
         content: { required: true, message: '文章内容不能为空', trigger: 'blur' }
       },
+      code_style: 'solarized-dark',
       externalLink: {
         hljs_css: function () {
           return '/highlightjs/styles/ir-black.min.css' // 这是你的代码高亮配色文件路径
@@ -170,6 +178,11 @@ export default {
         if (id) {
           executeGetArticleInfo(id).then(data => {
             if (data && data.code === 200) {
+              if (data.article.password && data.article.needEncrypt === true) {
+                data.article.password = decryptAES(data.article.password)
+              } else {
+                data.article.password = null
+              }
               this.article = data.article
               // 转换选中的标签
               this.tagSelectList = this.article.tagList.map(tag => { return tag.id })
@@ -182,7 +195,7 @@ export default {
     // 当不加密时，清空密码
     encryptHandle (val) {
       if (val === false) {
-        this.password = ''
+        this.article.password = null
       }
     },
     // 过滤标签
@@ -204,21 +217,17 @@ export default {
       this.article.tagList = temp
     },
 
-    // 保存文章
+    // 新增或更新文章
     saveArticle () {
-      this.$refs.articleForm.validate((valid) => {
+      this.$refs.articleForm.validate(valid => {
         if (valid) {
-          this.$http({
-            url: this.$http.adornUrl(`/admin/article/${!this.article.id ? 'save' : 'update'}`),
-            method: !this.article.id ? 'post' : 'put',
-            data: this.$http.adornData(this.article)
-          }).then(({ data }) => {
+          executeSubmitArticleInfo(this.article).then(data => {
             if (data && data.code === 200) {
               this.$message.success('保存文章成功')
               // 关闭当前标签
               this.$emit('closeCurrentTabs')
               // 跳转到list
-              this.$router.push('/article-article')
+              this.$router.push('article/list')
             } else {
               this.$message.error(data.msg)
             }
@@ -231,11 +240,21 @@ export default {
 
     // 文章内容图片上传
     imgAdd (pos, $file) {
-      // 第一步.将图片上传到服务器.
       const formData = new FormData()
       formData.append('file', $file)
-      executeSubmitArticleInfo(formData).then(data => {
-        this.$refs.md.$img2Url(pos, data.resource.url)
+      executeImgUpload(formData).then(data => {
+        if (data && data.code === 200) {
+          this.$message.success('图片上传成功')
+          this.$refs.md.$img2Url(pos, data.resource.url)
+        }
+      })
+    },
+    // 文章内容图片删除
+    imgDel (pos) {
+      executeImgDelete(pos[0]).then(data => {
+        if (data && data.code === 200) {
+          this.$message.success('图片删除成功')
+        }
       })
     },
     // markdown转换为html

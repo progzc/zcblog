@@ -32,7 +32,7 @@ export default function request (config, timestampFlag = true, contentType = 'js
     if (config.params) { // 若存在请求参数，请求参数处理添加时间戳，并json化
       config.params = timestampFlag ? merge(timestamp, config.params) : config.params
     }
-    if (config.data) { // 若存在请求体，请求体添加时间戳，并json化
+    if (config.data && !(config.data instanceof FormData)) { // 若存在请求体且请求体不是FormData，请求体添加时间戳，并json化
       config.data = timestampFlag ? merge(timestamp, config.data) : config.data
       config.data = contentType === 'json' ? JSON.stringify(config.data) : qs.stringify(config.data)
     }

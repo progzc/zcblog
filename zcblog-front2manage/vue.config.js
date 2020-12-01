@@ -93,20 +93,23 @@ module.exports = {
     }
   },
 
-  // 配置mavonEditor的本地高亮样式
-  plugins: [
-    new CopyWebpackPlugin([{
-      from: 'node_modules/mavon-editor/dist/highlightjs',
-      to: path.resolve(__dirname, './dist/highlightjs') // 插件将会把文件导出于/dist/highlightjs之下
-    }, {
-      from: 'node_modules/mavon-editor/dist/markdown',
-      to: path.resolve(__dirname, './dist/markdown') // 插件将会把文件导出于/dist/markdown之下
-    }, {
-      from: 'node_modules/mavon-editor/dist/katex',
-      to: path.resolve(__dirname, './dist/katex') // 插件将会把文件导出/dist/katex之下
-    }])
-  ]
-
+  configureWebpack: {
+    // 配置mavonEditor的本地高亮样式
+    plugins: [
+      new CopyWebpackPlugin({
+        patterns: [{
+          from: 'node_modules/mavon-editor/dist/highlightjs',
+          to: path.resolve(__dirname, './dist/highlightjs') // 插件将会把文件导出于/dist/highlightjs之下
+        }, {
+          from: 'node_modules/mavon-editor/dist/markdown',
+          to: path.resolve(__dirname, './dist/markdown') // 插件将会把文件导出于/dist/markdown之下
+        }, {
+          from: 'node_modules/mavon-editor/dist/katex',
+          to: path.resolve(__dirname, './dist/katex') // 插件将会把文件导出/dist/katex之下
+        }]
+      })
+    ]
+  }
 }
 
 function addStyleResource (rule) {

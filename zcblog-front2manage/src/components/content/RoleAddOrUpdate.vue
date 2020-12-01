@@ -77,6 +77,7 @@ export default {
             if (data && data.code === 200) {
               this.dataForm.roleName = data.role.roleName
               this.dataForm.remark = data.role.remark
+              // 解决el-tree半选中问题
               const idx = data.role.menuIdList.indexOf(this.tempKey)
               if (idx !== -1) {
                 data.role.menuIdList.splice(idx, data.role.menuIdList.length - idx)
@@ -96,7 +97,6 @@ export default {
             this.dataForm.id,
             this.dataForm.roleName,
             this.dataForm.remark,
-            // this.$refs.menuListTree.getCheckedKeys()).then(data => {
             chooseMenuIdList).then(data => {
             if (data && data.code === 200) {
               this.$message({
