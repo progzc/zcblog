@@ -1,4 +1,4 @@
-# 0 技术方案
+0 技术方案
 
 `Springboot`+`Spring` + `SpringMVC` + `MyBatis` + `MyBatisPlus`：主流web框架；
 
@@ -5450,6 +5450,25 @@ UploadManager uploadManager = new UploadManager(cfg);
 2. 保存文章/相册后，文章/相册中上传的图片**永不过期**。
 3. 删除文章/相册后，文章/相册中的图片将在**30天后从OSS彻底清除**（类似于回收站的功能）。
 4. 从文章或相册上传图片需要**不同的访问权限**。
+
+### 18.21.15 SQL注入问题
+
+**问题描述：**下面的java语句在执行时会出现SQL注入的问题，Druid不能识别由程序自动产生的SQL注入还是由外界输入导致的SQL注入，因此会统一将注入疑是SQL注入的语句拦截掉。
+
+```java
+// 当like里的query.getKeyWord() != null为false，这里的like条件会变成and 1=1，Druid会将其识别为SQL注入问题，使得访问被禁止
+List<Article> articleList = articleMapper.selectList(new QueryWrapper<Article>().lambda()
+	.like(query.getKeyWord() != null, Article::getTitle, query.getKeyWord())
+	.orderByDesc(Article::getUpdateTime));
+```
+
+![image-20201201180133926](zcblog-backend-docs.assets/image-20201201180133926.png)
+
+**解决办法：**在.yml中关掉防止SQL注入。
+
+![image-20201201180715222](zcblog-backend-docs.assets/image-20201201180715222.png)
+
+
 
 # 19 提高编码效率
 
