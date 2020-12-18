@@ -1,4 +1,4 @@
-0 技术方案
+# 0 技术方案
 
 `Springboot`+`Spring` + `SpringMVC` + `MyBatis` + `MyBatisPlus`：主流web框架；
 
@@ -4827,25 +4827,518 @@ POST请求属于HTTP请求中的复杂请求，HTTP协议在浏览器中对复�
 
 ### 18.18.1 Math
 
-**Math.round()：**"四舍五入"， 该函数返回的是一个四舍五入后的的整数。
+- Math.round()："四舍五入"， 该函数返回的是一个四舍五入后的的整数。 
+  - **注意：**负数，小数点第一位是5时，直接舍去，整数部分不+1； 正数，小数点第一位是5时，往整数部分+1。
 
-- **注意：**负数，小数点第一位是5时，直接舍去，整数部分不+1； 正数，小数点第一位是5时，往整数部分+1。
+- Math.ceil()："向上取整"，即小数部分直接舍去，并向正数部分进1。
 
-**Math.ceil()：**"向上取整"，即小数部分直接舍去，并向正数部分进1。
+- Math.floor()："向下取整"，即小数部分直接舍去。
+  - **注意：**Math.floor()容易出现精度问题。例如，对小数8.54保留两位小数（虽然它已经保留了2位小数），`Math.floor(8.54*100)/100  // 输出结果为 8.53, 注意是 8.53 而不是 8.54`。**Math.floor()慎用！**
 
-**Math.floor()：**"向下取整"，即小数部分直接舍去。
+### 18.18.2 Arrays
 
-- **注意：**Math.floor()容易出现精度问题。例如，对小数8.54保留两位小数（虽然它已经保留了2位小数），`Math.floor(8.54*100)/100  // 输出结果为 8.53, 注意是 8.53 而不是 8.54`。**Math.floor()慎用！**
+```java
+// 排序
+sort()
+// 查找
+binarySearch()
+// 比较
+equals()
+// 填充
+fill()
+// 将数组转换为列表
+asList()
+// 转换为字符串
+Arrays.toString()
+// 复制
+copyOf()
+// 截取复制
+copyRangeOf()
+```
 
-### 18.18.2 commons-io包
+### 18.18.3 Collections
+
+- 排序
+
+```java
+// 反转
+void reverse(List list)
+// 随机排序
+void shuffle(List list)
+// 按自然排序的升序排序
+void sort(List list)
+// 定制排序，由Comparator控制排序逻辑
+void sort(List list, Comparator c)
+// 交换两个索引位置的元素
+void swap(List list, int i , int j)
+// 旋转。当distance为正数时，将list后distance个元素整体移到前面。当distance为负数时，将 list的前distance个元素整体移到后面。
+void rotate(List list, int distance)
+```
+
+- 查找与替换操作
+
+```java
+// 对List进行二分查找，返回索引，注意List必须是有序的
+int binarySearch(List list, Object key)
+// 根据元素的自然顺序，返回最大的元素
+int max(Collection coll)
+// 根据定制排序，返回最大元素
+int max(Collection coll, Comparator c)
+// 用指定的元素代替指定list中的所有元素
+void fill(List list, Object obj)
+// 统计元素出现次数
+int frequency(Collection c, Object o)
+// 统计target在list中第一次出现的索引，找不到则返回-1
+int indexOfSubList(List list, List target)
+// 用新元素替换旧元素
+boolean replaceAll(List list, Object oldVal, Object newVal)
+```
+
+- 同步控制：禁止使用，效率很低，**需要线程安全的集合类型时请考虑使用 JUC 包下的并发集合**。
+
+```java
+// 返回指定Collection支持的同步（线程安全的）Collection
+synchronizedCollection(Collection<T>  c)
+// 返回指定列表支持的同步（线程安全的）List
+synchronizedList(List<T> list)
+// 返回由指定映射支持的同步（线程安全的）Map
+synchronizedMap(Map<K,V> m)
+// 返回指定Set支持的同步（线程安全的）Set
+synchronizedSet(Set<T> s)
+```
+
+- 设置不可变集合
+
+```java
+// 下面三类方法的参数是原有的集合对象，返回值是该集合的"只读"版本
+// 返回一个空的、不可变的集合对象，此处的集合既可以是List/Set/Map
+emptyXxx()
+// 返回一个只包含指定对象（只有一个或一个元素）的不可变的集合对象，此处的集合可以是List/Set/Map
+singletonXxx()
+// 返回指定集合对象的不可变视图，此处的集合可以是List/Set/Map
+unmodifiableXxx()
+```
+
+### 18.18.4 commons-io包
 
 
 
-### 18.18.3 commons-lang包
+### 18.18.5 commons-lang包
+
+`commons-lang`可能是最常用的java工具包之一。commons-lang包的基本组织结构如下：
+
+![image-20201202002550571](zcblog-backend-docs.assets/image-20201202002550571.png)
 
 
 
-### 18.18.4 commons-fileupload包
+#### 18.18.31.1 ArchUtils
+
+**ArchUtils：**java运行环境的系统信息工具类。
+
+```java
+getArch();// 获取电脑处理器体系结构 32 bit、64 bit、unknown
+getType();// 返回处理器类型 x86、ia64、ppc、unknown
+is32Bit();// 检查处理器是否为32位
+is64Bit();// 检查处理器是否为64位
+isIA64();// 检查是否是英特尔安腾处理器类型
+isPPC();// 检查处理器是否是电源PC类型
+isX86();// 检查处理器是否是x86类型
+```
+
+#### 18.18.31.2 ArrayUtils
+
+**ArrayUtils：**数组工具类。
+
+```java
+// add(boolean[] array, boolean element) 将给定的数据添加到指定的数组中，返回一个新的数组
+ArrayUtils.add(null, true)          = [true]
+ArrayUtils.add([true], false)       = [true, false]
+ArrayUtils.add([true, false], true) = [true, false, true]
+// add(boolean[] array, int index, boolean element) 将给定的数据添加到指定的数组下标中，返回一个新的数组
+ArrayUtils.add(null, 0, true)          = [true]
+ArrayUtils.add([true], 0, false)       = [false, true]
+ArrayUtils.add([false], 1, true)       = [false, true]
+ArrayUtils.add([true, false], 1, true) = [true, true, false]
+// addAll(boolean[] array1, boolean... array2) 将给定的多个数据添加到指定的数组中，返回一个新的数组
+ArrayUtils.addAll(array1, null)   = cloned copy of array1
+ArrayUtils.addAll(null, array2)   = cloned copy of array2
+ArrayUtils.addAll([], [])         = []
+// clone(boolean[] array) 复制数组并返回 结果数组为空将返回空
+// contains(boolean[] array, boolean valueToFind) 检查该数据在该数组中是否存在，返回一个boolean值
+// getLength(Object array) 返回该数组长度
+ArrayUtils.getLength(null)            = 0
+ArrayUtils.getLength([])              = 0
+ArrayUtils.getLength([null])          = 1
+ArrayUtils.getLength([true, false])   = 2
+ArrayUtils.getLength([1, 2, 3])       = 3
+ArrayUtils.getLength(["a", "b", "c"]) = 3
+// hashCode(Object array) 返回该数组的哈希Code码
+// indexOf(boolean[] array, boolean valueToFind) 从数组的第一位开始查询该数组中是否有指定的数值，存在返回index的数值，否则返回-1
+// indexOf(boolean[] array, boolean valueToFind, int startIndex) 从数组的第startIndex位开始查询该数组中是否有指定的数值，存在返回index的数值，否则返回-1
+// insert(int index, boolean[] array, boolean... values) 向指定的位置往该数组添加指定的元素，返回一个新的数组
+ArrayUtils.insert(index, null, null)      = null
+ArrayUtils.insert(index, array, null)     = cloned copy of 'array'
+ArrayUtils.insert(index, null, values)    = null
+// isEmpty(boolean[] array) 判断该数组是否为空，返回一个boolean值
+// isNotEmpty(boolean[] array) 判断该数组是否为空，而不是null
+// isSameLength(boolean[] array1, boolean[] array2) 判断两个数组的长度是否一样，当数组为空视长度为0。返回一个boolean值
+// isSameType(Object array1, Object array2) 判断两个数组的类型是否一样，返回一个boolean值
+// isSorted(boolean[] array) 判断该数组是否按照自然排列顺序排序，返回一个boolean值
+// isSorted(T[] array, Comparator<T> comparator) 判断该数组是否按照比较器排列顺序排序，返回一个boolean值
+// lastIndexOf(boolean[] array, boolean valueToFind) 从数组的最后一位开始往前查询该数组中是否有指定的数值，存在返回index的数值，否则返回-1
+// lastIndexOf(boolean[] array, boolean valueToFind, int startIndex) 从数组的最后startIndex位开始往前查询该数组中是否有指定的数值，存在返回index的数值，否则返回-1
+// nullToEmpty(boolean[] array) 将null转换为空的数组,如果数组不为null,返回原数组,如果数组为null,返回一个空的数组
+// remove(boolean[] array, int index) 删除该数组指定位置上的元素，返回一个新的数组，所有后续元素左移（下标减1）
+ArrayUtils.remove([true], 0)              = []
+ArrayUtils.remove([true, false], 0)       = [false]
+ArrayUtils.remove([true, false], 1)       = [true]
+ArrayUtils.remove([true, true, false], 1) = [true, false]
+// removeAll(boolean[] array, int... indices) 删除该数组多个指定位置上的元素，返回一个新的数组，所有后续元素左移（下标减1）
+ArrayUtils.removeAll([true, false, true], 0, 2) = [false]
+ArrayUtils.removeAll([true, false, true], 1, 2) = [true]
+// removeAllOccurences(boolean[] array, boolean element) 从该数组中删除指定的元素，返回一个新的数组
+// removeElement(boolean[] array, boolean element) 从该数组中删除指定的元素，返回一个新的数组
+// removeElements(boolean[] array, boolean... values) 从该数组中删除指定数量的元素，返回一个新的数组
+// reverse(boolean[] array) 数组反转
+// reverse(boolean[] array, int startIndexInclusive, int endIndexExclusive) 数组从指定位置区间进行反转
+// shuffle(boolean[] array) 把数组中的元素按随机顺序重新排列
+// subarray(boolean[] array, int startIndexInclusive, int endIndexExclusive) 截取数组，按指定位置区间截取并返回一个新的数组
+// swap(boolean[] array, int offset1, int offset2) 指定该数组的两个位置的元素交换进行交换
+ArrayUtils.swap([1, 2, 3], 0, 2) -> [3, 2, 1]
+ArrayUtils.swap([1, 2, 3], 0, 0) -> [1, 2, 3]
+ArrayUtils.swap([1, 2, 3], 1, 0) -> [2, 1, 3]
+ArrayUtils.swap([1, 2, 3], 0, 5) -> [1, 2, 3]
+ArrayUtils.swap([1, 2, 3], -1, 1) -> [2, 1, 3]
+// toArray(T... items) 创建数组
+String[] array = ArrayUtils.toArray("1", "2");
+String[] emptyArray = ArrayUtils.<String>toArray();
+// toMap(Object[] array) 将二维数组转换成Map并返会Map
+Map colorMap = ArrayUtils.toMap(new String[][] {
+    {"RED", "#FF0000"},
+    {"GREEN", "#00FF00"},
+    {"BLUE", "#0000FF"}}
+);
+// toObject(boolean[] array) 将基本类型数组转换成对象类型数组并返回
+// toPrimitive(Boolean[] array) 将对象类型数组转换成基本类型数组并返回
+// toString(Object array) 将数组转换为string字符串并返回
+// toStringArray(Object[] array) 将Object数组转换为String数组类型
+```
+
+#### 18.18.31.3 BooleanUtils
+
+**BooleanUtils：**布尔工具包。
+
+```java
+// and(boolean... array) 逻辑与
+// compare(boolean x, boolean y) 比较两个布尔值并返回int类型 如果x == y返回0， !x && y 返回小于 0 ，x && !y 返回大于0
+// isFalse(Boolean bool) 是否是假并返回boolean
+// isTrue(Boolean bool) 是否是真并返回boolean
+// negate(Boolean bool) 逻辑非
+// or(boolean... array) 逻辑或
+// toBoolean(Boolean bool) 将对象类型转换为基本数据类型并返回
+// toBoolean(int value) 将int类型转换为boolean类型并返回
+// toBoolean(String str) 将string类型转换为boolean类型并返回
+// toInteger(boolean bool) 将boolean类型数据转换为int类型并返回
+// toStringOnOff(boolean bool) 将boolean类型数据转换为String类型'on' or 'off'并返回
+// toStringTrueFalse(Boolean bool) 将boolean类型数据转换为String类型''true' or 'false'并返回
+// toStringYesNo(boolean bool) 将boolean类型数据转换为String类型'yes' or 'no'并返回
+// xor(boolean... array) 异或
+```
+
+#### 18.18.31.4 ClassPathUtils
+
+**ClassPathUtils：**class路径工具。
+
+```java
+// toFullyQualifiedName(Class<?> context, String resourceName) 返回一个由class包名+resourceName拼接的字符串
+ClassPathUtils.toFullyQualifiedName(StringUtils.class, "StringUtils.properties") = "org.apache.commons.lang3.StringUtils.properties"
+// toFullyQualifiedName(Package context, String resourceName) 返回一个由class包名+resourceName拼接的字符串
+ClassPathUtils.toFullyQualifiedName(StringUtils.class.getPackage(), "StringUtils.properties") = "org.apache.commons.lang3.StringUtils.properties"
+// toFullyQualifiedPath(Class<?> context, String resourceName) 返回一个由class包名+resourceName拼接的字符串
+ClassPathUtils.toFullyQualifiedPath(StringUtils.class, "StringUtils.properties") = "org/apache/commons/lang3/StringUtils.properties"
+// toFullyQualifiedPath(Package context, String resourceName) 返回一个由class包名+resourceName拼接的字符串
+ClassPathUtils.toFullyQualifiedPath(StringUtils.class, "StringUtils.properties") = "org/apache/commons/lang3/StringUtils.properties"
+```
+
+#### 18.18.31.5 EnumUtils
+
+**EnumUtils：**枚举工具类。
+
+```java
+// getEnum(Class<E> enumClass, String enumName) 通过类返回一个枚举，可能返回空
+// getEnumList(Class<E> enumClass) 通过类返回一个枚举集合
+// getEnumMap(Class<E> enumClass) 通过类返回一个枚举map
+// isValidEnum(Class<E> enumClass, String enumName) 验证enumName是否在枚举中，返回true false
+```
+
+#### 18.18.31.6 ObjectUtils
+
+**ObjectUtils：**Object工具类。
+
+```java
+// allNotNull(Object... values) 检查所有元素是否为空,返回一个boolean
+// anyNotNull(Object... values) 检查元素是否为空,返回一个boolean,如果有一个元素不为空返回true
+// clone(T obj) 拷贝一个对象并返回
+// compare(T c1, T c2) 比较两个对象,返回一个int值
+// defaultIfNull(T object, T defaultValue) 如果对象为空返回一个默认值
+// firstNonNull(T... values) 返回数组中第一个不为空的值
+// notEqual(Object object1, Object object2) 判断两个对象不相等，返回一个boolean
+```
+
+#### 18.18.31.7 RandomUtils
+
+**RandomUtils：**随机工具类。
+
+```java
+// nextBoolean() 返回一个随机boolean值
+// nextBytes(int count) 返回一个指定大小的随机byte数组
+// nextDouble() 返回一个随机double值
+// nextDouble(double startInclusive, double endInclusive) 返回一个指定范围的随机double值
+// nextFloat() 返回一个随机float值
+// nextFloat(float startInclusive, float endInclusive) 返回一个指定范围的随机float值
+// nextInt() 返回一个随机int值
+// nextInt(int startInclusive, int endExclusive) 返回一个指定范围的随机int值
+// nextLong() 返回一个随机long值
+// nextLong(long startInclusive, long endExclusive) 返回一个指定范围的随机long值
+```
+
+#### 18.18.31.8 SystemUtils
+
+**SystemUtils：**操作系统工具类。
+
+```java
+// FILE_ENCODING 返回系统编码
+// IS_JAVA_1_1、...、IS_JAVA_1_8、IS_JAVA_10、IS_JAVA_9 判断java版本,返回一个boolean
+// IS_OS_LINUX 判断系统是否是linux,返回一个boolean
+// IS_OS_MAC 判断系统是否是mac,返回一个boolean
+// IS_OS_LINUX 判断系统是否是linux,返回一个boolean
+// JAVA_CLASS_PATH 返回系统CLASS_PATH值
+// JAVA_CLASS_VERSION 返回系统java版本
+// JAVA_HOME 返回系统java home
+// JAVA_RUNTIME_VERSION 返回java运行版本
+// JAVA_VERSION 返回java版本
+// OS_NAME 返回系统名
+// OS_VERSION 返回系统版本
+// USER_COUNTRY 返回用户国家编号
+// USER_DIR 返回项目文件夹
+// USER_HOME 返回系统用户主文件夹
+// USER_LANGUAGE 返回系统用户语言
+// USER_NAME 返回系统用户名
+```
+
+#### 18.18.31.9 StringUtils
+
+**StringUtils：**字符串工具类。
+
+```java
+// abbreviate(String str, int maxWidth) 返回一个指定长度加省略号的字符串，maxWidth必须大于3
+StringUtils.abbreviate(null, *)      = null
+StringUtils.abbreviate("", 4)        = ""
+StringUtils.abbreviate("abcdefg", 6) = "abc..."
+StringUtils.abbreviate("abcdefg", 7) = "abcdefg"
+StringUtils.abbreviate("abcdefg", 8) = "abcdefg"
+StringUtils.abbreviate("abcdefg", 4) = "a..."
+StringUtils.abbreviate("abcdefg", 3) = IllegalArgumentException
+// abbreviate(String str, int offset, int maxWidth) 返回一个指定长度加省略号的字符串，maxWidth必须大于3
+// abbreviate(String str, String abbrevMarker, int maxWidth) 返回一个自定义省略号的指定长度字符串，maxWidth必须大于3
+StringUtils.abbreviate(null, "...", *)      = null
+StringUtils.abbreviate("abcdefg", null, *)  = "abcdefg"
+StringUtils.abbreviate("", "...", 4)        = ""
+StringUtils.abbreviate("abcdefg", ".", 5)   = "abcd."
+StringUtils.abbreviate("abcdefg", ".", 7)   = "abcdefg"
+StringUtils.abbreviate("abcdefg", ".", 8)   = "abcdefg"
+StringUtils.abbreviate("abcdefg", "..", 4)  = "ab.."
+StringUtils.abbreviate("abcdefg", "..", 3)  = "a.."
+StringUtils.abbreviate("abcdefg", "..", 2)  = IllegalArgumentException
+StringUtils.abbreviate("abcdefg", "...", 3) = IllegalArgumentException
+// abbreviateMiddle(String str, String abbrevMarker, int maxWidth) 将字符串缩短到指定长度（length），字符串的中间部分用替换字符串（middle）显示
+StringUtils.abbreviateMiddle("abc", null, 0)      = "abc"
+StringUtils.abbreviateMiddle("abc", ".", 0)      = "abc"
+StringUtils.abbreviateMiddle("abc", ".", 3)      = "abc"
+StringUtils.abbreviateMiddle("abcdef", ".", 4)     = "ab.f"
+// appendIfMissing(String str, CharSequence suffix, CharSequence... suffixes) 如果str不是以任何suffixes结尾，将字符串suffix拼接到字符串str后面
+StringUtils.appendIfMissing(null, null) = null
+StringUtils.appendIfMissing("abc", null) = "abc"
+StringUtils.appendIfMissing("", "xyz") = "xyz"
+StringUtils.appendIfMissing("abc", "xyz") = "abcxyz"
+StringUtils.appendIfMissing("abcxyz", "xyz") = "abcxyz"
+StringUtils.appendIfMissing("abcXYZ", "xyz") = "abcXYZxyz"
+// appendIfMissingIgnoreCase(String str, CharSequence suffix, CharSequence... suffixes) 同上 不区分大小写
+// capitalize(String str) 将字符串第一个字符大写并返回
+// center(String str, int size) 用空格字符填充使字符串str位于长度为size的大字符串中间
+StringUtils.center(null, *)   = null
+StringUtils.center("", 4)     = "    "
+StringUtils.center("ab", -1)  = "ab"
+StringUtils.center("ab", 4)   = " ab "
+StringUtils.center("abcd", 2) = "abcd"
+StringUtils.center("a", 4)    = " a  "
+// center(String str, int size, char padChar) 用指定字符填充使字符串str位于长度为size的大字符串中间
+// chomp(String str) 删除字符串末尾的一个换行符,返回一个新的字符串（换行符"n", "r", or "rn"）
+StringUtils.chomp(null)          = null
+StringUtils.chomp("")            = ""
+StringUtils.chomp("abc \r")      = "abc "
+StringUtils.chomp("abc\n")       = "abc"
+StringUtils.chomp("abc\r\n")     = "abc"
+StringUtils.chomp("abc\r\n\r\n") = "abc\r\n"
+StringUtils.chomp("abc\n\r")     = "abc\n"
+StringUtils.chomp("abc\n\rabc")  = "abc\n\rabc"
+StringUtils.chomp("\r")          = ""
+StringUtils.chomp("\n")          = ""
+StringUtils.chomp("\r\n")        = ""
+// chop(String str) 删除字符串末尾的一个字符，返回一个新的字符串
+// compare(String str1, String str2) 比较两个字符串，返回一个int值:str1等于str2（或都为空）返回0;str1小于str2返回小于0;str1大于str2返回大于0
+StringUtils.compare(null, null)   = 0
+StringUtils.compare(null , "a")   < 0
+StringUtils.compare("a", null)    > 0
+StringUtils.compare("abc", "abc") = 0
+StringUtils.compare("a", "b")     < 0
+StringUtils.compare("b", "a")     > 0
+StringUtils.compare("a", "B")     > 0
+StringUtils.compare("ab", "abc")  < 0
+// contains(CharSequence seq, CharSequence searchSeq) 检查字符串中是否包含指定字符，返回boolean
+// containsAny(CharSequence cs, CharSequence... searchCharSequences) 检查字符串中是否包含任一字符，返回boolean
+// containsNone(CharSequence cs, String invalidChars) 检查字符串不包含指定字符，返回boolean
+// containsOnly(CharSequence cs, String validChars) 检查字符串只包含特定的字符，返回boolean
+// containsWhitespace(CharSequence seq) 检查字符串中是否包含空格字符，返回boolean
+// countMatches(CharSequence str, CharSequence sub) 检查字符串中出现指定字符的次数，返回一个int值
+// defaultIfBlank(T str, T defaultStr) 如果字符串为null、空（""），或全是空格，将返回指定字符串，否则返回原值
+// defaultIfEmpty(T str, T defaultStr) 如果字符串为null、空（""），将返回指定字符串，否则返回原值
+// defaultString(String str) 如果字符串为null，将返回空的字符串（""），否则返回原值
+// defaultString(String str, String defaultStr) 如果字符串为null，将返回指定字符，否则返回原值
+// deleteWhitespace(String str) 删除字符串中的空格字符，并返回新的字符串
+// difference(String str1, String str2) 比较两个字符串差异，并返回差异的字符，返回第二个字符串的剩余部分，这意味着“ABC”和“AB”之间的区别是空字符串而不是“C”。
+// endsWith(CharSequence str, CharSequence suffix) 检查字符串是否以指定字符结尾，返回一个boolean
+// endsWithAny(CharSequence sequence, CharSequence... searchStrings) 检查字符串是否以指定字符数组结尾，返回一个boolean
+// endsWithIgnoreCase(CharSequence str, CharSequence suffix) 检查字符串是否以指定字符（不区分大小写）结尾，返回一个boolean
+// equals(CharSequence cs1, CharSequence cs2) 比较两个字符串是否相等，返回一个boolean
+// equalsAnyIgnoreCase(CharSequence string, CharSequence... searchStrings) 比较两个字符串是否相等（不区分大小写），返回一个boolean
+// equalsAny(CharSequence string, CharSequence... searchStrings) 比较字符串是否与指定字符串数组中某一值相等，返回一个boolean
+// equalsAnyIgnoreCase(CharSequence string, CharSequence... searchStrings) 比较字符串是否与指定字符串数组中某一值相等（不区分大小写），返回一个boolean
+// getCommonPrefix(String... strs) 获取字符串数组元素公共字符，返回string
+// indexOf(CharSequence seq, CharSequence searchSeq) 检查指定字符在字符串中出现的位置，返回一个int值
+// indexOfIgnoreCase(CharSequence seq, CharSequence searchSeq) 检查指定字符在字符串中出现的位置（不区分大小写），返回一个int值
+// isAllBlank(CharSequence... css) 检查数组所有字符是否为null、empty、或全是空格字符，返回一个boolean
+// isAllEmpty(CharSequence... css) 检查数组所有字符是否为null、empty，返回一个boolean
+// isAllLowerCase(CharSequence cs) 检查字符串中所有字符是否是小写，返回一个boolean
+// isAllUpperCase(CharSequence cs) 检查字符串中所有字符是否是大写，返回一个boolean
+// isAnyBlank(CharSequence... css) 检查数组中字符串是否有一个为null、empty或全是空格字符，返回一个boolean
+// isAnyEmpty(CharSequence... css) 检查数组中字符串是否有一个为null、empty，返回一个boolean
+// isBlank(CharSequence cs) 检查字符串是否为null、empty或空格字符，返回一个boolean
+StringUtils.isBlank(null)      = true
+StringUtils.isBlank("")        = true
+StringUtils.isBlank(" ")       = true
+StringUtils.isBlank("bob")     = false
+StringUtils.isBlank("  bob  ") = false
+// isEmpty(CharSequence cs) 检查字符串是否为null、empty，返回一个boolean
+StringUtils.isEmpty(null)      = true
+StringUtils.isEmpty("")        = true
+StringUtils.isEmpty(" ")       = false
+StringUtils.isEmpty("bob")     = false
+StringUtils.isEmpty("  bob  ") = false
+// isNotBlank(CharSequence cs) 检查字符串是否不为null、empty或空格字符，返回一个boolean
+// isNotEmpty(CharSequence cs) 检查字符串是否不为null、empty，返回一个boolean
+// isNumeric(CharSequence cs) 检查字符串是否是数字，返回一个boolean
+// isWhitespace(CharSequence cs) 检查字符串是否是空格字符，返回一个boolean
+// join(byte[] array, char separator) 将字节数组转换成string，以指定字符分隔
+StringUtils.join(null, *)               = null
+StringUtils.join([], *)                 = ""
+StringUtils.join([null], *)             = ""
+StringUtils.join([1, 2, 3], ';')  = "1;2;3"
+StringUtils.join([1, 2, 3], null) = "123"
+// joinWith(String separator, Object... objects) 将多个元素已指定字符分隔拼接成String
+StringUtils.joinWith(",", {"a", "b"})        = "a,b"
+StringUtils.joinWith(",", {"a", "b",""})     = "a,b,"
+StringUtils.joinWith(",", {"a", null, "b"})  = "a,,b"
+StringUtils.joinWith(null, {"a", "b"})       = "ab"
+// lastIndexOf(CharSequence seq, CharSequence searchSeq) 获取指定字符在字符串中的最后一个索引位置
+StringUtils.lastIndexOf(null, *)          = -1
+StringUtils.lastIndexOf(*, null)          = -1
+StringUtils.lastIndexOf("", "")           = 0
+StringUtils.lastIndexOf("aabaabaa", "a")  = 7
+StringUtils.lastIndexOf("aabaabaa", "b")  = 5
+StringUtils.lastIndexOf("aabaabaa", "ab") = 4
+StringUtils.lastIndexOf("aabaabaa", "")   = 8
+// left(String str, int len) 返回从左边开始指定大小的字符串
+StringUtils.left(null, *)    = null
+StringUtils.left(*, -ve)     = ""
+StringUtils.left("", *)      = ""
+StringUtils.left("abc", 0)   = ""
+StringUtils.left("abc", 2)   = "ab"
+StringUtils.left("abc", 4)   = "abc"
+// right(String str, int len) 同上相反
+// length(CharSequence cs) 获取字符串大小，返回一个int
+// lowerCase(String str) 将字符串转换为小写，返回一个string
+// upperCase(String str) 同上相反
+// mid(String str, int pos, int len) 获取字符串指定位置区间的字符，返回一个string
+// overlay(String str, String overlay, int start, int end) 在字符串位置区间插入指定字符，返回一个string
+// prependIfMissing(String str, CharSequence prefix, CharSequence... prefixes) 在字符串最左边插入指定字符，如果已存在，将不插入，返回一个string
+// prependIfMissingIgnoreCase(String str, CharSequence prefix, CharSequence... prefixes) 同上，只是不区分大小写
+// remove(String str, char remove) 删除字符串中指定字符，返回一个string
+// removeIgnoreCase(String str, String remove) 同上，只是不区分大小写
+// removeAll(String text, String regex) 根据匹配规则删除所有字符，返回一个string
+StringUtils.removeAll(null, *)      = null
+StringUtils.removeAll("any", null)  = "any"
+StringUtils.removeAll("any", "")    = "any"
+StringUtils.removeAll("any", ".*")  = ""
+StringUtils.removeAll("any", ".+")  = ""
+StringUtils.removeAll("abc", ".?")  = ""
+StringUtils.removeAll("A<__>\n<__>B", "<.*>")      = "A\nB"
+StringUtils.removeAll("A<__>\n<__>B", "(?s)<.*>")  = "AB"
+StringUtils.removeAll("ABCabc123abc", "[a-z]")     = "ABC123"
+// removeEnd(String str, String remove) 删除字符串结尾指定字符，返回一个string
+StringUtils.removeEnd(null, *)      = null
+StringUtils.removeEnd("", *)        = ""
+StringUtils.removeEnd(*, null)      = *
+StringUtils.removeEnd("www.domain.com", ".com.")  = "www.domain.com"
+StringUtils.removeEnd("www.domain.com", ".com")   = "www.domain"
+StringUtils.removeEnd("www.domain.com", "domain") = "www.domain.com"
+StringUtils.removeEnd("abc", "")    = "abc"
+// removeStart(String str, String remove) 同上相反
+// removeEndIgnoreCase(String str, String remove) 同上，只是不区分大小写
+// removeFirst(String text, String regex) 根据匹配规则删除第一次出现的字符，返回一个string
+// repeat(String str, int repeat) 将字符重复指定次数拼接成新的字符串，返回一个string
+// replace(String text, String searchString, String replacement) 用replacement替换字符串中的所有searchString，返回一个string
+// reverse(String str) 将字符串反转，返回一个string
+// reverseDelimited(String str, char separatorChar) 将字符串指定分隔符出的字符反转
+StringUtils.reverseDelimited(null, *)      = null
+StringUtils.reverseDelimited("", *)        = ""
+StringUtils.reverseDelimited("a.b.c", 'x') = "a.b.c"
+StringUtils.reverseDelimited("a.b.c", ".") = "c.b.a"
+// split(String str, String separatorChars) 将字符串以指定字符分隔，返回数组
+StringUtils.split(null, *)         = null
+StringUtils.split("", *)           = []
+StringUtils.split("abc def", null) = ["abc", "def"]
+StringUtils.split("abc def", " ")  = ["abc", "def"]
+StringUtils.split("abc  def", " ") = ["abc", "def"]
+StringUtils.split("ab:cd:ef", ":") = ["ab", "cd", "ef"]
+// substring(String str, int start) 将字符串从指定位置区间截取，返回string
+// swapCase(String str) 将字符串大小写互转，返回一个string
+StringUtils.swapCase(null)                 = null
+StringUtils.swapCase("")                   = ""
+StringUtils.swapCase("The dog has a BONE") = "tHE DOG HAS A bone"
+// toEncodedString(byte[] bytes, Charset charset) 将字符串转为指定编码格式，返回一个string
+// trim(String str) 去除字符串空格
+// trimToEmpty(String str) 去除字符串空格，null转为empty，返回一个string
+StringUtils.trimToEmpty(null)          = ""
+StringUtils.trimToEmpty("")            = ""
+StringUtils.trimToEmpty("     ")       = ""
+StringUtils.trimToEmpty("abc")         = "abc"
+StringUtils.trimToEmpty("    abc    ") = "abc"
+```
+
+
+
+
+
+
+
+
+
+
+
+> 参考博客文章：[commons-lang3工具类学习（一）](https://blog.csdn.net/u012240455/article/details/79014161?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522160683981119724818097015%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fblog.%2522%257D&request_id=160683981119724818097015&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~blog~first_rank_v2~rank_blog_default-2-79014161.pc_v2_rank_blog_default&utm_term=commons-lang3&spm=1018.2118.3001.4450)、[commons-lang3工具类学习（二）](https://blog.csdn.net/u012240455/article/details/79014192?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522160683981119724818097015%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fblog.%2522%257D&request_id=160683981119724818097015&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~blog~first_rank_v2~rank_blog_default-3-79014192.pc_v2_rank_blog_default&utm_term=commons-lang3&spm=1018.2118.3001.4450)、[commons-lang3工具类学习（三）](https://blog.csdn.net/u012240455/article/details/79014224?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522160683981119724818097015%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fblog.%2522%257D&request_id=160683981119724818097015&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~blog~first_rank_v2~rank_blog_default-1-79014224.pc_v2_rank_blog_default&utm_term=commons-lang3&spm=1018.2118.3001.4450)、[commons-lang3常用工具类api整理](https://blog.csdn.net/qq_37334135/article/details/95480230?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522160683970819195271630309%2522%252C%2522scm%2522%253A%252220140713.130102334..%2522%257D&request_id=160683970819195271630309&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~blog~top_click~default-1-95480230.pc_v2_rank_blog_default&utm_term=commons-lang3&spm=1018.2118.3001.4450)
+
+### 18.18.6 commons-fileupload包
 
 
 
@@ -5493,8 +5986,9 @@ List<Article> articleList = articleMapper.selectList(new QueryWrapper<Article>()
 |   ALT+Insert    |          快速生成get、set和toString方法          |  Ctrl+Alt+Shift+C   |  拷贝相关数据（包括路径和所在行）  |
 |   Ctrl+Alt+V    |          快速生成方法返回值，生成变量名          |    Ctrl+Shift+V     |          从历史记录中粘贴          |
 |   Ctrl+Alt+T    | 选中代码块或者光标所在行，快速添加try...catch... |  Ctrl+Shift+Enter   |               新建行               |
-| ALT+SHIFT+ENTER |                     抛出异常                     |  Ctrl+Alter+Enter   |         在当前行前面新建行         |
-|  Ctrl+shift+F9  |                     重新编译                     |    Ctrl+Shift+U     |             大小写转换             |
+| ALT+Shift+Enter |                     抛出异常                     |  Ctrl+Alter+Enter   |         在当前行前面新建行         |
+|  Ctrl+Shift+F9  |                     重新编译                     |    Ctrl+Shift+U     |             大小写转换             |
+|   Shift+Alt+U   |       驼峰命名转换（需安装CamelCase插件）        |                     |                                    |
 
 ## 19.2 实时代码模板
 
