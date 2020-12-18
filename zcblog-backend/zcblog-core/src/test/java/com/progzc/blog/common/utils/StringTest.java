@@ -1,5 +1,6 @@
 package com.progzc.blog.common.utils;
 
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -59,5 +60,17 @@ public class StringTest {
             urlList[i] = urlList[i].substring(0, 2);
         }
         System.out.println(Arrays.asList(urlList)); //  [ab, de, gh]
+    }
+
+    @Test
+    public void test6() {
+        System.out.println(StringUtils.abbreviate(null, 4));
+        System.out.println(StringUtils.abbreviate("", 4));
+        System.out.println(StringUtils.abbreviate("abcdefg", 6));
+        System.out.println(StringUtils.abbreviate("abcdefg", 7));
+        System.out.println(StringUtils.abbreviate("abcdefg", 5));
+        System.out.println(StringUtils.abbreviate("abcdefg", 4));
+//        StringUtils.abbreviate("abcdefg", 3);
+
     }
 }
