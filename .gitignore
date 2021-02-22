@@ -2,6 +2,7 @@
 *.iml
 /.idea/
 /out/
+*.kotlin_module
 
 # Maven
 /target/
