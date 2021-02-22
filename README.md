@@ -11,7 +11,7 @@
 
 ## 博客项目启动步骤
 
-1. 克隆项目到本地：`https://github.com/progzc/zcblog.git`。
+1. 克隆项目到本地：`git clone https://github.com/progzc/zcblog.git`。
 2. 启动Redis：`redis-server.exe  redis.windows.conf`，Redis服务端地址：`http://localhost:6379/`。
 3. 在`zcblog-front2client`模块下执行命令`npm intsall`，安装博客前台模块相关依赖。
 4. 在`zcblog-front2manage`模块下执行命令`npm install`，安装博客管理系统前台相关依赖。
