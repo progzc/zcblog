@@ -5,9 +5,9 @@
 ## 相关数据文档
 
 1. 数据库脚本链接地址：[zcblog.sql](https://github.com/progzc/zcblog/tree/master/db/zcblog.sql)
-2. 博客前台模块开发文档说明书链接地址：[zcblog-front2client-docs](https://github.com/progzc/zcblog/tree/master/docs/zcblog-front2client-docs)
-3. 博客管理系统前台模块开发文档说明书链接地址：[zcblog-front2manage-docs](https://github.com/progzc/zcblog/tree/master/docs/zcblog-front2manage-docs)
-4. 博客后台管理系统模块开发文档说明书链接地址：[zcblog-backend-docs](https://github.com/progzc/zcblog/tree/master/docs/zcblog-backend-docs)
+2. 博客前台模块开发文档说明书链接地址：[zcblog-front2client-docs](https://github.com/progzc/zcblog/blob/master/docs/zcblog-front2client-docs/zcblog-front2client-docs.md)
+3. 博客管理系统前台模块开发文档说明书链接地址：[zcblog-front2manage-docs](https://github.com/progzc/zcblog/blob/master/docs/zcblog-front2manage-docs/zcblog-front2manage-docs.md)
+4. 博客后台管理系统模块开发文档说明书链接地址：[zcblog-backend-docs](https://github.com/progzc/zcblog/blob/master/docs/zcblog-backend-docs/zcblog-backend-docs.md)
 
 ## 博客项目启动步骤
 
