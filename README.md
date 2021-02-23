@@ -51,6 +51,10 @@ PC端文章页展示效果：
 
 ![image-20210223004138624](README.assets/image-20210223004138624.png)
 
+国际化：
+
+![image-20210223094210216](README.assets/image-20210223094210216.png)
+
 移动端标签页效果：
 
 ![image-20210223005125679](README.assets/image-20210223005125679.png)
